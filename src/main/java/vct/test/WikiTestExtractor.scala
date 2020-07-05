@@ -4,14 +4,103 @@ import java.io.File
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-import com.google.gson.{Gson, JsonObject}
-import hre.config.{OptionParser, StringListSetting, StringSetting}
+import com.google.gson.{Gson, JsonArray, JsonElement, JsonObject}
+import hre.config.{OptionParser, StringSetting}
 
 import sys.process._
 import hre.lang.System._
 
 import scala.collection.JavaConverters._
 import scala.util.Properties
+
+// Pandoc datetypes
+
+object Block {
+  def of(json: JsonElement): Option[Block] = {
+    RawBlock.of(json)
+      .orElse(CodeBlock.of(json))
+  }
+}
+
+abstract class Block
+
+object RawBlock {
+  def of(obj: JsonObject): Option[RawBlock] = {
+    if (obj.has("t")) {
+      val t = obj.get("t").getAsString
+      val c = obj.get("c").getAsJsonArray
+      t match {
+        case "RawBlock" => Some(RawBlock(c.get(0).getAsString, c.get(1).getAsString.trim))
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
+
+  def of(json: JsonElement): Option[RawBlock] =
+    if (json.isJsonObject) {
+      of(json.getAsJsonObject)
+    } else {
+      None
+    }
+}
+
+case class RawBlock(format: String, txt: String) extends Block {
+  def isComment = txt.startsWith("<!--") && txt.endsWith("-->")
+
+  def innerComment = if (isComment) {
+    txt.substring("<!--".length, txt.length - "-->".length)
+  } else {
+    Abort("Cannot take inner comment if block is not actually comment")
+    ???
+  }
+}
+
+object Attr {
+  def of(arr: JsonArray): Option[Attr] = {
+    val classes = arr.get(1)
+      .getAsJsonArray
+      .asScala
+      .map(_.getAsString)
+      .toSeq
+    Some(Attr(arr.get(0).getAsString, classes, Map()))
+  }
+
+  def of(json: JsonElement): Option[Attr] =
+    if (json.isJsonArray) {
+      of(json.getAsJsonArray)
+    } else {
+      None
+    }
+}
+
+case class Attr(identifier: String, classes: Seq[String], kvPairs: Map[String, String])
+
+object CodeBlock {
+  def of(json: JsonObject): Option[CodeBlock] =
+    if (json.get("t").getAsString == "CodeBlock") {
+      val c = json.get("c").getAsJsonArray
+      Some(CodeBlock(Attr.of(c.get(0)).get, c.get(1).getAsString))
+    } else {
+      None
+    }
+
+  def of(json: JsonElement): Option[CodeBlock] =
+    if (json.isJsonObject) {
+      of(json.getAsJsonObject)
+    } else {
+      None
+    }
+}
+
+case class CodeBlock(attributes: Attr, txt: String) extends Block
+
+// Custom snip datatypes, embedded in html
+
+case class Snip (name: String, standalone: Boolean, lang: String)
+
+// Extractor
 
 object WikiTestExtractor {
   /** Turns relative and absolute paths into absolute paths
@@ -41,6 +130,10 @@ object WikiTestExtractor {
     }
 
   def collectSnippets(pandocBin: File, file: File): Seq[String] = {
+    if (!file.getAbsolutePath.contains("Exception")) {
+      return Seq()
+    }
+
     val out = new StringBuilder
     val err = new StringBuilder
     val json = s"""${pandocBin} -f gfm -t json ${file}""" ! ProcessLogger(out append _, err append _)
@@ -52,7 +145,19 @@ object WikiTestExtractor {
     val obj = gson.fromJson(out.toString(), classOf[JsonObject])
     val blocks = obj.get("blocks")
     for (block <- blocks.getAsJsonArray.iterator().asScala) {
-//      print(block.getAsJsonObject.get("t"))
+      Block.of(block) match {
+        case Some(value) => value match {
+          case CodeBlock(attributes, txt) => println(s"Code block: ${attributes}")
+          case r@RawBlock(format, txt) => {
+            println(s"Raw block: ${format}")
+            if (r.isComment) {
+              println(r.innerComment)
+            }
+          }
+          case _ => ()
+        }
+        case None => ()
+      }
     }
     Seq()
   }
