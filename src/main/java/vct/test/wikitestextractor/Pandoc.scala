@@ -35,13 +35,12 @@ object RawBlock {
 }
 
 case class RawBlock(format: String, txt: String) extends Block {
-  def isComment = txt.startsWith("<!--") && txt.endsWith("-->")
+  def isComment: Boolean = txt.startsWith("<!--") && txt.endsWith("-->")
 
-  def innerComment = if (isComment) {
-    txt.substring("<!--".length, txt.length - "-->".length)
+  def innerComment: Option[String] = if (isComment) {
+    Some(txt.substring("<!--".length, txt.length - "-->".length))
   } else {
-    Abort("Cannot take inner comment if block is not actually comment")
-    ???
+    None
   }
 }
 
