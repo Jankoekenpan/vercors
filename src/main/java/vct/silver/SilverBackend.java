@@ -4,6 +4,7 @@ import hre.ast.HREOrigins;
 import vct.col.ast.stmt.decl.ProgramUnit;
 import hre.ast.AssertOrigin;
 import hre.ast.RestOfContractOrigin;
+import vct.experiments.python.Python$;
 import viper.api.*;
 
 import java.io.FileNotFoundException;
@@ -51,10 +52,13 @@ public class SilverBackend {
   
   public static
   PassReport TestSilicon(PassReport given, String tool) {
-    ViperAPI<Origin, ?, ?, ?, ?, ?, ?> verifier=getVerifier(tool);
+    Python$.MODULE$.verify(given);
+//    ViperAPI<Origin, ?, ?, ?, ?, ?, ?> verifier=getVerifier(tool);
     // We redirect through a new method, because we need to convince java the program type is consistent. The most brief
     // way to capture a  wildcard ("?") type is via a method.
-    return TestSilicon(given, tool, verifier);
+//    return TestSilicon(given, tool, verifier);
+    System.exit(0);
+    return null;
   }
 
   public static <Program> PassReport TestSilicon(PassReport given, String tool, ViperAPI<Origin, ?, ?, ?, ?, ?, Program> verifier) {
