@@ -28,11 +28,17 @@ public class ColJavaParser implements Parser {
   public final int version;
   public final boolean twopass;
   public final boolean topLevelSpecs;
+
+  private static JavaParser javaParser = null;
   
   public ColJavaParser(int version, boolean twopass, boolean topLevelSpecs){
     this.version=version;
     this.twopass=twopass;
     this.topLevelSpecs = topLevelSpecs;
+
+    if (javaParser == null) {
+      javaParser = new JavaParser(null);
+    }
   }
   
   @Override
@@ -45,45 +51,55 @@ public class ColJavaParser implements Parser {
 
         ProgramUnit pu;
         ErrorCounter ec=new ErrorCounter(file_name);
-        
+
         switch(version){
         case 7:
           if (twopass){
             Lexer lexer = new LangJavaLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            JavaParser parser = new JavaParser(tokens);
-            parser.removeErrorListeners();
-            parser.addErrorListener(ec);
+
+            javaParser.reset();
+            javaParser.setInputStream(tokens);
+
+            javaParser.removeErrorListeners();
+            javaParser.addErrorListener(ec);
             lexer.removeErrorListeners();
             lexer.addErrorListener(ec);
             if(this.topLevelSpecs) {
-              parser.specLevel = 1;
+              javaParser.specLevel = 1;
+            } else {
+              javaParser.specLevel = 0;
             }
-            JavaParser.CompilationUnitContext tree = parser.compilationUnit();
+            JavaParser.CompilationUnitContext tree = javaParser.compilationUnit();
             ec.report();
             Progress("first parsing pass took %dms",tk.show());
             
-            pu=JavaJMLtoCOL.convert(tree,file_name,tokens,parser);
+            pu=JavaJMLtoCOL.convert(tree,file_name,tokens,javaParser);
             Progress("AST conversion took %dms",tk.show());
             Debug("program after Java parsing:%n%s",pu);
             break;
           } else {
             Lexer lexer = new LangJavaLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            JavaParser parser = new JavaParser(tokens);
-            parser.removeErrorListeners();
-            parser.addErrorListener(ec);
+
+            javaParser.reset();
+            javaParser.setInputStream(tokens);
+
+            javaParser.removeErrorListeners();
+            javaParser.addErrorListener(ec);
             lexer.removeErrorListeners();
             lexer.addErrorListener(ec);
             if(this.topLevelSpecs) {
-              parser.specLevel = 1;
+              javaParser.specLevel = 1;
+            } else {
+              javaParser.specLevel = 0;
             }
             
-            JavaParser.CompilationUnitContext tree = parser.compilationUnit();
+            JavaParser.CompilationUnitContext tree = javaParser.compilationUnit();
             ec.report();
             Progress("first parsing pass took %dms",tk.show());
             
-            pu=JavaJMLtoCOL.convert(tree,file_name,tokens,parser);
+            pu=JavaJMLtoCOL.convert(tree,file_name,tokens,javaParser);
             Progress("AST conversion took %dms",tk.show());
             Debug("program after Java parsing:%n%s",pu);
             break;
