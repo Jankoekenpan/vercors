@@ -1,9 +1,12 @@
 package vct.parsers;
 
 import hre.tools.TimeKeeper;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import vct.antlr4.generated.LangCLexer;
 import vct.antlr4.generated.CParser;
 import vct.col.ast.stmt.decl.ProgramUnit;
@@ -19,6 +22,8 @@ import static hre.lang.System.*;
  */
 public class ColIParser implements Parser {
 
+  private static CParser parser = null;
+
   protected ProgramUnit parse(String file_name,InputStream stream) throws IOException{
     TimeKeeper tk=new TimeKeeper();
     ErrorCounter ec=new ErrorCounter(file_name);
@@ -28,10 +33,32 @@ public class ColIParser implements Parser {
     lexer.removeErrorListeners();
     lexer.addErrorListener(ec);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
-    CParser parser = new CParser(tokens);
+
+    if (parser == null) {
+      parser = new CParser(null);
+      parser.setErrorHandler(new BailErrorStrategy());
+    }
+
+    parser.setInputStream(tokens);
+
     parser.removeErrorListeners();
     parser.addErrorListener(ec);
-    CParser.CompilationUnitContext tree = parser.compilationUnit();
+
+    CParser.CompilationUnitContext tree;
+
+    try {
+      // First we try parsing in SLL mode (as recommended in the FAQ)
+      // If that fails, it's probably a syntax error. This must however be
+      // double-checked by parsing with LL mode, since some grammars fail in SLL
+      // for _some_ inputs that are still valid inputs.
+      parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
+      tree = parser.compilationUnit();
+    } catch (ParseCancellationException e) {
+      parser.reset();
+      parser.getInterpreter().setPredictionMode(PredictionMode.LL);
+      tree = parser.compilationUnit();
+    }
+
     Progress("first parsing pass took %dms",tk.show());
     ec.report();
     Debug("parser got: %s",tree.toStringTree(parser));
