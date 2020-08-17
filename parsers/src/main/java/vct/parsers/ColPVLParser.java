@@ -8,10 +8,13 @@ import java.io.FileNotFoundException;
 
 import hre.lang.HREExitException;
 import hre.tools.TimeKeeper;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
+import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import vct.antlr4.generated.PVLLexer;
 import vct.antlr4.generated.PVLParser;
 import vct.col.ast.stmt.decl.ProgramUnit;
@@ -25,6 +28,8 @@ import vct.parsers.rewrite.SpecificationCollector;
  */
 public class ColPVLParser implements Parser {
 
+  private static PVLParser parser = null;
+
   @Override
   public ProgramUnit parse(File file) {
     String file_name=file.toString();
@@ -37,10 +42,31 @@ public class ColPVLParser implements Parser {
         lexer.removeErrorListeners();
         lexer.addErrorListener(ec);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        PVLParser parser = new PVLParser(tokens);
+
+        if (parser == null) {
+          parser = new PVLParser(null);
+          parser.setErrorHandler(new BailErrorStrategy());
+        }
+        parser.setInputStream(tokens);
+
         parser.removeErrorListeners();
         parser.addErrorListener(ec);
-        PVLParser.ProgramContext tree = parser.program();
+
+        PVLParser.ProgramContext tree;
+
+        try {
+          // First we try parsing in SLL mode (as recommended in the FAQ)
+          // If that fails, it's probably a syntax error. This must however be
+          // double-checked by parsing with LL mode, since some grammars fail in SLL
+          // for _some_ inputs that are still valid inputs.
+          parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
+          tree = parser.program();
+        } catch (ParseCancellationException e) {
+          parser.reset();
+          parser.getInterpreter().setPredictionMode(PredictionMode.LL);
+          tree = parser.program();
+        }
+
         Progress("parsing pass took %dms",tk.show());
         ec.report();
         Debug("parser got: %s",tree.toStringTree(parser));
