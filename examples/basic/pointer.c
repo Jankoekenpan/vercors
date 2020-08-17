@@ -67,7 +67,7 @@ requires rightLen > 0;
 context \pointer(left, leftLen, write);
 context \pointer(right, rightLen, write);
 @*/
-void mergeArrays(int *left, int leftLen, int *right, int rightLen) {
+void merge(int *left, int leftLen, int *right, int rightLen) {
 
 }
 
@@ -82,6 +82,6 @@ void sort(int *data, int len) {
         int mid = len / 2;
         sort(data, mid);
         sort(data+mid, len-mid);
-        mergeArrays(data, mid, &data[mid], len-mid);
+        merge(data, mid, &data[mid], len-mid);
     }
 }

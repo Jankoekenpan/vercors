@@ -88,6 +88,11 @@ public class ColJavaParser implements Parser {
           tree = javaParser.compilationUnit();
         } catch (ParseCancellationException e) {
           javaParser.reset();
+          if(this.topLevelSpecs) {
+            javaParser.specLevel = 1;
+          } else {
+            javaParser.specLevel = 0;
+          }
           javaParser.getInterpreter().setPredictionMode(PredictionMode.LL);
           tree = javaParser.compilationUnit();
         }

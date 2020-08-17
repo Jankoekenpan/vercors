@@ -55,6 +55,7 @@ public class ColIParser implements Parser {
       tree = parser.compilationUnit();
     } catch (ParseCancellationException e) {
       parser.reset();
+      parser.specLevel = 0;
       parser.getInterpreter().setPredictionMode(PredictionMode.LL);
       tree = parser.compilationUnit();
     }
