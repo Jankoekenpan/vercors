@@ -70,35 +70,9 @@ class Program {
         (initialised ? HPerm(f.results, write) ** size == |f.results| : true) **
         (initialised ==> (\forall int i; 0 <= i && i < size; (\forall int j; 0 <= j && j < |f.channel[i]|; 0 <= f.channel[i][j] && f.channel[i][j] < maxvalue)));
 
-    requires 0 < max;
-    requires f != null;
-    requires HPerm(f.channel, write);
-    requires HPerm(f.results, write);
-    requires |f.results| == |f.channel|;
-    requires |f.channel| == size;
-    requires (\forall int i; 0 <= i && i < |f.channel|; (\forall int j; 0 <= j && j < |f.channel[i]|; 0 <= f.channel[i][j] && f.channel[i][j] < max));
-    ensures Perm(this.f, 1\2) ** this.f == f;
-    ensures Perm(this.size, 1\2) ** this.size == size;
-    ensures Perm(this.maxvalue, 1\2) ** this.maxvalue == max;
-    ensures Perm(this.initialised, 1\2) ** this.initialised;
     Program(Future f, int size, int max) {
-    inhale false;
+        inhale false;
     }
-
-
-    /* ** Auxiliary operations */
-
-    // @param `xs[i]` is the position that is considered now
-    // @param `xs[j]` is the current highest position
-    // @result the index of the highest value in `xs`
-    requires 0 <= i && i <= |xs|;
-    requires 0 <= j && j < |xs|;
-    requires (\forall int l; 0 <= l && l < i; xs[l] <= xs[j]);
-    ensures 0 <= \result && \result < |xs|;
-    ensures xs[j] <= xs[\result];
-    ensures (\forall int l; i <= l && l < |xs|; xs[l] <= xs[\result]);
-    pure static int maxint(seq<int> xs, int i, int j) =
-        i < |xs| ? (xs[j] <= xs[i] ? maxint(xs, i + 1, i) : maxint(xs, i + 1, j)) : j;
 
     /* ** Auxiliary lemmas */
 
