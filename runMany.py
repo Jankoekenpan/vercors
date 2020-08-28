@@ -54,7 +54,7 @@ if __name__ == "__main__":
 Search is cut off at {args.run_cutoff} passes or fails.
 Jobs will be cut off after {args.time_cutoff}s.""")
 
-    processArgs = ["./bin/vct", "--silicon", "--disable-sat", args.file]
+    processArgs = ["./bin/vct", "--silicon", "--disable-sat", "--check-history", args.file]
 
     print(f"""Process command: {" ".join(processArgs)}""")
     
