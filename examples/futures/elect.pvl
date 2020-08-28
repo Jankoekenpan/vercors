@@ -102,11 +102,10 @@ class Program {
         lock this;
     
         if (0 < |f.channel[(rank - 1) % size]|) {
-          // going to contain the resulting, received value
-          int res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
+            // going to contain the resulting, received value
+            int res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
 
-          assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
-          lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
+            lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
         }
     }
 }
