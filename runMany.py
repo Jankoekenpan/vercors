@@ -42,7 +42,6 @@ class ParallelProcess:
             self.p.kill()
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", type=str, help="input file to run", required=True)
     parser.add_argument("--num-jobs", type=int, help="number of parallel jobs", default=multiprocessing.cpu_count())

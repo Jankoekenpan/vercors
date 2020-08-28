@@ -121,13 +121,6 @@ class Program {
     seq<seq<int>> pop(seq<seq<int>> xs, int i) =
         0 < i ? seq<seq<int>> { head(xs) } + pop(tail(xs), i - 1) : seq<seq<int>> { tail(head(xs)) } + tail(xs);
 
-    requires 0 <= i && i < |xs|;
-    ensures |\result| == |xs|;
-    ensures \result[i] == v;
-    ensures (\forall int j; 0 <= j && j < |xs| && j != i; \result[j] == xs[j]);
-    pure static seq<int> update(seq<int> xs, int i, int v) =
-        0 < i ? seq<int> { head(xs) } + update(tail(xs), i - 1, v) : seq<int> { v } + tail(xs);
-
     // @param `xs[i]` is the position that is considered now
     // @param `xs[j]` is the current highest position
     // @result the index of the highest value in `xs`
