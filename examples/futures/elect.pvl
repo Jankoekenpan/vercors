@@ -111,10 +111,6 @@ class Program {
     context 0 <= rank && rank < size;
     requires 0 <= x && x <= w;
     requires Future(f, q, f.SigmaRecv(rank, size, v, w, maxvalue, n));
-    ensures maxvalue == \old(maxvalue);
-    ensures size == \old(size);
-    ensures f.channel == \old(f.channel);
-    ensures Future(f, q, f.Recv((rank - 1) % size, x) * f.Check(rank, size, v, x, maxvalue, n));
     void lemma_sigmaRecv_choice(Future f, int rank, int v, int w, int x, int n);
 
     /* ** Message passing primitives */
