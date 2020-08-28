@@ -101,6 +101,7 @@ class Program {
 	ensures Perm(this.maxvalue, 1\2) ** this.maxvalue == max;
 	ensures Perm(this.initialised, 1\2) ** this.initialised;
 	Program(Future f, int size, int max) {
+    inhale false;
 		this.f = f;
 		this.maxvalue = max;
 		this.size = size;
@@ -158,7 +159,7 @@ class Program {
 	ensures size == \old(size);
 	ensures f.channel == \old(f.channel);
 	ensures Future(f, q, f.Recv((rank - 1) % size, x) * f.Check(rank, size, v, x, maxvalue, n));
-	void lemma_sigmaRecv_choice(Future f, int rank, int v, int w, int x, int n) {
+	void lemma_sigmaRecv_choice(Future f, int rank, int v, int w, int x, int n); /* {
 		if (x == w) {
 			if (0 < x) {
 				choose f, q, f.SigmaRecv(rank, size, v, w, maxvalue, n), f.Recv((rank - 1) % size, x) * f.Check(rank, size, v, w, maxvalue, n);
@@ -168,7 +169,7 @@ class Program {
 			choose f, q, f.SigmaRecv(rank, size, v, w, maxvalue, n), f.SigmaRecv(rank, size, v, w - 1, maxvalue, n);
 			lemma_sigmaRecv_choice(f, rank, v, w - 1, x, n) with { q = q; };
 		}
-	}
+	} */
 	
 	given frac q;
 	context q != none;
@@ -176,8 +177,8 @@ class Program {
 	requires 0 <= rank && rank < size;
 	requires Future(f, q, f.Elect(rank, size, v, maxvalue, n));
 	ensures Future(f, q, f.Send((rank + 1) % size, v) * f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
-	void lemma_fut_elect(Future f, int rank, int size, int v, int maxvalue, int n) {
-	}
+	void lemma_fut_elect(Future f, int rank, int size, int v, int maxvalue, int n); /* {
+	} */
 	
 	
 	/* ** Message passing primitives */
@@ -196,13 +197,13 @@ class Program {
 	ensures size == \old(size);
 	ensures maxvalue == \old(maxvalue);
 	ensures f == \old(f);
-	void mpi_send(int rank, int msg) {
+	void mpi_send(int rank, int msg); /* {
 		lock this;
 		action(f, q2, P, f.Send(rank, msg)) {
 			f.channel = push(f.channel, rank, msg);
 		}
 		unlock this;
-	}
+	} */
 	
 	given int v;
 	given int n;
@@ -219,7 +220,7 @@ class Program {
 	ensures maxvalue == \old(maxvalue);
 	ensures f == \old(f);
 	ensures Future(f, q2, f.Check(rank, size, v, \result, maxvalue, n));
-	int mpi_recv(int rank) {
+	int mpi_recv(int rank) { /* UNSTABLE METHOD? */
 		boolean stop = false;
 		int res; // going to contain the resulting, received value
 		
@@ -237,18 +238,23 @@ class Program {
 				res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
 				
 				assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
-				lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; };
-				assert Future(f, q2, f.Recv((rank - 1) % size, res) * f.Check(rank, size, v, res, maxvalue, n));
+				lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
+        inhale false;
+				/* assert Future(f, q2, f.Recv((rank - 1) % size, res) * f.Check(rank, size, v, res, maxvalue, n));
 				
 				action(f, q2, f.Check(rank, size, v, res, maxvalue, n), f.Recv((rank - 1) % size, res)) {
 					f.channel = pop(f.channel, (rank - 1) % size);
 				}
 				
-				stop = true;
+				stop = true; */
 			}
+
+      inhale false;
 			
-			unlock this;
+			/* unlock this; */
 		}
+
+    inhale false;
 		
 		return res;
 	}
@@ -271,7 +277,7 @@ class Program {
 	ensures size == \old(size);
 	ensures maxvalue == \old(maxvalue);
 	ensures f == \old(f);
-	int elect(int rank, int vArg) {
+	int elect(int rank, int vArg); /* {
 	  int v = vArg;
 		int n = 0;
 		
@@ -307,7 +313,7 @@ class Program {
 		}
 		
 		return v;
-	}
+	} */
 }
 
 class Main {
@@ -324,6 +330,7 @@ class Main {
 	ensures Perm(this.r1, write) ** this.r1 == r1;
 	ensures Perm(this.r2, write) ** this.r2 == r2;
 	Main(Program pr, int rank, int val, frac r1, frac r2) {
+    inhale false;
 		this.pr = pr;
 		this.rank = rank;
 		this.val = val;
@@ -344,7 +351,7 @@ class Main {
 	context 0 <= val && val < pr.maxvalue;
 	requires Future(pr.f, r2, pr.f.Elect(rank, pr.size, val, pr.maxvalue, 0));
 	ensures Future(pr.f, r2, empty);
-	void run() {
+	void run(); /* {
 		int res = pr.elect(rank, val) with { q1 = r1; q2 = r2; };
 		
 		lock pr;
@@ -352,14 +359,14 @@ class Main {
 			pr.f.results = Program.update(pr.f.results, rank, res);
 		}
 		unlock pr;
-	}
+	} */
 	
 	context_everywhere 0 < size;
 	context_everywhere 0 < max;
 	context_everywhere |xs| == size;
 	context_everywhere (\forall int j; 0 <= j && j < |xs|; (\forall int k; 0 <= k && k < |xs| && j != k; xs[j] != xs[k]));
 	context_everywhere (\forall int j; 0 <= j && j < |xs|; 0 <= xs[j] && xs[j] < max);
-	static void main(int size, int max, seq<int> xs) {
+	static void main(int size, int max, seq<int> xs); /* {
 		Future f = new Future();
 		f.channel = seq<seq<int>> { };
 		f.results = seq<int> { };
@@ -395,7 +402,7 @@ class Main {
 		
 		// postcondition
 		assert (\forall int i; 0 <= i && i < |f.results|; f.results[i] == f.results[Program.maxint(xs, 0, 0)]);
-	}
+	} */
 	
 	given frac q1; // ownership of the program `p`
 	given frac q2; // ownershow of the future `p.f`
@@ -414,7 +421,7 @@ class Main {
 	ensures pr.maxvalue == \old(pr.maxvalue);
 	ensures pr.f == \old(pr.f);
 	ensures Future(pr.f, q2, empty);
-	static void spawn(int rank, Program pr, seq<int> xs) {
+	static void spawn(int rank, Program pr, seq<int> xs); /* {
 		if (rank < pr.size) {
 			Main m = new Main(pr, rank, xs[rank], q1\2, q2\2);
 			
@@ -431,5 +438,5 @@ class Main {
 			// merge the resulting empty processes
 			merge pr.f, q2\2, empty, q2\2, empty;
 		}
-	}
+	} */
 }
