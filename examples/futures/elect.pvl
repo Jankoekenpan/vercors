@@ -62,18 +62,6 @@ class Program {
     int maxvalue;
     Future f;
 
-    resource lock_invariant() =
-        Perm(initialised, 1\2) ** Perm(size, 1\2) **
-        Perm(maxvalue, 1\2) ** 0 < maxvalue **
-        (initialised ? Perm(f, 1\2) ** f != null: true) **
-        (initialised ? HPerm(f.channel, write) ** size == |f.channel| : true) **
-        (initialised ? HPerm(f.results, write) ** size == |f.results| : true) **
-        (initialised ==> (\forall int i; 0 <= i && i < size; (\forall int j; 0 <= j && j < |f.channel[i]|; 0 <= f.channel[i][j] && f.channel[i][j] < maxvalue)));
-
-    Program(Future f, int size, int max) {
-        inhale false;
-    }
-
     /* ** Auxiliary lemmas */
 
     given frac q;
@@ -99,8 +87,16 @@ class Program {
     requires Perm(f, q1) ** f != null;
     requires Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
     void mpi_recv(int rank) { /* UNSTABLE METHOD? */
-        lock this;
-    
+        // Inlined:
+        // lock this;
+        // HYPOTHESIS: Factoring out initialised gets rid of instability it seems?
+        inhale Perm(initialised, 1\2) ** Perm(size, 1\2) **
+            Perm(maxvalue, 1\2) ** 0 < maxvalue **
+            (initialised ? Perm(f, 1\2) ** f != null: true) **
+            (initialised ? HPerm(f.channel, write) ** size == |f.channel| : true) **
+            (initialised ? HPerm(f.results, write) ** size == |f.results| : true) **
+            (initialised ==> (\forall int i; 0 <= i && i < size; (\forall int j; 0 <= j && j < |f.channel[i]|; 0 <= f.channel[i][j] && f.channel[i][j] < maxvalue)));
+
         if (0 < |f.channel[(rank - 1) % size]|) {
             // going to contain the resulting, received value
             int res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
