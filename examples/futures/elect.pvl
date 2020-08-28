@@ -104,11 +104,11 @@ class Program {
     /* ** Auxiliary lemmas */
 
     given frac q;
-    context q != none;
-    context Perm(maxvalue, 1\2);
-    context Perm(size, 1\2) ** 0 <= size;
-    context f != null ** HPerm(f.channel, 1\2);
-    context 0 <= rank && rank < size;
+    requires q != none;
+    requires Perm(maxvalue, 1\2);
+    requires Perm(size, 1\2) ** 0 <= size;
+    requires f != null ** HPerm(f.channel, 1\2);
+    requires 0 <= rank && rank < size;
     requires 0 <= x && x <= w;
     requires Future(f, q, f.SigmaRecv(rank, size, v, w, maxvalue, n));
     void lemma_sigmaRecv_choice(Future f, int rank, int v, int w, int x, int n);
