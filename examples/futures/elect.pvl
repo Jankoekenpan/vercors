@@ -199,29 +199,16 @@ class Program {
 	ensures f == \old(f);
 	ensures Future(f, q2, f.Check(rank, size, v, \result, maxvalue, n));
 	int mpi_recv(int rank) { /* UNSTABLE METHOD? */
-		boolean stop = false;
 		int res; // going to contain the resulting, received value
 		
-		loop_invariant size == \old(size);
-		loop_invariant maxvalue == \old(maxvalue);
-		loop_invariant f == \old(f);
-		loop_invariant 0 <= rank && rank < size;
-		loop_invariant !stop ==> Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
-		loop_invariant stop ==> Future(f, q2, f.Check(rank, size, v, res, maxvalue, n));
-		loop_invariant stop ==> (0 <= res && res < maxvalue);
-		while (!stop) {
-			lock this;
-			
-			if (0 < |f.channel[(rank - 1) % size]|) {
-				res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
-				
-				assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
-				lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
-        inhale false;
-			}
-
-      inhale false;
-		}
+    lock this;
+    
+    if (0 < |f.channel[(rank - 1) % size]|) {
+      res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
+      
+      assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
+      lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
+    }
 
     inhale false;
 		
