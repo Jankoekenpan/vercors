@@ -227,24 +227,4 @@ class Program {
 		
 		return res;
 	}
-
-	/* ** Leader election protocol implementation */
-	
-	given frac q1; // ownership of the program `p`
-	given frac q2; // ownershow of the future `p.f`
-	context_everywhere q1 != none && q2 != none;
-	context_everywhere Perm(size, q1);
-	context_everywhere 0 <= rank && rank < size;
-	context_everywhere Perm(initialised, q1) ** initialised;
-	context_everywhere Perm(maxvalue, q1);
-	context_everywhere 0 <= vArg && vArg < maxvalue;
-	requires Perm(f, q1) ** f != null;
-	requires Future(f, q2, f.Elect(rank, size, vArg, maxvalue, 0));
-	ensures Perm(f, q1) ** f != null;
-	ensures Future(f, q2, f.Done(rank, \result));
-	ensures 0 <= \result && \result < maxvalue;
-	ensures size == \old(size);
-	ensures maxvalue == \old(maxvalue);
-	ensures f == \old(f);
-	int elect(int rank, int vArg); 
 }
