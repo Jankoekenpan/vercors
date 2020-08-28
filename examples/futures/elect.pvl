@@ -101,6 +101,8 @@ class Program {
             // going to contain the resulting, received value
             int res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
 
+            /* HYPOTHESIS: adding assert removes instability? VERDICT: I've seen it fail at some point! */
+            assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n)); /* PROBLEMATIC REQUIRES AS ASSERT */
             lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
         }
     }
