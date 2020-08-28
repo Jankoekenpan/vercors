@@ -157,14 +157,6 @@ class Program {
 	ensures Future(f, q, f.Recv((rank - 1) % size, x) * f.Check(rank, size, v, x, maxvalue, n));
 	void lemma_sigmaRecv_choice(Future f, int rank, int v, int w, int x, int n); 
 	
-	given frac q;
-	context q != none;
-	requires n < size;
-	requires 0 <= rank && rank < size;
-	requires Future(f, q, f.Elect(rank, size, v, maxvalue, n));
-	ensures Future(f, q, f.Send((rank + 1) % size, v) * f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
-	void lemma_fut_elect(Future f, int rank, int size, int v, int maxvalue, int n);
-	
 	/* ** Message passing primitives */
 	
 	given frac q1; // ownership of the program `p`
