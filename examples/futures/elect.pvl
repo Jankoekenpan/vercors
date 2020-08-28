@@ -54,25 +54,6 @@ class Future {
     requires 0 <= rank && rank < size && size == |channel|;
     process Elect(int rank, int size, int v, int max, int n) =
         n < size ? Send((rank + 1) % size, v) * SigmaRecv(rank, size, v, max - 1, max, n) : Done(rank, v);
-
-
-    /* ** Parallel composition of participants */
-
-    requires 0 <= rank && rank < size && size == |channel|;
-    requires |xs| == size;
-    requires (\forall int i; 0 <= i && i < |xs|; (\forall int j; 0 <= j && j < |xs| && i != j; xs[i] != xs[j])); // uniqueness
-    requires (\forall int i; 0 <= i && i < |xs|; 0 <= xs[i] && xs[i] < max);
-    process Spawn(int rank, int size, seq<int> xs, int max) =
-        rank < size ? Elect(rank, size, xs[rank], max, 0) || Spawn(rank + 1, size, xs, max) : empty;
-
-    context 0 < size;
-    context |channel| == size;
-    context |results| == size;
-    context |xs| == size;
-    requires (\forall int i; 0 <= i && i < |xs|; (\forall int j; 0 <= j && j < |xs| && i != j; xs[i] != xs[j])); // uniqueness
-    requires (\forall int i; 0 <= i && i < |xs|; 0 <= xs[i] && xs[i] < max);
-    ensures (\forall int i; 0 <= i && i < |results|; results[i] == results[Program.maxint(xs, 0, 0)]);
-    process Start(int size, seq<int> xs, int max) = Spawn(0, size, xs, max);
 }
 
 class Program {
