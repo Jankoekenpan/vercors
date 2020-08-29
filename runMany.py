@@ -56,7 +56,7 @@ Jobs will be cut off after {args.time_cutoff}s.""")
     processArgs = ["./bin/vct", "--silicon", "--disable-sat", "--check-history", args.file]
 
     print(f"""Process command: {" ".join(processArgs)}""")
-    
+
     pps = []
     for i in range(args.num_jobs):
         pps += [ParallelProcess(processArgs)]
@@ -65,7 +65,7 @@ Jobs will be cut off after {args.time_cutoff}s.""")
     numFails = 0
     numTimeOuts = 0
     startTime = time.time()
-
+     
     lastOverview = time.time()
     while (numPasses == 0 or numFails == 0) and numPasses < args.run_cutoff and numFails < args.run_cutoff:
         time.sleep(0.01)

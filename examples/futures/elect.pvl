@@ -18,14 +18,6 @@ class Future {
     ensures (\forall int i; 0 <= i && i < |channel| && i != rank; channel[i] == \old(channel[i]));
     process Send(int rank, int msg);
 
-    modifies channel;
-    context 0 <= rank && rank < |channel|;
-    ensures |channel| == |\old(channel)|;
-    ensures seq<int> { msg } + channel[rank] == \old(channel[rank]);
-    ensures (\forall int i; 0 <= i && i < |channel| && i != rank; channel[i] == \old(channel[i]));
-    process Recv(int rank, int msg);
-
-
     /* ** Leader election actions */
 
     modifies results;
@@ -41,8 +33,8 @@ class Future {
     requires 0 <= w;
     requires 0 <= rank && rank < size && size == |channel|;
     process SigmaRecv(int rank, int size, int v, int w, int max, int n) =
-        0 < w ? (Recv((rank - 1) % size, w) * Check(rank, size, v, w, max, n)) + SigmaRecv(rank, size, v, w - 1, max, n) :
-                        (Recv((rank - 1) % size, w) * Check(rank, size, v, w, max, n));
+        0 < w ? (empty * Check(rank, size, v, w, max, n)) + SigmaRecv(rank, size, v, w - 1, max, n) :
+                        (empty * Check(rank, size, v, w, max, n));
 
     // compares the received value `w` with the current highest value `v` of a participant, which continues with the biggest of the two values.
     requires 0 <= w;
