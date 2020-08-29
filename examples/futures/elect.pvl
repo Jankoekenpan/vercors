@@ -74,7 +74,7 @@ class Program {
     void mpi_recv(int rank) { /* UNSTABLE METHOD? */
         // Inlined:
         // lock this;
-        // HYPOTHESIS: Factoring out initialised gets rid of instability it seems?
+        // HYPOTHESIS: Factoring out initialised gets rid of instability it seems? VERDICT: Yes, 1000 passes encountered.
         inhale Perm(initialised, 1\2) ** Perm(size, 1\2) **
             Perm(maxvalue, 1\2) ** 0 < maxvalue **
             (initialised ? Perm(f, 1\2) ** f != null: true) **
