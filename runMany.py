@@ -79,10 +79,12 @@ def findSilicon():
 def findZ3():
     path = which("z3")
     if path != None:
+        subprocess.run([path, "--version"])
         return Path(path)
 
     path = Path("./z3")
     if path.exists():
+        subprocess.run([str(path), "--version"])
         return path
 
     raise Exception("z3 not found")
@@ -154,7 +156,7 @@ def constructSolverCommand(args):
         cmd = [str(findSilicon())]
 
         if not ("--z3Exe" in args.args):
-            cmd += ["--z3Exe", findZ3()]
+            cmd += ["--z3Exe", str(findZ3())]
 
         cmd += [args.args]
     else:
@@ -218,6 +220,7 @@ Process command: {" ".join(processArgs)}
 
         if time.time() - lastOverview >= 30:
             print(f"-- Passes: {numPasses}, fails: {numFails}, time-outs: {numTimeOuts} (cutoff at {args.run_cutoff}) --")
+            print(f"""-- Command: {" ".join(processArgs)} --""")
             print(f"-- Overview durations {datetime.datetime.now()} --")
             lastOverview = time.time()
 
