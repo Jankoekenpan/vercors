@@ -413,17 +413,6 @@ method hist_set_channel(diz: Ref, current_thread_id: Int, value: Seq[Seq[Int]])
   inhale false
 }
 
-method hist_set_results(diz: Ref, current_thread_id: Int, value: Seq[Int])
-  requires diz != null
-  requires 0 <= current_thread_id
-  requires acc(diz.results_hist_value, write)
-  requires acc(diz.results_hist_write, write)
-  ensures acc(diz.results_hist_value, write) && diz.results_hist_value == value
-  ensures acc(diz.results_hist_write, write)
-{
-  inhale false
-}
-
 /* PROBLEMATIC LEMMA */
 method method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz: Ref, current_thread_id: Int, globals: Ref, f: Ref, rank: Int, v: Int, w: Int, x: Int, n: Int, q: frac)
   requires diz != null
