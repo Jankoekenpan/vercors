@@ -137,16 +137,10 @@ domain zfrac {
 field channel_hist_value: Seq[Seq[Int]]
 
 //  a field 
-field channel_hist_init: Seq[Seq[Int]]
-
-//  a field 
 field channel_hist_act: Seq[Seq[Int]]
 
 //  a field 
 field channel_hist_write: Seq[Seq[Int]]
-
-//  a field 
-field channel_hist_free: Seq[Seq[Int]]
 
 //  a field 
 field channel_hist_hist: Seq[Seq[Int]]
@@ -158,16 +152,10 @@ field channel_hist_action: Seq[Seq[Int]]
 field results_hist_value: Seq[Int]
 
 //  a field 
-field results_hist_init: Seq[Int]
-
-//  a field 
 field results_hist_act: Seq[Int]
 
 //  a field 
 field results_hist_write: Seq[Int]
-
-//  a field 
-field results_hist_free: Seq[Int]
 
 //  a field 
 field results_hist_hist: Seq[Int]
@@ -226,15 +214,6 @@ function method_Program_pop__Sequence$Sequence$Integer$$__Integer(diz: Ref, xs: 
 {
   (0 < i ? Seq(xs[0]) ++ method_Program_pop__Sequence$Sequence$Integer$$__Integer(diz, xs[1..], i - 1) : Seq(xs[0][1..]) ++ xs[1..])
 }
-
-function new_frac(x: Perm): frac
-  requires 0 / 1 < x && x <= 1 / 1
-  ensures frac_val(result) == x
-
-
-function new_zfrac(x: Perm): zfrac
-  requires 0 / 1 <= x && x <= 1 / 1
-  ensures zfrac_val(result) == x
 
 
 predicate hist_do_method_Future_Send__Integer__Integer(diz: Ref, fr: frac, proc: Process) 
