@@ -120,19 +120,6 @@ domain frac {
   }
 }
 
-domain zfrac {
-  
-  function zfrac_val(a: zfrac): Perm
-  
-  axiom zfrac_eq {
-    (forall a: zfrac, b: zfrac :: { zfrac_val(a),zfrac_val(b) } (zfrac_val(a) == zfrac_val(b)) == (a == b))
-  }
-  
-  axiom zfrac_bound {
-    (forall a: zfrac :: { zfrac_val(a) } 0 / 1 <= zfrac_val(a) && zfrac_val(a) <= 1 / 1)
-  }
-}
-
 //  a field 
 field channel_hist_value: Seq[Seq[Int]]
 
