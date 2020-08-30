@@ -732,31 +732,10 @@ method method_Program_mpi_recv__Integer(diz: Ref, current_thread_id: Int, global
       // assert
       assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
       method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, diz.field_Program_f, rank, v, diz.field_Program_maxvalue - 1, res__11, n, q2)
-      // assert
-      assert acc(hist_idle(diz.field_Program_f, q2, p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % diz.field_Program_size, res__11), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n))), write)
-      __flatten_14__14 := p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n)
-      method_Future_Recv__Integer__Integer_begin(diz.field_Program_f, current_thread_id, q2, __flatten_14__14, (rank - 1) % diz.field_Program_size, res__11)
-      __flatten_16__15 := diz.field_Program_f
-      __flatten_17__16 := method_Program_pop__Sequence$Sequence$Integer$$__Integer(diz, __flatten_16__15.channel_hist_value, (rank - 1) % diz.field_Program_size)
-      hist_set_channel(diz.field_Program_f, current_thread_id, __flatten_17__16)
-      __flatten_19__17 := p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n)
-      method_Future_Recv__Integer__Integer_commit(diz.field_Program_f, current_thread_id, q2, __flatten_19__17, (rank - 1) % diz.field_Program_size, res__11)
-      stop__10 := true
     }
-    exhale acc(method_Program_lock_held(diz, globals), write)
-    fold acc(method_Program_lock_invariant(diz, globals), write)
-    exhale acc(method_Program_lock_invariant(diz, globals), write)
+    inhale false
   }
-  sys__local__result__9 := res__11
-  // assert
-  assert 0 <= sys__local__result__9 && sys__local__result__9 < diz.field_Program_maxvalue && diz.field_Program_size == old(diz.field_Program_size) && diz.field_Program_maxvalue == old(diz.field_Program_maxvalue) && diz.field_Program_f == old(diz.field_Program_f) && acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, sys__local__result__9, diz.field_Program_maxvalue, n)), write)
-  goto __return_mpi_recv
-  label __return_mpi_recv
-  sys__result := sys__local__result__9
-  // assert
-  assert frac_val(q1) != none && frac_val(q2) != none && acc(diz.field_Program_size, frac_val(q1)) && acc(diz.field_Program_maxvalue, frac_val(q1)) && (0 <= rank && rank < diz.field_Program_size) && acc(diz.field_Program_initialised, frac_val(q1)) && diz.field_Program_initialised && acc(diz.field_Program_f, frac_val(q1)) && diz.field_Program_f != null && (0 <= sys__result && sys__result < diz.field_Program_maxvalue) && diz.field_Program_size == old(diz.field_Program_size) && diz.field_Program_maxvalue == old(diz.field_Program_maxvalue) && diz.field_Program_f == old(diz.field_Program_f) && acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, sys__result, diz.field_Program_maxvalue, n)), write)
   inhale false
-  label method_end_method_Program_mpi_recv__Integer_5
 }
 
 method method_Program_elect__Integer__Integer(diz: Ref, current_thread_id: Int, globals: Ref, rank: Int, vArg: Int, q1: frac, q2: frac) returns (sys__result: Int)
@@ -1162,16 +1141,4 @@ method method_Main_run(diz: Ref, current_thread_id: Int, globals: Ref)
   fold acc(method_Program_lock_invariant(diz.field_Main_pr, globals), write)
   exhale acc(method_Program_lock_invariant(diz.field_Main_pr, globals), write)
   label method_end_method_Main_run_8
-}
-
-method array_new_Sequence_Sequence_Integer__(size0: Int) returns (sys__result: Seq[Seq[Int]])
-  ensures 0 < size0 ==> sys__result == Seq[Seq[Int]]()
-{
-  inhale false
-}
-
-method array_new_Sequence_Integer_(size0: Int) returns (sys__result: Seq[Int])
-  ensures 0 < size0 ==> sys__result == Seq[Int]()
-{
-  inhale false
 }
