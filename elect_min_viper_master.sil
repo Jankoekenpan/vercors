@@ -380,18 +380,6 @@ method method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer_
   requires 0 <= rank && rank < diz.field_Program_size
   requires 0 <= x && x <= w
   requires acc(hist_idle(f, q, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n)), write)
-  ensures frac_val(q) != none
-  ensures acc(diz.field_Program_maxvalue, 1 / 2)
-  ensures acc(diz.field_Program_size, 1 / 2)
-  ensures 0 <= diz.field_Program_size
-  ensures f != null
-  ensures acc(f.channel_hist_value, 1 / 2)
-  ensures acc(f.channel_hist_hist, 1 / 2)
-  ensures 0 <= rank && rank < diz.field_Program_size
-  ensures diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
-  ensures diz.field_Program_size == old(diz.field_Program_size)
-  ensures f.channel_hist_value == old(f.channel_hist_value)
-  ensures acc(hist_idle(f, q, p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % diz.field_Program_size, x), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, x, diz.field_Program_maxvalue, n))), write)
 
 /* PROBLEMATIC METHOD */
 method method_Program_mpi_recv__Integer(diz: Ref, current_thread_id: Int, globals: Ref, rank: Int, v: Int, n: Int, q1: frac, q2: frac) returns (sys__result: Int)
@@ -429,6 +417,5 @@ method method_Program_mpi_recv__Integer(diz: Ref, current_thread_id: Int, global
     /* PROBLEMATIC CALL */
     method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, diz.field_Program_f, rank, v, diz.field_Program_maxvalue - 1, res__11, n, q2)
   }
-  inhale false
 }
 
