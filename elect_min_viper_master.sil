@@ -187,21 +187,6 @@ field field_Program_maxvalue: Int
 //  a field 
 field field_Program_f: Ref
 
-//  a field 
-field field_Main_pr: Ref
-
-//  a field 
-field field_Main_rank: Int
-
-//  a field 
-field field_Main_val: Int
-
-//  a field 
-field field_Main_r1: frac
-
-//  a field 
-field field_Main_r2: frac
-
 function method_Program_update__Sequence$Integer$__Integer__Integer(xs: Seq[Int], i: Int, v: Int): Seq[Int]
   requires 0 <= i && i < |xs|
   ensures |result| == |xs|
@@ -454,19 +439,6 @@ method method_Program_mpi_recv__Integer(diz: Ref, current_thread_id: Int, global
   requires diz.field_Program_f != null
   requires 0 <= current_thread_id
   requires acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
-  ensures frac_val(q1) != none && frac_val(q2) != none
-  ensures acc(diz.field_Program_size, frac_val(q1))
-  ensures acc(diz.field_Program_maxvalue, frac_val(q1))
-  ensures 0 <= rank && rank < diz.field_Program_size
-  ensures acc(diz.field_Program_initialised, frac_val(q1))
-  ensures diz.field_Program_initialised
-  ensures acc(diz.field_Program_f, frac_val(q1))
-  ensures diz.field_Program_f != null
-  ensures 0 <= sys__result && sys__result < diz.field_Program_maxvalue
-  ensures diz.field_Program_size == old(diz.field_Program_size)
-  ensures diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
-  ensures diz.field_Program_f == old(diz.field_Program_f)
-  ensures acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, sys__result, diz.field_Program_maxvalue, n)), write)
 {
   var sys__local__result__9: Int
   var stop__10: Bool
