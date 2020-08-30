@@ -1,0 +1,1177 @@
+domain Process {
+  
+  function p_is_choice(p1: Process, p2: Process): Bool
+  
+  function p_empty(): Process
+  
+  function p_merge(p1: Process, p2: Process): Process
+  
+  function p_choice(p1: Process, p2: Process): Process
+  
+  function p_seq(p1: Process, p2: Process): Process
+  
+  function p_method_Future_Send__Integer__Integer(rank: Int, msg: Int): Process
+  
+  function p_method_Future_Recv__Integer__Integer(rank: Int, msg: Int): Process
+  
+  function p_method_Future_Done__Integer__Integer(rank: Int, v: Int): Process
+  
+  function p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank: Int, size: Int, v: Int, w: Int, max: Int, n: Int): Process
+  
+  function p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank: Int, size: Int, v: Int, w: Int, max: Int, n: Int): Process
+  
+  function p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank: Int, size: Int, v: Int, max: Int, n: Int): Process
+  
+  function p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank: Int, size: Int, xs: Seq[Int], max: Int): Process
+  
+  function p_method_Future_Start__Integer__Sequence$Integer$__Integer(size: Int, xs: Seq[Int], max: Int): Process
+  
+  axiom empty_1L {
+    (forall p: Process :: { p_merge(p_empty(), p) } p_merge(p_empty(), p) == p)
+  }
+  
+  axiom empty_2L {
+    (forall p: Process :: { p_seq(p_empty(), p) } p_seq(p_empty(), p) == p)
+  }
+  
+  axiom empty_2R {
+    (forall p: Process :: { p_seq(p, p_empty()) } p_seq(p, p_empty()) == p)
+  }
+  
+  axiom choice_L {
+    (forall p1: Process, p2: Process :: { p_is_choice(p_choice(p1, p2), p1) } p_is_choice(p_choice(p1, p2), p1))
+  }
+  
+  axiom choice_R {
+    (forall p1: Process, p2: Process :: { p_is_choice(p_choice(p1, p2), p2) } p_is_choice(p_choice(p1, p2), p2))
+  }
+  
+  axiom choice_dist {
+    (forall p1: Process, p2: Process, p3: Process :: { p_seq(p_choice(p1, p2), p3) } p_seq(p_choice(p1, p2), p3) == p_choice(p_seq(p1, p3), p_seq(p2, p3)))
+  }
+  
+  axiom seq_assoc {
+    (forall p1: Process, p2: Process, p3: Process :: { p_seq(p_seq(p1, p2), p3) } p_seq(p_seq(p1, p2), p3) == p_seq(p1, p_seq(p2, p3)))
+  }
+  
+  axiom method_Future_Send__Integer__Integer_def_2 {
+    (forall p: Process, rank: Int, msg: Int :: { p_seq(p, p_method_Future_Send__Integer__Integer(rank, msg)) } p_seq(p, p_method_Future_Send__Integer__Integer(rank, msg)) == p_seq(p, p_seq(p_method_Future_Send__Integer__Integer(rank, msg), p_empty())))
+  }
+  
+  axiom method_Future_Recv__Integer__Integer_def_2 {
+    (forall p: Process, rank: Int, msg: Int :: { p_seq(p, p_method_Future_Recv__Integer__Integer(rank, msg)) } p_seq(p, p_method_Future_Recv__Integer__Integer(rank, msg)) == p_seq(p, p_seq(p_method_Future_Recv__Integer__Integer(rank, msg), p_empty())))
+  }
+  
+  axiom method_Future_Done__Integer__Integer_def_2 {
+    (forall p: Process, rank: Int, v: Int :: { p_seq(p, p_method_Future_Done__Integer__Integer(rank, v)) } p_seq(p, p_method_Future_Done__Integer__Integer(rank, v)) == p_seq(p, p_seq(p_method_Future_Done__Integer__Integer(rank, v), p_empty())))
+  }
+  
+  axiom method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer_def_1 {
+    (forall rank: Int, size: Int, v: Int, w: Int, max: Int, n: Int :: { p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n) } (0 < w ? p_choice(p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % size, w), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n)), p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w - 1, max, n)) : p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % size, w), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n))) == p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n))
+  }
+  
+  axiom method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer_def_2 {
+    (forall p: Process, rank: Int, size: Int, v: Int, w: Int, max: Int, n: Int :: { p_seq(p, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n)) } p_seq(p, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n)) == p_seq(p, p_seq(p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n), p_empty())))
+  }
+  
+  axiom method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer_def_1 {
+    (forall rank: Int, size: Int, v: Int, w: Int, max: Int, n: Int :: { p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n) } p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, (v <= w ? w : v), max, n + 1) == p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n))
+  }
+  
+  axiom method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer_def_2 {
+    (forall p: Process, rank: Int, size: Int, v: Int, w: Int, max: Int, n: Int :: { p_seq(p, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n)) } p_seq(p, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n)) == p_seq(p, p_seq(p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, w, max, n), p_empty())))
+  }
+  
+  axiom method_Future_Elect__Integer__Integer__Integer__Integer__Integer_def_1 {
+    (forall rank: Int, size: Int, v: Int, max: Int, n: Int :: { p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, v, max, n) } (n < size ? p_seq(p_method_Future_Send__Integer__Integer((rank + 1) % size, v), p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, max - 1, max, n)) : p_method_Future_Done__Integer__Integer(rank, v)) == p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, v, max, n))
+  }
+  
+  axiom method_Future_Elect__Integer__Integer__Integer__Integer__Integer_def_2 {
+    (forall p: Process, rank: Int, size: Int, v: Int, max: Int, n: Int :: { p_seq(p, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, v, max, n)) } p_seq(p, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, v, max, n)) == p_seq(p, p_seq(p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, v, max, n), p_empty())))
+  }
+  
+  axiom method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer_def_1 {
+    (forall rank: Int, size: Int, xs: Seq[Int], max: Int :: { p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, size, xs, max) } (rank < size ? p_merge(p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, xs[rank], max, 0), p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank + 1, size, xs, max)) : p_empty()) == p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, size, xs, max))
+  }
+  
+  axiom method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer_def_2 {
+    (forall p: Process, rank: Int, size: Int, xs: Seq[Int], max: Int :: { p_seq(p, p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, size, xs, max)) } p_seq(p, p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, size, xs, max)) == p_seq(p, p_seq(p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, size, xs, max), p_empty())))
+  }
+  
+  axiom method_Future_Start__Integer__Sequence$Integer$__Integer_def_1 {
+    (forall size: Int, xs: Seq[Int], max: Int :: { p_method_Future_Start__Integer__Sequence$Integer$__Integer(size, xs, max) } p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(0, size, xs, max) == p_method_Future_Start__Integer__Sequence$Integer$__Integer(size, xs, max))
+  }
+  
+  axiom method_Future_Start__Integer__Sequence$Integer$__Integer_def_2 {
+    (forall p: Process, size: Int, xs: Seq[Int], max: Int :: { p_seq(p, p_method_Future_Start__Integer__Sequence$Integer$__Integer(size, xs, max)) } p_seq(p, p_method_Future_Start__Integer__Sequence$Integer$__Integer(size, xs, max)) == p_seq(p, p_seq(p_method_Future_Start__Integer__Sequence$Integer$__Integer(size, xs, max), p_empty())))
+  }
+}
+
+domain frac {
+  
+  function frac_val(a: frac): Perm
+  
+  axiom frac_eq {
+    (forall a: frac, b: frac :: { frac_val(a),frac_val(b) } (frac_val(a) == frac_val(b)) == (a == b))
+  }
+  
+  axiom frac_bound {
+    (forall a: frac :: { frac_val(a) } 0 / 1 < frac_val(a) && frac_val(a) <= 1 / 1)
+  }
+}
+
+domain zfrac {
+  
+  function zfrac_val(a: zfrac): Perm
+  
+  axiom zfrac_eq {
+    (forall a: zfrac, b: zfrac :: { zfrac_val(a),zfrac_val(b) } (zfrac_val(a) == zfrac_val(b)) == (a == b))
+  }
+  
+  axiom zfrac_bound {
+    (forall a: zfrac :: { zfrac_val(a) } 0 / 1 <= zfrac_val(a) && zfrac_val(a) <= 1 / 1)
+  }
+}
+
+//  a field 
+field channel_hist_value: Seq[Seq[Int]]
+
+//  a field 
+field channel_hist_init: Seq[Seq[Int]]
+
+//  a field 
+field channel_hist_act: Seq[Seq[Int]]
+
+//  a field 
+field channel_hist_write: Seq[Seq[Int]]
+
+//  a field 
+field channel_hist_free: Seq[Seq[Int]]
+
+//  a field 
+field channel_hist_hist: Seq[Seq[Int]]
+
+//  a field 
+field channel_hist_action: Seq[Seq[Int]]
+
+//  a field 
+field results_hist_value: Seq[Int]
+
+//  a field 
+field results_hist_init: Seq[Int]
+
+//  a field 
+field results_hist_act: Seq[Int]
+
+//  a field 
+field results_hist_write: Seq[Int]
+
+//  a field 
+field results_hist_free: Seq[Int]
+
+//  a field 
+field results_hist_hist: Seq[Int]
+
+//  a field 
+field results_hist_action: Seq[Int]
+
+//  a field 
+field field_Program_initialised: Bool
+
+//  a field 
+field field_Program_size: Int
+
+//  a field 
+field field_Program_maxvalue: Int
+
+//  a field 
+field field_Program_f: Ref
+
+//  a field 
+field field_Main_pr: Ref
+
+//  a field 
+field field_Main_rank: Int
+
+//  a field 
+field field_Main_val: Int
+
+//  a field 
+field field_Main_r1: frac
+
+//  a field 
+field field_Main_r2: frac
+
+function method_Program_update__Sequence$Integer$__Integer__Integer(xs: Seq[Int], i: Int, v: Int): Seq[Int]
+  requires 0 <= i && i < |xs|
+  ensures |result| == |xs|
+  ensures result[i] == v
+  ensures (forall j: Int :: { result[j] } { xs[j] } 0 <= j && j < |xs| && j != i ==> result[j] == xs[j])
+{
+  (0 < i ? Seq(xs[0]) ++ method_Program_update__Sequence$Integer$__Integer__Integer(xs[1..], i - 1, v) : Seq(v) ++ xs[1..])
+}
+
+function method_Program_maxint__Sequence$Integer$__Integer__Integer(xs: Seq[Int], i: Int, j: Int): Int
+  requires 0 <= i && i <= |xs|
+  requires 0 <= j && j < |xs|
+  requires (forall l: Int :: { xs[l] } 0 <= l && l < i ==> xs[l] <= xs[j])
+  ensures 0 <= result && result < |xs|
+  ensures xs[j] <= xs[result]
+  ensures (forall l: Int :: { xs[l] } i <= l && l < |xs| ==> xs[l] <= xs[result])
+{
+  (i < |xs| ? (xs[j] <= xs[i] ? method_Program_maxint__Sequence$Integer$__Integer__Integer(xs, i + 1, i) : method_Program_maxint__Sequence$Integer$__Integer__Integer(xs, i + 1, j)) : j)
+}
+
+function method_Program_push__Sequence$Sequence$Integer$$__Integer__Integer(diz: Ref, xs: Seq[Seq[Int]], i: Int, val: Int): Seq[Seq[Int]]
+  requires diz != null
+  requires 0 <= i && i < |xs|
+  ensures |result| == |xs|
+  ensures result[i] == xs[i] ++ Seq(val)
+  ensures (forall j: Int :: { result[j] } { xs[j] } 0 <= j && j < |xs| && j != i ==> result[j] == xs[j])
+{
+  (0 < i ? Seq(xs[0]) ++ method_Program_push__Sequence$Sequence$Integer$$__Integer__Integer(diz, xs[1..], i - 1, val) : Seq(xs[0] ++ Seq(val)) ++ xs[1..])
+}
+
+function method_Program_pop__Sequence$Sequence$Integer$$__Integer(diz: Ref, xs: Seq[Seq[Int]], i: Int): Seq[Seq[Int]]
+  requires diz != null
+  requires 0 <= i && i < |xs|
+  ensures |result| == |xs|
+  ensures result[i] == xs[i][1..]
+  ensures (forall j: Int :: { result[j] } { xs[j] } 0 <= j && j < |xs| && j != i ==> result[j] == xs[j])
+{
+  (0 < i ? Seq(xs[0]) ++ method_Program_pop__Sequence$Sequence$Integer$$__Integer(diz, xs[1..], i - 1) : Seq(xs[0][1..]) ++ xs[1..])
+}
+
+function new_frac(x: Perm): frac
+  requires 0 / 1 < x && x <= 1 / 1
+  ensures frac_val(result) == x
+
+
+function new_zfrac(x: Perm): zfrac
+  requires 0 / 1 <= x && x <= 1 / 1
+  ensures zfrac_val(result) == x
+
+
+predicate hist_do_method_Future_Send__Integer__Integer(diz: Ref, fr: frac, proc: Process) 
+
+predicate hist_do_method_Future_Recv__Integer__Integer(diz: Ref, fr: frac, proc: Process) 
+
+predicate hist_do_method_Future_Done__Integer__Integer(diz: Ref, fr: frac, proc: Process) 
+
+predicate hist_idle(diz: Ref, fr: frac, proc: Process) 
+
+predicate method_Program_lock_held(diz: Ref, globals: Ref) 
+
+predicate method_Program_lock_invariant(diz: Ref, globals: Ref) {
+  diz != null && (acc(diz.field_Program_initialised, 1 / 2) && acc(diz.field_Program_size, 1 / 2) && acc(diz.field_Program_maxvalue, 1 / 2) && 0 < diz.field_Program_maxvalue && (diz.field_Program_initialised ? acc(diz.field_Program_f, 1 / 2) && diz.field_Program_f != null : true) && (diz.field_Program_initialised ? acc(diz.field_Program_f.channel_hist_value, write) && acc(diz.field_Program_f.channel_hist_hist, write) && diz.field_Program_size == |diz.field_Program_f.channel_hist_value| : true) && (diz.field_Program_initialised ? acc(diz.field_Program_f.results_hist_value, write) && acc(diz.field_Program_f.results_hist_hist, write) && diz.field_Program_size == |diz.field_Program_f.results_hist_value| : true) && (diz.field_Program_initialised ==> (forall i: Int, j: Int :: { diz.field_Program_f.channel_hist_value[i][j] } 0 <= i && i < diz.field_Program_size && (0 <= j && j < |diz.field_Program_f.channel_hist_value[i]|) ==> 0 <= diz.field_Program_f.channel_hist_value[i][j] && diz.field_Program_f.channel_hist_value[i][j] < diz.field_Program_maxvalue)))
+}
+
+predicate method_Main_joinToken(diz: Ref, globals: Ref) 
+
+predicate method_Main_idleToken(diz: Ref, globals: Ref) 
+
+method method_Future_Send__Integer__Integer_begin(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, msg: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(fr) != none
+  requires acc(hist_idle(diz, fr, p_seq(p_method_Future_Send__Integer__Integer(rank, msg), proc)), write)
+  requires write != none
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_hist, write)
+  requires 0 <= rank && rank < |diz.channel_hist_value|
+  ensures frac_val(fr) != none
+  ensures acc(hist_do_method_Future_Send__Integer__Integer(diz, fr, proc), write)
+  ensures acc(diz.channel_hist_act, write)
+  ensures acc(diz.channel_hist_value, write)
+  ensures acc(diz.channel_hist_write, write)
+  ensures acc(diz.channel_hist_action, write)
+  ensures diz.channel_hist_value == diz.channel_hist_act
+  ensures diz.channel_hist_value == old(diz.channel_hist_value)
+{
+  inhale false
+}
+
+method method_Future_Send__Integer__Integer_commit(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, msg: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(fr) != none
+  requires acc(hist_do_method_Future_Send__Integer__Integer(diz, fr, proc), write)
+  requires write != none
+  requires acc(diz.channel_hist_act, write)
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_write, write)
+  requires acc(diz.channel_hist_action, write)
+  requires 0 <= rank && rank < |diz.channel_hist_value|
+  requires |diz.channel_hist_value| == |diz.channel_hist_act|
+  requires diz.channel_hist_value[rank] == diz.channel_hist_act[rank] ++ Seq(msg)
+  requires (forall i: Int :: { diz.channel_hist_value[i] } { diz.channel_hist_act[i] } 0 <= i && i < |diz.channel_hist_value| && i != rank ==> diz.channel_hist_value[i] == diz.channel_hist_act[i])
+  ensures frac_val(fr) != none
+  ensures acc(hist_idle(diz, fr, proc), write)
+  ensures acc(diz.channel_hist_value, write)
+  ensures acc(diz.channel_hist_hist, write)
+  ensures diz.channel_hist_value == old(diz.channel_hist_value)
+{
+  inhale false
+}
+
+method method_Future_Recv__Integer__Integer_begin(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, msg: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(fr) != none
+  requires acc(hist_idle(diz, fr, p_seq(p_method_Future_Recv__Integer__Integer(rank, msg), proc)), write)
+  requires write != none
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_hist, write)
+  requires 0 <= rank && rank < |diz.channel_hist_value|
+  ensures frac_val(fr) != none
+  ensures acc(hist_do_method_Future_Recv__Integer__Integer(diz, fr, proc), write)
+  ensures acc(diz.channel_hist_act, write)
+  ensures acc(diz.channel_hist_value, write)
+  ensures acc(diz.channel_hist_write, write)
+  ensures acc(diz.channel_hist_action, write)
+  ensures diz.channel_hist_value == diz.channel_hist_act
+  ensures diz.channel_hist_value == old(diz.channel_hist_value)
+{
+  inhale false
+}
+
+method method_Future_Recv__Integer__Integer_commit(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, msg: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(fr) != none
+  requires acc(hist_do_method_Future_Recv__Integer__Integer(diz, fr, proc), write)
+  requires write != none
+  requires acc(diz.channel_hist_act, write)
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_write, write)
+  requires acc(diz.channel_hist_action, write)
+  requires 0 <= rank && rank < |diz.channel_hist_value|
+  requires |diz.channel_hist_value| == |diz.channel_hist_act|
+  requires Seq(msg) ++ diz.channel_hist_value[rank] == diz.channel_hist_act[rank]
+  requires (forall i: Int :: { diz.channel_hist_value[i] } { diz.channel_hist_act[i] } 0 <= i && i < |diz.channel_hist_value| && i != rank ==> diz.channel_hist_value[i] == diz.channel_hist_act[i])
+  ensures frac_val(fr) != none
+  ensures acc(hist_idle(diz, fr, proc), write)
+  ensures acc(diz.channel_hist_value, write)
+  ensures acc(diz.channel_hist_hist, write)
+  ensures diz.channel_hist_value == old(diz.channel_hist_value)
+{
+  inhale false
+}
+
+method method_Future_Done__Integer__Integer_begin(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, v: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(fr) != none
+  requires acc(hist_idle(diz, fr, p_seq(p_method_Future_Done__Integer__Integer(rank, v), proc)), write)
+  requires write != none
+  requires acc(diz.results_hist_value, write)
+  requires acc(diz.results_hist_hist, write)
+  requires 0 <= rank && rank < |diz.results_hist_value|
+  ensures frac_val(fr) != none
+  ensures acc(hist_do_method_Future_Done__Integer__Integer(diz, fr, proc), write)
+  ensures acc(diz.results_hist_act, write)
+  ensures acc(diz.results_hist_value, write)
+  ensures acc(diz.results_hist_write, write)
+  ensures acc(diz.results_hist_action, write)
+  ensures diz.results_hist_value == diz.results_hist_act
+  ensures diz.results_hist_value == old(diz.results_hist_value)
+{
+  inhale false
+}
+
+method method_Future_Done__Integer__Integer_commit(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, v: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(fr) != none
+  requires acc(hist_do_method_Future_Done__Integer__Integer(diz, fr, proc), write)
+  requires write != none
+  requires acc(diz.results_hist_act, write)
+  requires acc(diz.results_hist_value, write)
+  requires acc(diz.results_hist_write, write)
+  requires acc(diz.results_hist_action, write)
+  requires 0 <= rank && rank < |diz.results_hist_value|
+  requires |diz.results_hist_value| == |diz.results_hist_act|
+  requires diz.results_hist_value[rank] == v
+  requires (forall i: Int :: { diz.results_hist_value[i] } { diz.results_hist_act[i] } 0 <= i && i < |diz.results_hist_value| && i != rank ==> diz.results_hist_value[i] == diz.results_hist_act[i])
+  ensures frac_val(fr) != none
+  ensures acc(hist_idle(diz, fr, proc), write)
+  ensures acc(diz.results_hist_value, write)
+  ensures acc(diz.results_hist_hist, write)
+  ensures diz.results_hist_value == old(diz.results_hist_value)
+{
+  inhale false
+}
+
+method constructor_Future_Future(current_thread_id: Int) returns (sys__result: Ref)
+  requires 0 <= current_thread_id
+  ensures sys__result != null
+  ensures acc(sys__result.channel_hist_value, write)
+  ensures acc(sys__result.channel_hist_write, write)
+  ensures acc(sys__result.channel_hist_free, write)
+  ensures sys__result.channel_hist_value == Seq[Seq[Int]]()
+  ensures acc(sys__result.results_hist_value, write)
+  ensures acc(sys__result.results_hist_write, write)
+  ensures acc(sys__result.results_hist_free, write)
+  ensures sys__result.results_hist_value == Seq[Int]()
+{
+  var diz__1: Ref
+  var __flatten_1__2: Seq[Seq[Int]]
+  var __flatten_3__3: Seq[Int]
+  var __flatten_61__4: Seq[Seq[Int]]
+  var __flatten_63__5: Seq[Int]
+  diz__1 := new(channel_hist_value, channel_hist_init, channel_hist_act, channel_hist_write, channel_hist_free, channel_hist_hist, channel_hist_action, results_hist_value, results_hist_init, results_hist_act, results_hist_write, results_hist_free, results_hist_hist, results_hist_action)
+  __flatten_61__4 := Seq[Seq[Int]]()
+  __flatten_1__2 := __flatten_61__4
+  hist_set_channel(diz__1, current_thread_id, __flatten_1__2)
+  __flatten_63__5 := Seq[Int]()
+  __flatten_3__3 := __flatten_63__5
+  hist_set_results(diz__1, current_thread_id, __flatten_3__3)
+  label method_end_constructor_Future_Future_0
+  sys__result := diz__1
+  // assert
+  assert sys__result != null && acc(sys__result.channel_hist_value, write) && acc(sys__result.channel_hist_write, write) && acc(sys__result.channel_hist_free, write) && sys__result.channel_hist_value == Seq[Seq[Int]]() && acc(sys__result.results_hist_value, write) && acc(sys__result.results_hist_write, write) && acc(sys__result.results_hist_free, write) && sys__result.results_hist_value == Seq[Int]()
+  inhale false
+}
+
+method hist_set_channel(diz: Ref, current_thread_id: Int, value: Seq[Seq[Int]])
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_write, write)
+  ensures acc(diz.channel_hist_value, write) && diz.channel_hist_value == value
+  ensures acc(diz.channel_hist_write, write)
+{
+  inhale false
+}
+
+method hist_set_results(diz: Ref, current_thread_id: Int, value: Seq[Int])
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(diz.results_hist_value, write)
+  requires acc(diz.results_hist_write, write)
+  ensures acc(diz.results_hist_value, write) && diz.results_hist_value == value
+  ensures acc(diz.results_hist_write, write)
+{
+  inhale false
+}
+
+method end_future(diz: Ref, current_thread_id: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_hist, write)
+  requires acc(diz.channel_hist_init, write)
+  requires acc(diz.results_hist_value, write)
+  requires acc(diz.results_hist_hist, write)
+  requires acc(diz.results_hist_init, write)
+  requires acc(hist_idle(diz, new_frac(write), p_empty()), write)
+  ensures acc(diz.channel_hist_value, write)
+  ensures acc(diz.channel_hist_write, write)
+  ensures acc(diz.channel_hist_free, write)
+  ensures diz.channel_hist_value == old(diz.channel_hist_value)
+  ensures diz.channel_hist_value == old(diz.channel_hist_init)
+  ensures acc(diz.results_hist_value, write)
+  ensures acc(diz.results_hist_write, write)
+  ensures acc(diz.results_hist_free, write)
+  ensures diz.results_hist_value == old(diz.results_hist_value)
+  ensures diz.results_hist_value == old(diz.results_hist_init)
+{
+  inhale false
+}
+
+method split(diz: Ref, current_thread_id: Int, frac1: frac, proc1: Process, frac2: frac, proc2: Process)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(frac1) + frac_val(frac2) <= write
+  requires acc(hist_idle(diz, new_frac(frac_val(frac1) + frac_val(frac2)), p_merge(proc1, proc2)), write)
+  ensures acc(hist_idle(diz, frac1, proc1), write)
+  ensures acc(hist_idle(diz, frac2, proc2), write)
+{
+  inhale false
+}
+
+method merge(diz: Ref, current_thread_id: Int, frac1: frac, proc1: Process, frac2: frac, proc2: Process)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(frac1) + frac_val(frac2) <= write
+  requires acc(hist_idle(diz, frac1, proc1), write)
+  requires acc(hist_idle(diz, frac2, proc2), write)
+  ensures acc(hist_idle(diz, new_frac(frac_val(frac1) + frac_val(frac2)), p_merge(proc1, proc2)), write)
+{
+  inhale false
+}
+
+method begin_future_1(diz: Ref, current_thread_id: Int, size: Int, xs: Seq[Int], max: Int)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(diz.channel_hist_value, write)
+  requires acc(diz.channel_hist_write, write)
+  requires acc(diz.channel_hist_free, write)
+  requires acc(diz.results_hist_value, write)
+  requires acc(diz.results_hist_write, write)
+  requires acc(diz.results_hist_free, write)
+  requires 0 < size
+  requires |diz.channel_hist_value| == size
+  requires |diz.results_hist_value| == size
+  requires |xs| == size
+  requires (forall i: Int, j: Int :: { xs[j],xs[i] } 0 <= i && i < |xs| && (0 <= j && j < |xs| && i != j) ==> xs[i] != xs[j])
+  requires (forall i: Int :: { xs[i] } 0 <= i && i < |xs| ==> 0 <= xs[i] && xs[i] < max)
+  ensures acc(diz.channel_hist_value, write)
+  ensures acc(diz.channel_hist_hist, write)
+  ensures acc(diz.channel_hist_init, write)
+  ensures diz.channel_hist_value == old(diz.channel_hist_value)
+  ensures acc(diz.results_hist_value, write)
+  ensures acc(diz.results_hist_hist, write)
+  ensures acc(diz.results_hist_init, write)
+  ensures diz.results_hist_value == old(diz.results_hist_value)
+  ensures 0 < size
+  ensures |diz.channel_hist_init| == size
+  ensures |diz.results_hist_init| == size
+  ensures |xs| == size
+  ensures (forall i: Int :: { diz.results_hist_init[i] } 0 <= i && i < |diz.results_hist_init| ==> diz.results_hist_init[i] == diz.results_hist_init[method_Program_maxint__Sequence$Integer$__Integer__Integer(xs, 0, 0)])
+  ensures acc(hist_idle(diz, new_frac(write), p_method_Future_Start__Integer__Sequence$Integer$__Integer(size, xs, max)), write)
+{
+  inhale false
+}
+
+method constructor_Program_Program__Future__Integer__Integer(current_thread_id: Int, globals: Ref, f: Ref, size: Int, max: Int) returns (sys__result: Ref)
+  requires 0 <= current_thread_id
+  requires 0 < max
+  requires f != null
+  requires acc(f.channel_hist_value, write)
+  requires acc(f.channel_hist_hist, write)
+  requires acc(f.results_hist_value, write)
+  requires acc(f.results_hist_hist, write)
+  requires |f.results_hist_value| == |f.channel_hist_value|
+  requires |f.channel_hist_value| == size
+  requires (forall i: Int, j: Int :: { f.channel_hist_value[i][j] } 0 <= i && i < |f.channel_hist_value| && (0 <= j && j < |f.channel_hist_value[i]|) ==> 0 <= f.channel_hist_value[i][j] && f.channel_hist_value[i][j] < max)
+  ensures sys__result != null
+  ensures acc(sys__result.field_Program_f, 1 / 2)
+  ensures sys__result.field_Program_f == f
+  ensures acc(sys__result.field_Program_size, 1 / 2)
+  ensures sys__result.field_Program_size == size
+  ensures acc(sys__result.field_Program_maxvalue, 1 / 2)
+  ensures sys__result.field_Program_maxvalue == max
+  ensures acc(sys__result.field_Program_initialised, 1 / 2)
+  ensures sys__result.field_Program_initialised
+{
+  var diz__6: Ref
+  diz__6 := new(field_Program_initialised, field_Program_size, field_Program_maxvalue, field_Program_f)
+  diz__6.field_Program_f := f
+  diz__6.field_Program_maxvalue := max
+  diz__6.field_Program_size := size
+  diz__6.field_Program_initialised := true
+  fold acc(method_Program_lock_invariant(diz__6, globals), write)
+  exhale acc(method_Program_lock_invariant(diz__6, globals), write)
+  label method_end_constructor_Program_Program__Future__Integer__Integer_1
+  sys__result := diz__6
+  // assert
+  assert sys__result != null && acc(sys__result.field_Program_f, 1 / 2) && sys__result.field_Program_f == f && acc(sys__result.field_Program_size, 1 / 2) && sys__result.field_Program_size == size && acc(sys__result.field_Program_maxvalue, 1 / 2) && sys__result.field_Program_maxvalue == max && acc(sys__result.field_Program_initialised, 1 / 2) && sys__result.field_Program_initialised
+  inhale false
+}
+
+method method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz: Ref, current_thread_id: Int, globals: Ref, f: Ref, rank: Int, v: Int, w: Int, x: Int, n: Int, q: frac)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(q) != none
+  requires acc(diz.field_Program_maxvalue, 1 / 2)
+  requires acc(diz.field_Program_size, 1 / 2)
+  requires 0 <= diz.field_Program_size
+  requires f != null
+  requires acc(f.channel_hist_value, 1 / 2)
+  requires acc(f.channel_hist_hist, 1 / 2)
+  requires 0 <= rank && rank < diz.field_Program_size
+  requires 0 <= x && x <= w
+  requires acc(hist_idle(f, q, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n)), write)
+  ensures frac_val(q) != none
+  ensures acc(diz.field_Program_maxvalue, 1 / 2)
+  ensures acc(diz.field_Program_size, 1 / 2)
+  ensures 0 <= diz.field_Program_size
+  ensures f != null
+  ensures acc(f.channel_hist_value, 1 / 2)
+  ensures acc(f.channel_hist_hist, 1 / 2)
+  ensures 0 <= rank && rank < diz.field_Program_size
+  ensures diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
+  ensures diz.field_Program_size == old(diz.field_Program_size)
+  ensures f.channel_hist_value == old(f.channel_hist_value)
+  ensures acc(hist_idle(f, q, p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % diz.field_Program_size, x), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, x, diz.field_Program_maxvalue, n))), write)
+{
+  if (x == w) {
+    if (0 < x) {
+      exhale acc(hist_idle(f, q, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n)), write)
+      // assert
+      assert p_is_choice(p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n), p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % diz.field_Program_size, x), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n)))
+      inhale acc(hist_idle(f, q, p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % diz.field_Program_size, x), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n))), write)
+    }
+  } else {
+    exhale acc(hist_idle(f, q, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n)), write)
+    // assert
+    assert p_is_choice(p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w, diz.field_Program_maxvalue, n), p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w - 1, diz.field_Program_maxvalue, n))
+    inhale acc(hist_idle(f, q, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, w - 1, diz.field_Program_maxvalue, n)), write)
+    method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, f, rank, v, w - 1, x, n, q)
+  }
+  label method_end_method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer_2
+}
+
+method method_Program_lemma_fut_elect__Future__Integer__Integer__Integer__Integer__Integer(diz: Ref, current_thread_id: Int, globals: Ref, f: Ref, rank: Int, size: Int, v: Int, maxvalue: Int, n: Int, q: frac)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires frac_val(q) != none
+  requires n < size
+  requires 0 <= rank && rank < size
+  requires acc(hist_idle(f, q, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, size, v, maxvalue, n)), write)
+  ensures frac_val(q) != none
+  ensures acc(hist_idle(f, q, p_seq(p_method_Future_Send__Integer__Integer((rank + 1) % size, v), p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, size, v, maxvalue - 1, maxvalue, n))), write)
+{
+  label method_end_method_Program_lemma_fut_elect__Future__Integer__Integer__Integer__Integer__Integer_3
+}
+
+method method_Program_mpi_send__Integer__Integer(diz: Ref, current_thread_id: Int, globals: Ref, rank: Int, msg: Int, q1: frac, q2: frac, P: Process)
+  requires diz != null
+  requires frac_val(q1) != none && frac_val(q2) != none
+  requires acc(diz.field_Program_size, frac_val(q1))
+  requires acc(diz.field_Program_maxvalue, frac_val(q1))
+  requires 0 <= rank && rank < diz.field_Program_size
+  requires 0 <= msg && msg < diz.field_Program_maxvalue
+  requires acc(diz.field_Program_initialised, frac_val(q1))
+  requires diz.field_Program_initialised
+  requires acc(diz.field_Program_f, frac_val(q1))
+  requires diz.field_Program_f != null
+  requires 0 <= current_thread_id
+  requires acc(hist_idle(diz.field_Program_f, q2, p_seq(p_method_Future_Send__Integer__Integer(rank, msg), P)), write)
+  ensures frac_val(q1) != none && frac_val(q2) != none
+  ensures acc(diz.field_Program_size, frac_val(q1))
+  ensures acc(diz.field_Program_maxvalue, frac_val(q1))
+  ensures 0 <= rank && rank < diz.field_Program_size
+  ensures 0 <= msg && msg < diz.field_Program_maxvalue
+  ensures acc(diz.field_Program_initialised, frac_val(q1))
+  ensures diz.field_Program_initialised
+  ensures acc(diz.field_Program_f, frac_val(q1))
+  ensures diz.field_Program_f != null
+  ensures acc(hist_idle(diz.field_Program_f, q2, P), write)
+  ensures diz.field_Program_size == old(diz.field_Program_size)
+  ensures diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
+  ensures diz.field_Program_f == old(diz.field_Program_f)
+{
+  var __flatten_7__7: Ref
+  var __flatten_8__8: Seq[Seq[Int]]
+  inhale acc(method_Program_lock_invariant(diz, globals), write)
+  unfold acc(method_Program_lock_invariant(diz, globals), write)
+  inhale acc(method_Program_lock_held(diz, globals), write)
+  method_Future_Send__Integer__Integer_begin(diz.field_Program_f, current_thread_id, q2, P, rank, msg)
+  __flatten_7__7 := diz.field_Program_f
+  __flatten_8__8 := method_Program_push__Sequence$Sequence$Integer$$__Integer__Integer(diz, __flatten_7__7.channel_hist_value, rank, msg)
+  hist_set_channel(diz.field_Program_f, current_thread_id, __flatten_8__8)
+  method_Future_Send__Integer__Integer_commit(diz.field_Program_f, current_thread_id, q2, P, rank, msg)
+  exhale acc(method_Program_lock_held(diz, globals), write)
+  fold acc(method_Program_lock_invariant(diz, globals), write)
+  exhale acc(method_Program_lock_invariant(diz, globals), write)
+  label method_end_method_Program_mpi_send__Integer__Integer_4
+}
+
+method method_Program_mpi_recv__Integer(diz: Ref, current_thread_id: Int, globals: Ref, rank: Int, v: Int, n: Int, q1: frac, q2: frac) returns (sys__result: Int)
+  requires diz != null
+  requires frac_val(q1) != none && frac_val(q2) != none
+  requires acc(diz.field_Program_size, frac_val(q1))
+  requires acc(diz.field_Program_maxvalue, frac_val(q1))
+  requires 0 <= rank && rank < diz.field_Program_size
+  requires acc(diz.field_Program_initialised, frac_val(q1))
+  requires diz.field_Program_initialised
+  requires acc(diz.field_Program_f, frac_val(q1))
+  requires diz.field_Program_f != null
+  requires 0 <= current_thread_id
+  requires acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
+  ensures frac_val(q1) != none && frac_val(q2) != none
+  ensures acc(diz.field_Program_size, frac_val(q1))
+  ensures acc(diz.field_Program_maxvalue, frac_val(q1))
+  ensures 0 <= rank && rank < diz.field_Program_size
+  ensures acc(diz.field_Program_initialised, frac_val(q1))
+  ensures diz.field_Program_initialised
+  ensures acc(diz.field_Program_f, frac_val(q1))
+  ensures diz.field_Program_f != null
+  ensures 0 <= sys__result && sys__result < diz.field_Program_maxvalue
+  ensures diz.field_Program_size == old(diz.field_Program_size)
+  ensures diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
+  ensures diz.field_Program_f == old(diz.field_Program_f)
+  ensures acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, sys__result, diz.field_Program_maxvalue, n)), write)
+{
+  var sys__local__result__9: Int
+  var stop__10: Bool
+  var res__11: Int
+  var __flatten_11__12: Ref
+  var __flatten_12__13: Ref
+  var __flatten_14__14: Process
+  var __flatten_16__15: Ref
+  var __flatten_17__16: Seq[Seq[Int]]
+  var __flatten_19__17: Process
+  stop__10 := false
+  while (!stop__10)
+    invariant frac_val(q1) != none && frac_val(q2) != none
+    invariant acc(diz.field_Program_size, frac_val(q1))
+    invariant acc(diz.field_Program_maxvalue, frac_val(q1))
+    invariant 0 <= rank && rank < diz.field_Program_size
+    invariant acc(diz.field_Program_initialised, frac_val(q1))
+    invariant diz.field_Program_initialised
+    invariant acc(diz.field_Program_f, frac_val(q1))
+    invariant diz.field_Program_f != null
+    invariant diz.field_Program_size == old(diz.field_Program_size)
+    invariant diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
+    invariant diz.field_Program_f == old(diz.field_Program_f)
+    invariant 0 <= rank && rank < diz.field_Program_size
+    invariant !stop__10 ==> acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
+    invariant stop__10 ==> acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n)), write)
+    invariant stop__10 ==> 0 <= res__11 && res__11 < diz.field_Program_maxvalue 
+  {
+    inhale acc(method_Program_lock_invariant(diz, globals), write)
+    unfold acc(method_Program_lock_invariant(diz, globals), write)
+    inhale acc(method_Program_lock_held(diz, globals), write)
+    __flatten_11__12 := diz.field_Program_f
+    if (0 < |__flatten_11__12.channel_hist_value[(rank - 1) % diz.field_Program_size]|) {
+      __flatten_12__13 := diz.field_Program_f
+      res__11 := __flatten_12__13.channel_hist_value[(rank - 1) % diz.field_Program_size][0]
+      // assert
+      assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
+      method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, diz.field_Program_f, rank, v, diz.field_Program_maxvalue - 1, res__11, n, q2)
+      // assert
+      assert acc(hist_idle(diz.field_Program_f, q2, p_seq(p_method_Future_Recv__Integer__Integer((rank - 1) % diz.field_Program_size, res__11), p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n))), write)
+      __flatten_14__14 := p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n)
+      method_Future_Recv__Integer__Integer_begin(diz.field_Program_f, current_thread_id, q2, __flatten_14__14, (rank - 1) % diz.field_Program_size, res__11)
+      __flatten_16__15 := diz.field_Program_f
+      __flatten_17__16 := method_Program_pop__Sequence$Sequence$Integer$$__Integer(diz, __flatten_16__15.channel_hist_value, (rank - 1) % diz.field_Program_size)
+      hist_set_channel(diz.field_Program_f, current_thread_id, __flatten_17__16)
+      __flatten_19__17 := p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n)
+      method_Future_Recv__Integer__Integer_commit(diz.field_Program_f, current_thread_id, q2, __flatten_19__17, (rank - 1) % diz.field_Program_size, res__11)
+      stop__10 := true
+    }
+    exhale acc(method_Program_lock_held(diz, globals), write)
+    fold acc(method_Program_lock_invariant(diz, globals), write)
+    exhale acc(method_Program_lock_invariant(diz, globals), write)
+  }
+  sys__local__result__9 := res__11
+  // assert
+  assert 0 <= sys__local__result__9 && sys__local__result__9 < diz.field_Program_maxvalue && diz.field_Program_size == old(diz.field_Program_size) && diz.field_Program_maxvalue == old(diz.field_Program_maxvalue) && diz.field_Program_f == old(diz.field_Program_f) && acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, sys__local__result__9, diz.field_Program_maxvalue, n)), write)
+  goto __return_mpi_recv
+  label __return_mpi_recv
+  sys__result := sys__local__result__9
+  // assert
+  assert frac_val(q1) != none && frac_val(q2) != none && acc(diz.field_Program_size, frac_val(q1)) && acc(diz.field_Program_maxvalue, frac_val(q1)) && (0 <= rank && rank < diz.field_Program_size) && acc(diz.field_Program_initialised, frac_val(q1)) && diz.field_Program_initialised && acc(diz.field_Program_f, frac_val(q1)) && diz.field_Program_f != null && (0 <= sys__result && sys__result < diz.field_Program_maxvalue) && diz.field_Program_size == old(diz.field_Program_size) && diz.field_Program_maxvalue == old(diz.field_Program_maxvalue) && diz.field_Program_f == old(diz.field_Program_f) && acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, sys__result, diz.field_Program_maxvalue, n)), write)
+  inhale false
+  label method_end_method_Program_mpi_recv__Integer_5
+}
+
+method method_Program_elect__Integer__Integer(diz: Ref, current_thread_id: Int, globals: Ref, rank: Int, vArg: Int, q1: frac, q2: frac) returns (sys__result: Int)
+  requires diz != null
+  requires frac_val(q1) != none && frac_val(q2) != none
+  requires acc(diz.field_Program_size, frac_val(q1))
+  requires 0 <= rank && rank < diz.field_Program_size
+  requires acc(diz.field_Program_initialised, frac_val(q1))
+  requires diz.field_Program_initialised
+  requires acc(diz.field_Program_maxvalue, frac_val(q1))
+  requires 0 <= vArg && vArg < diz.field_Program_maxvalue
+  requires 0 <= current_thread_id
+  requires acc(diz.field_Program_f, frac_val(q1))
+  requires diz.field_Program_f != null
+  requires acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, vArg, diz.field_Program_maxvalue, 0)), write)
+  ensures frac_val(q1) != none && frac_val(q2) != none
+  ensures acc(diz.field_Program_size, frac_val(q1))
+  ensures 0 <= rank && rank < diz.field_Program_size
+  ensures acc(diz.field_Program_initialised, frac_val(q1))
+  ensures diz.field_Program_initialised
+  ensures acc(diz.field_Program_maxvalue, frac_val(q1))
+  ensures 0 <= vArg && vArg < diz.field_Program_maxvalue
+  ensures acc(diz.field_Program_f, frac_val(q1))
+  ensures diz.field_Program_f != null
+  ensures acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Done__Integer__Integer(rank, sys__result)), write)
+  ensures 0 <= sys__result && sys__result < diz.field_Program_maxvalue
+  ensures diz.field_Program_size == old(diz.field_Program_size)
+  ensures diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
+  ensures diz.field_Program_f == old(diz.field_Program_f)
+{
+  var R__23: Process
+  var w__22: Int
+  var Q__21: Process
+  var sys__local__result__18: Int
+  var v__19: Int
+  var n__20: Int
+  v__19 := vArg
+  n__20 := 0
+  while (n__20 < diz.field_Program_size)
+    invariant frac_val(q1) != none && frac_val(q2) != none
+    invariant acc(diz.field_Program_size, frac_val(q1))
+    invariant 0 <= rank && rank < diz.field_Program_size
+    invariant acc(diz.field_Program_initialised, frac_val(q1))
+    invariant diz.field_Program_initialised
+    invariant acc(diz.field_Program_maxvalue, frac_val(q1))
+    invariant 0 <= vArg && vArg < diz.field_Program_maxvalue
+    invariant diz.field_Program_size == old(diz.field_Program_size)
+    invariant diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
+    invariant acc(diz.field_Program_f, frac_val(q1))
+    invariant diz.field_Program_f != null
+    invariant diz.field_Program_f == old(diz.field_Program_f)
+    invariant 0 <= n__20 && n__20 <= diz.field_Program_size
+    invariant acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v__19, diz.field_Program_maxvalue, n__20)), write)
+    invariant 0 <= v__19 && v__19 < diz.field_Program_maxvalue 
+  {
+    method_Program_lemma_fut_elect__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, diz.field_Program_f, rank, diz.field_Program_size, v__19, diz.field_Program_maxvalue, n__20, q2)
+    Q__21 := p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v__19, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n__20)
+    method_Program_mpi_send__Integer__Integer(diz, current_thread_id, globals, (rank + 1) % diz.field_Program_size, v__19, q1, q2, Q__21)
+    // assert
+    assert Q__21 == p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v__19, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n__20)
+    // assert
+    assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v__19, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n__20)), write)
+    w__22 := method_Program_mpi_recv__Integer(diz, current_thread_id, globals, rank, v__19, n__20, q1, q2)
+    // assert
+    assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v__19, w__22, diz.field_Program_maxvalue, n__20)), write)
+    // assert
+    assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, (v__19 <= w__22 ? w__22 : v__19), diz.field_Program_maxvalue, n__20 + 1)), write)
+    if (v__19 <= w__22) {
+      v__19 := w__22
+    }
+    R__23 := p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v__19, diz.field_Program_maxvalue, n__20 + 1)
+    // assert
+    assert acc(hist_idle(diz.field_Program_f, q2, R__23), write)
+    n__20 := n__20 + 1
+    // assert
+    assert acc(hist_idle(diz.field_Program_f, q2, R__23), write)
+  }
+  sys__local__result__18 := v__19
+  // assert
+  assert acc(diz.field_Program_f, frac_val(q1)) && diz.field_Program_f != null && acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Done__Integer__Integer(rank, sys__local__result__18)), write) && (0 <= sys__local__result__18 && sys__local__result__18 < diz.field_Program_maxvalue) && diz.field_Program_size == old(diz.field_Program_size) && diz.field_Program_maxvalue == old(diz.field_Program_maxvalue) && diz.field_Program_f == old(diz.field_Program_f)
+  goto __return_elect
+  label __return_elect
+  sys__result := sys__local__result__18
+  // assert
+  assert frac_val(q1) != none && frac_val(q2) != none && acc(diz.field_Program_size, frac_val(q1)) && (0 <= rank && rank < diz.field_Program_size) && acc(diz.field_Program_initialised, frac_val(q1)) && diz.field_Program_initialised && acc(diz.field_Program_maxvalue, frac_val(q1)) && (0 <= vArg && vArg < diz.field_Program_maxvalue) && acc(diz.field_Program_f, frac_val(q1)) && diz.field_Program_f != null && acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Done__Integer__Integer(rank, sys__result)), write) && (0 <= sys__result && sys__result < diz.field_Program_maxvalue) && diz.field_Program_size == old(diz.field_Program_size) && diz.field_Program_maxvalue == old(diz.field_Program_maxvalue) && diz.field_Program_f == old(diz.field_Program_f)
+  inhale false
+  label method_end_method_Program_elect__Integer__Integer_6
+}
+
+method method_Main_main__Integer__Integer__Sequence$Integer$(current_thread_id: Int, globals: Ref, size: Int, max: Int, xs: Seq[Int])
+  requires 0 < size
+  requires 0 < max
+  requires |xs| == size
+  requires (forall j: Int, k: Int :: { xs[k],xs[j] } 0 <= j && j < |xs| && (0 <= k && k < |xs| && j != k) ==> xs[j] != xs[k])
+  requires (forall j: Int :: { xs[j] } 0 <= j && j < |xs| ==> 0 <= xs[j] && xs[j] < max)
+  requires 0 <= current_thread_id
+  ensures 0 < size
+  ensures 0 < max
+  ensures |xs| == size
+  ensures (forall j: Int, k: Int :: { xs[k],xs[j] } 0 <= j && j < |xs| && (0 <= k && k < |xs| && j != k) ==> xs[j] != xs[k])
+  ensures (forall j: Int :: { xs[j] } 0 <= j && j < |xs| ==> 0 <= xs[j] && xs[j] < max)
+{
+  var f__24: Ref
+  var __flatten_39__25: Seq[Seq[Int]]
+  var __flatten_41__26: Seq[Int]
+  var i__27: Int
+  var __flatten_43__28: Seq[Seq[Int]]
+  var __flatten_45__29: Seq[Int]
+  var pr__30: Ref
+  var __flatten_83__31: Seq[Seq[Int]]
+  var __flatten_85__32: Seq[Int]
+  var __flatten_87__33: Seq[Seq[Int]]
+  var __flatten_89__34: Seq[Int]
+  var __flatten_93__35: frac
+  var __flatten_94__36: frac
+  f__24 := constructor_Future_Future(current_thread_id)
+  __flatten_83__31 := Seq[Seq[Int]]()
+  __flatten_39__25 := __flatten_83__31
+  hist_set_channel(f__24, current_thread_id, __flatten_39__25)
+  __flatten_85__32 := Seq[Int]()
+  __flatten_41__26 := __flatten_85__32
+  hist_set_results(f__24, current_thread_id, __flatten_41__26)
+  i__27 := 0
+  while (i__27 < size)
+    invariant 0 < size
+    invariant 0 < max
+    invariant |xs| == size
+    invariant (forall j__37: Int, k__38: Int :: { xs[k__38],xs[j__37] } 0 <= j__37 && j__37 < |xs| && (0 <= k__38 && k__38 < |xs| && j__37 != k__38) ==> xs[j__37] != xs[k__38])
+    invariant (forall j__39: Int :: { xs[j__39] } 0 <= j__39 && j__39 < |xs| ==> 0 <= xs[j__39] && xs[j__39] < max)
+    invariant 0 <= i__27 && i__27 <= size
+    invariant acc(f__24.channel_hist_value, write)
+    invariant acc(f__24.channel_hist_write, write)
+    invariant acc(f__24.channel_hist_free, write)
+    invariant acc(f__24.results_hist_value, write)
+    invariant acc(f__24.results_hist_write, write)
+    invariant acc(f__24.results_hist_free, write)
+    invariant |f__24.channel_hist_value| == i__27
+    invariant (forall j__40: Int :: { f__24.channel_hist_value[j__40] } 0 <= j__40 && j__40 < i__27 ==> |f__24.channel_hist_value[j__40]| == 0)
+    invariant |f__24.results_hist_value| == i__27
+    invariant (forall j__41: Int :: { f__24.results_hist_value[j__41] } 0 <= j__41 && j__41 < i__27 ==> f__24.results_hist_value[j__41] == 0) 
+  {
+    __flatten_87__33 := Seq(Seq[Int]())
+    __flatten_43__28 := __flatten_87__33
+    hist_set_channel(f__24, current_thread_id, f__24.channel_hist_value ++ __flatten_43__28)
+    __flatten_89__34 := Seq(0)
+    __flatten_45__29 := __flatten_89__34
+    hist_set_results(f__24, current_thread_id, f__24.results_hist_value ++ __flatten_45__29)
+    i__27 := i__27 + 1
+  }
+  begin_future_1(f__24, current_thread_id, size, xs, max)
+  // assert
+  assert acc(hist_idle(f__24, new_frac(write), p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(0, size, xs, max)), write)
+  pr__30 := constructor_Program_Program__Future__Integer__Integer(current_thread_id, globals, f__24, size, max)
+  __flatten_93__35 := new_frac(1 / 2)
+  __flatten_94__36 := new_frac(write)
+  method_Main_spawn__Integer__Program__Sequence$Integer$(current_thread_id, globals, 0, pr__30, xs, __flatten_93__35, __flatten_94__36)
+  inhale acc(method_Program_lock_invariant(pr__30, globals), write)
+  unfold acc(method_Program_lock_invariant(pr__30, globals), write)
+  inhale acc(method_Program_lock_held(pr__30, globals), write)
+  pr__30.field_Program_initialised := false
+  exhale acc(method_Program_lock_held(pr__30, globals), write)
+  fold acc(method_Program_lock_invariant(pr__30, globals), write)
+  exhale acc(method_Program_lock_invariant(pr__30, globals), write)
+  end_future(f__24, current_thread_id)
+  // assert
+  assert (forall i__42: Int :: { f__24.results_hist_value[i__42] } 0 <= i__42 && i__42 < |f__24.results_hist_value| ==> f__24.results_hist_value[i__42] == f__24.results_hist_value[method_Program_maxint__Sequence$Integer$__Integer__Integer(xs, 0, 0)])
+  label method_end_method_Main_main__Integer__Integer__Sequence$Integer$_9
+}
+
+method method_Main_spawn__Integer__Program__Sequence$Integer$(current_thread_id: Int, globals: Ref, rank: Int, pr: Ref, xs: Seq[Int], q1: frac, q2: frac)
+  requires frac_val(q1) != none && frac_val(q2) != none
+  requires pr != null
+  requires acc(pr.field_Program_size, frac_val(q1))
+  requires acc(pr.field_Program_f, frac_val(q1))
+  requires pr.field_Program_f != null
+  requires acc(pr.field_Program_maxvalue, frac_val(q1))
+  requires acc(pr.field_Program_initialised, frac_val(q1))
+  requires pr.field_Program_initialised
+  requires 0 <= rank && rank <= pr.field_Program_size
+  requires |xs| == pr.field_Program_size
+  requires (forall j: Int :: { xs[j] } 0 <= j && j < |xs| ==> 0 <= xs[j] && xs[j] < pr.field_Program_maxvalue)
+  requires 0 <= current_thread_id
+  requires acc(hist_idle(pr.field_Program_f, q2, p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, pr.field_Program_size, xs, pr.field_Program_maxvalue)), write)
+  ensures frac_val(q1) != none && frac_val(q2) != none
+  ensures pr != null
+  ensures acc(pr.field_Program_size, frac_val(q1))
+  ensures acc(pr.field_Program_f, frac_val(q1))
+  ensures pr.field_Program_f != null
+  ensures acc(pr.field_Program_maxvalue, frac_val(q1))
+  ensures acc(pr.field_Program_initialised, frac_val(q1))
+  ensures pr.field_Program_initialised
+  ensures 0 <= rank && rank <= pr.field_Program_size
+  ensures |xs| == pr.field_Program_size
+  ensures (forall j: Int :: { xs[j] } 0 <= j && j < |xs| ==> 0 <= xs[j] && xs[j] < pr.field_Program_maxvalue)
+  ensures pr == old(pr)
+  ensures pr.field_Program_size == old(pr.field_Program_size)
+  ensures pr.field_Program_maxvalue == old(pr.field_Program_maxvalue)
+  ensures pr.field_Program_f == old(pr.field_Program_f)
+  ensures acc(hist_idle(pr.field_Program_f, q2, p_empty()), write)
+{
+  var m__63: Ref
+  var __flatten_52__43: Process
+  var __flatten_53__44: Process
+  var __flatten_58__45: Process
+  var __flatten_59__46: Process
+  var __flatten_97__47: Perm
+  var __flatten_98__48: frac
+  var __flatten_99__49: Perm
+  var __flatten_100__50: frac
+  var __flatten_104__51: Perm
+  var __flatten_105__52: frac
+  var __flatten_106__53: Perm
+  var __flatten_107__54: frac
+  var __flatten_110__55: Perm
+  var __flatten_111__56: frac
+  var __flatten_112__57: Perm
+  var __flatten_113__58: frac
+  var __flatten_118__59: Perm
+  var __flatten_119__60: frac
+  var __flatten_120__61: Perm
+  var __flatten_121__62: frac
+  if (rank < pr.field_Program_size) {
+    __flatten_97__47 := frac_val(q1)
+    __flatten_98__48 := new_frac(__flatten_97__47 / 2)
+    __flatten_99__49 := frac_val(q2)
+    __flatten_100__50 := new_frac(__flatten_99__49 / 2)
+    m__63 := constructor_Main_Main__Program__Integer__Integer__Fraction__Fraction(current_thread_id, globals, pr, rank, xs[rank], __flatten_98__48, __flatten_100__50)
+    // assert
+    assert acc(hist_idle(pr.field_Program_f, q2, p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank, pr.field_Program_size, xs, pr.field_Program_maxvalue)), write)
+    // assert
+    assert acc(hist_idle(pr.field_Program_f, q2, p_merge(p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, pr.field_Program_size, xs[rank], pr.field_Program_maxvalue, 0), p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank + 1, pr.field_Program_size, xs, pr.field_Program_maxvalue))), write)
+    __flatten_52__43 := p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(rank, pr.field_Program_size, xs[rank], pr.field_Program_maxvalue, 0)
+    __flatten_53__44 := p_method_Future_Spawn__Integer__Integer__Sequence$Integer$__Integer(rank + 1, pr.field_Program_size, xs, pr.field_Program_maxvalue)
+    __flatten_104__51 := frac_val(q2)
+    __flatten_105__52 := new_frac(__flatten_104__51 / 2)
+    __flatten_106__53 := frac_val(q2)
+    __flatten_107__54 := new_frac(__flatten_106__53 / 2)
+    split(pr.field_Program_f, current_thread_id, __flatten_105__52, __flatten_52__43, __flatten_107__54, __flatten_53__44)
+    method_Main_forkOperator(m__63, current_thread_id, globals)
+    __flatten_110__55 := frac_val(q1)
+    __flatten_111__56 := new_frac(__flatten_110__55 / 2)
+    __flatten_112__57 := frac_val(q2)
+    __flatten_113__58 := new_frac(__flatten_112__57 / 2)
+    method_Main_spawn__Integer__Program__Sequence$Integer$(current_thread_id, globals, rank + 1, pr, xs, __flatten_111__56, __flatten_113__58)
+    method_Main_joinOperator(m__63, current_thread_id, globals)
+    __flatten_58__45 := p_empty()
+    __flatten_59__46 := p_empty()
+    __flatten_118__59 := frac_val(q2)
+    __flatten_119__60 := new_frac(__flatten_118__59 / 2)
+    __flatten_120__61 := frac_val(q2)
+    __flatten_121__62 := new_frac(__flatten_120__61 / 2)
+    merge(pr.field_Program_f, current_thread_id, __flatten_119__60, __flatten_58__45, __flatten_121__62, __flatten_59__46)
+  }
+  label method_end_method_Main_spawn__Integer__Program__Sequence$Integer$_10
+}
+
+method constructor_Main_Main__Program__Integer__Integer__Fraction__Fraction(current_thread_id: Int, globals: Ref, pr: Ref, rank: Int, val: Int, r1: frac, r2: frac) returns (sys__result: Ref)
+  requires 0 <= current_thread_id
+  requires frac_val(r1) != none && frac_val(r2) != none
+  ensures sys__result != null
+  ensures acc(method_Main_idleToken(sys__result, globals), write)
+  ensures acc(sys__result.field_Main_pr, write)
+  ensures sys__result.field_Main_pr == pr
+  ensures acc(sys__result.field_Main_rank, write)
+  ensures sys__result.field_Main_rank == rank
+  ensures acc(sys__result.field_Main_val, write)
+  ensures sys__result.field_Main_val == val
+  ensures acc(sys__result.field_Main_r1, write)
+  ensures frac_val(sys__result.field_Main_r1) == frac_val(r1)
+  ensures acc(sys__result.field_Main_r2, write)
+  ensures frac_val(sys__result.field_Main_r2) == frac_val(r2)
+{
+  var diz__64: Ref
+  diz__64 := new(field_Main_pr, field_Main_rank, field_Main_val, field_Main_r1, field_Main_r2)
+  diz__64.field_Main_pr := pr
+  diz__64.field_Main_rank := rank
+  diz__64.field_Main_val := val
+  diz__64.field_Main_r1 := r1
+  diz__64.field_Main_r2 := r2
+  inhale acc(method_Main_idleToken(diz__64, globals), write)
+  label method_end_constructor_Main_Main__Program__Integer__Integer__Fraction__Fraction_7
+  sys__result := diz__64
+  // assert
+  assert sys__result != null && acc(method_Main_idleToken(sys__result, globals), write) && acc(sys__result.field_Main_pr, write) && sys__result.field_Main_pr == pr && acc(sys__result.field_Main_rank, write) && sys__result.field_Main_rank == rank && acc(sys__result.field_Main_val, write) && sys__result.field_Main_val == val && acc(sys__result.field_Main_r1, write) && frac_val(sys__result.field_Main_r1) == frac_val(r1) && acc(sys__result.field_Main_r2, write) && frac_val(sys__result.field_Main_r2) == frac_val(r2)
+  inhale false
+}
+
+method method_Main_forkOperator(diz: Ref, current_thread_id: Int, globals: Ref)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(diz.field_Main_rank, 1 / 2)
+  requires acc(diz.field_Main_val, 1 / 2)
+  requires acc(diz.field_Main_pr, 1 / 2)
+  requires diz.field_Main_pr != null
+  requires acc(diz.field_Main_r1, 1 / 2)
+  requires frac_val(diz.field_Main_r1) != none
+  requires acc(diz.field_Main_r2, 1 / 2)
+  requires frac_val(diz.field_Main_r2) != none
+  requires acc(diz.field_Main_pr.field_Program_f, frac_val(diz.field_Main_r1))
+  requires diz.field_Main_pr.field_Program_f != null
+  requires acc(diz.field_Main_pr.field_Program_size, frac_val(diz.field_Main_r1))
+  requires acc(diz.field_Main_pr.field_Program_maxvalue, frac_val(diz.field_Main_r1))
+  requires acc(diz.field_Main_pr.field_Program_initialised, frac_val(diz.field_Main_r1))
+  requires diz.field_Main_pr.field_Program_initialised
+  requires 0 <= diz.field_Main_rank && diz.field_Main_rank < diz.field_Main_pr.field_Program_size
+  requires 0 <= diz.field_Main_val && diz.field_Main_val < diz.field_Main_pr.field_Program_maxvalue
+  requires acc(hist_idle(diz.field_Main_pr.field_Program_f, diz.field_Main_r2, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(diz.field_Main_rank, diz.field_Main_pr.field_Program_size, diz.field_Main_val, diz.field_Main_pr.field_Program_maxvalue, 0)), write)
+  requires acc(method_Main_idleToken(diz, globals), write)
+  ensures acc(method_Main_joinToken(diz, globals), write)
+{
+  inhale false
+}
+
+method method_Main_joinOperator(diz: Ref, current_thread_id: Int, globals: Ref)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(method_Main_joinToken(diz, globals), write)
+  ensures acc(method_Main_idleToken(diz, globals), write)
+  ensures acc(diz.field_Main_rank, 1 / 2)
+  ensures acc(diz.field_Main_val, 1 / 2)
+  ensures acc(diz.field_Main_pr, 1 / 2)
+  ensures diz.field_Main_pr != null
+  ensures acc(diz.field_Main_r1, 1 / 2)
+  ensures frac_val(diz.field_Main_r1) != none
+  ensures acc(diz.field_Main_r2, 1 / 2)
+  ensures frac_val(diz.field_Main_r2) != none
+  ensures acc(diz.field_Main_pr.field_Program_f, frac_val(diz.field_Main_r1))
+  ensures diz.field_Main_pr.field_Program_f != null
+  ensures acc(diz.field_Main_pr.field_Program_size, frac_val(diz.field_Main_r1))
+  ensures acc(diz.field_Main_pr.field_Program_maxvalue, frac_val(diz.field_Main_r1))
+  ensures acc(diz.field_Main_pr.field_Program_initialised, frac_val(diz.field_Main_r1))
+  ensures diz.field_Main_pr.field_Program_initialised
+  ensures 0 <= diz.field_Main_rank && diz.field_Main_rank < diz.field_Main_pr.field_Program_size
+  ensures 0 <= diz.field_Main_val && diz.field_Main_val < diz.field_Main_pr.field_Program_maxvalue
+  ensures acc(hist_idle(diz.field_Main_pr.field_Program_f, diz.field_Main_r2, p_empty()), write)
+{
+  inhale false
+}
+
+method method_Main_run(diz: Ref, current_thread_id: Int, globals: Ref)
+  requires diz != null
+  requires 0 <= current_thread_id
+  requires acc(diz.field_Main_rank, 1 / 2)
+  requires acc(diz.field_Main_val, 1 / 2)
+  requires acc(diz.field_Main_pr, 1 / 2)
+  requires diz.field_Main_pr != null
+  requires acc(diz.field_Main_r1, 1 / 2)
+  requires frac_val(diz.field_Main_r1) != none
+  requires acc(diz.field_Main_r2, 1 / 2)
+  requires frac_val(diz.field_Main_r2) != none
+  requires acc(diz.field_Main_pr.field_Program_f, frac_val(diz.field_Main_r1))
+  requires diz.field_Main_pr.field_Program_f != null
+  requires acc(diz.field_Main_pr.field_Program_size, frac_val(diz.field_Main_r1))
+  requires acc(diz.field_Main_pr.field_Program_maxvalue, frac_val(diz.field_Main_r1))
+  requires acc(diz.field_Main_pr.field_Program_initialised, frac_val(diz.field_Main_r1))
+  requires diz.field_Main_pr.field_Program_initialised
+  requires 0 <= diz.field_Main_rank && diz.field_Main_rank < diz.field_Main_pr.field_Program_size
+  requires 0 <= diz.field_Main_val && diz.field_Main_val < diz.field_Main_pr.field_Program_maxvalue
+  requires acc(hist_idle(diz.field_Main_pr.field_Program_f, diz.field_Main_r2, p_method_Future_Elect__Integer__Integer__Integer__Integer__Integer(diz.field_Main_rank, diz.field_Main_pr.field_Program_size, diz.field_Main_val, diz.field_Main_pr.field_Program_maxvalue, 0)), write)
+  ensures acc(diz.field_Main_rank, 1 / 2)
+  ensures acc(diz.field_Main_val, 1 / 2)
+  ensures acc(diz.field_Main_pr, 1 / 2)
+  ensures diz.field_Main_pr != null
+  ensures acc(diz.field_Main_r1, 1 / 2)
+  ensures frac_val(diz.field_Main_r1) != none
+  ensures acc(diz.field_Main_r2, 1 / 2)
+  ensures frac_val(diz.field_Main_r2) != none
+  ensures acc(diz.field_Main_pr.field_Program_f, frac_val(diz.field_Main_r1))
+  ensures diz.field_Main_pr.field_Program_f != null
+  ensures acc(diz.field_Main_pr.field_Program_size, frac_val(diz.field_Main_r1))
+  ensures acc(diz.field_Main_pr.field_Program_maxvalue, frac_val(diz.field_Main_r1))
+  ensures acc(diz.field_Main_pr.field_Program_initialised, frac_val(diz.field_Main_r1))
+  ensures diz.field_Main_pr.field_Program_initialised
+  ensures 0 <= diz.field_Main_rank && diz.field_Main_rank < diz.field_Main_pr.field_Program_size
+  ensures 0 <= diz.field_Main_val && diz.field_Main_val < diz.field_Main_pr.field_Program_maxvalue
+  ensures acc(hist_idle(diz.field_Main_pr.field_Program_f, diz.field_Main_r2, p_empty()), write)
+{
+  var res__65: Int
+  var __flatten_27__66: Ref
+  var __flatten_28__67: Process
+  var __flatten_30__68: Ref
+  var __flatten_31__69: Ref
+  var __flatten_32__70: Ref
+  var __flatten_33__71: Seq[Int]
+  var __flatten_35__72: Ref
+  var __flatten_36__73: Process
+  res__65 := method_Program_elect__Integer__Integer(diz.field_Main_pr, current_thread_id, globals, diz.field_Main_rank, diz.field_Main_val, diz.field_Main_r1, diz.field_Main_r2)
+  inhale acc(method_Program_lock_invariant(diz.field_Main_pr, globals), write)
+  unfold acc(method_Program_lock_invariant(diz.field_Main_pr, globals), write)
+  inhale acc(method_Program_lock_held(diz.field_Main_pr, globals), write)
+  __flatten_27__66 := diz.field_Main_pr
+  __flatten_28__67 := p_empty()
+  method_Future_Done__Integer__Integer_begin(__flatten_27__66.field_Program_f, current_thread_id, diz.field_Main_r2, __flatten_28__67, diz.field_Main_rank, res__65)
+  __flatten_30__68 := diz.field_Main_pr
+  __flatten_32__70 := diz.field_Main_pr
+  __flatten_31__69 := __flatten_32__70.field_Program_f
+  __flatten_33__71 := method_Program_update__Sequence$Integer$__Integer__Integer(__flatten_31__69.results_hist_value, diz.field_Main_rank, res__65)
+  hist_set_results(__flatten_30__68.field_Program_f, current_thread_id, __flatten_33__71)
+  __flatten_35__72 := diz.field_Main_pr
+  __flatten_36__73 := p_empty()
+  method_Future_Done__Integer__Integer_commit(__flatten_35__72.field_Program_f, current_thread_id, diz.field_Main_r2, __flatten_36__73, diz.field_Main_rank, res__65)
+  exhale acc(method_Program_lock_held(diz.field_Main_pr, globals), write)
+  fold acc(method_Program_lock_invariant(diz.field_Main_pr, globals), write)
+  exhale acc(method_Program_lock_invariant(diz.field_Main_pr, globals), write)
+  label method_end_method_Main_run_8
+}
+
+method array_new_Sequence_Sequence_Integer__(size0: Int) returns (sys__result: Seq[Seq[Int]])
+  ensures 0 < size0 ==> sys__result == Seq[Seq[Int]]()
+{
+  inhale false
+}
+
+method array_new_Sequence_Integer_(size0: Int) returns (sys__result: Seq[Int])
+  ensures 0 < size0 ==> sys__result == Seq[Int]()
+{
+  inhale false
+}
