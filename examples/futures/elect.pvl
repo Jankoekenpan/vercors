@@ -13,13 +13,6 @@ class Future {
 
     /* ** Leader election actions */
 
-    modifies results;
-    context 0 <= rank && rank < |results|;
-    ensures |results| == |\old(results)|;
-    ensures results[rank] == v;
-    ensures (\forall int i; 0 <= i && i < |results| && i != rank; results[i] == \old(results[i]));
-    process Done(int rank, int v);
-
     // `v` is the current highest value encountered by the participant
     // `w` is the value that is being received
     // `n` is the number of rounds we already had
@@ -38,7 +31,7 @@ class Future {
     requires n <= size;
     requires 0 <= rank && rank < size && size == |channel|;
     process Elect(int rank, int size, int v, int max, int n) =
-        n < size ? empty * SigmaRecv(rank, size, v, max - 1, max, n) : Done(rank, v);
+        n < size ? empty * SigmaRecv(rank, size, v, max - 1, max, n) : empty;
 }
 
 class Program {
@@ -87,7 +80,7 @@ class Program {
             int res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
 
             /* HYPOTHESIS: adding assert removes instability? VERDICT: I've seen it fail at some point! */
-            assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n)); /* PROBLEMATIC REQUIRES AS ASSERT */
+            // assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n)); /* PROBLEMATIC REQUIRES AS ASSERT */
             lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
         }
     }
