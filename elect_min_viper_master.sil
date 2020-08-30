@@ -417,36 +417,17 @@ method method_Program_mpi_recv__Integer(diz: Ref, current_thread_id: Int, global
   var __flatten_17__16: Seq[Seq[Int]]
   var __flatten_19__17: Process
   stop__10 := false
-  while (!stop__10)
-    invariant frac_val(q1) != none && frac_val(q2) != none
-    invariant acc(diz.field_Program_size, frac_val(q1))
-    invariant acc(diz.field_Program_maxvalue, frac_val(q1))
-    invariant 0 <= rank && rank < diz.field_Program_size
-    invariant acc(diz.field_Program_initialised, frac_val(q1))
-    invariant diz.field_Program_initialised
-    invariant acc(diz.field_Program_f, frac_val(q1))
-    invariant diz.field_Program_f != null
-    invariant diz.field_Program_size == old(diz.field_Program_size)
-    invariant diz.field_Program_maxvalue == old(diz.field_Program_maxvalue)
-    invariant diz.field_Program_f == old(diz.field_Program_f)
-    invariant 0 <= rank && rank < diz.field_Program_size
-    invariant !stop__10 ==> acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
-    invariant stop__10 ==> acc(hist_idle(diz.field_Program_f, q2, p_method_Future_Check__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, res__11, diz.field_Program_maxvalue, n)), write)
-    invariant stop__10 ==> 0 <= res__11 && res__11 < diz.field_Program_maxvalue 
-  {
-    inhale acc(method_Program_lock_invariant(diz, globals), write)
-    unfold acc(method_Program_lock_invariant(diz, globals), write)
-    inhale acc(method_Program_lock_held(diz, globals), write)
-    __flatten_11__12 := diz.field_Program_f
-    if (0 < |__flatten_11__12.channel_hist_value[(rank - 1) % diz.field_Program_size]|) {
-      __flatten_12__13 := diz.field_Program_f
-      res__11 := __flatten_12__13.channel_hist_value[(rank - 1) % diz.field_Program_size][0]
-      // assert
-      assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
-      /* PROBLEMATIC CALL */
-      method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, diz.field_Program_f, rank, v, diz.field_Program_maxvalue - 1, res__11, n, q2)
-    }
-    inhale false
+  inhale acc(method_Program_lock_invariant(diz, globals), write)
+  unfold acc(method_Program_lock_invariant(diz, globals), write)
+  inhale acc(method_Program_lock_held(diz, globals), write)
+  __flatten_11__12 := diz.field_Program_f
+  if (0 < |__flatten_11__12.channel_hist_value[(rank - 1) % diz.field_Program_size]|) {
+    __flatten_12__13 := diz.field_Program_f
+    res__11 := __flatten_12__13.channel_hist_value[(rank - 1) % diz.field_Program_size][0]
+    // assert
+    assert acc(hist_idle(diz.field_Program_f, q2, p_method_Future_SigmaRecv__Integer__Integer__Integer__Integer__Integer__Integer(rank, diz.field_Program_size, v, diz.field_Program_maxvalue - 1, diz.field_Program_maxvalue, n)), write)
+    /* PROBLEMATIC CALL */
+    method_Program_lemma_sigmaRecv_choice__Future__Integer__Integer__Integer__Integer__Integer(diz, current_thread_id, globals, diz.field_Program_f, rank, v, diz.field_Program_maxvalue - 1, res__11, n, q2)
   }
   inhale false
 }
