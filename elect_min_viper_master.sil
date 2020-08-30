@@ -379,29 +379,7 @@ method method_Future_Done__Integer__Integer_begin(diz: Ref, current_thread_id: I
   inhale false
 }
 
-method method_Future_Done__Integer__Integer_commit(diz: Ref, current_thread_id: Int, fr: frac, proc: Process, rank: Int, v: Int)
-  requires diz != null
-  requires 0 <= current_thread_id
-  requires frac_val(fr) != none
-  requires acc(hist_do_method_Future_Done__Integer__Integer(diz, fr, proc), write)
-  requires write != none
-  requires acc(diz.results_hist_act, write)
-  requires acc(diz.results_hist_value, write)
-  requires acc(diz.results_hist_write, write)
-  requires acc(diz.results_hist_action, write)
-  requires 0 <= rank && rank < |diz.results_hist_value|
-  requires |diz.results_hist_value| == |diz.results_hist_act|
-  requires diz.results_hist_value[rank] == v
-  requires (forall i: Int :: { diz.results_hist_value[i] } { diz.results_hist_act[i] } 0 <= i && i < |diz.results_hist_value| && i != rank ==> diz.results_hist_value[i] == diz.results_hist_act[i])
-  ensures frac_val(fr) != none
-  ensures acc(hist_idle(diz, fr, proc), write)
-  ensures acc(diz.results_hist_value, write)
-  ensures acc(diz.results_hist_hist, write)
-  ensures diz.results_hist_value == old(diz.results_hist_value)
-{
-  inhale false
-}
-
+/* REMOVING THIS MAKES IT STABLE? UNTESTED */
 method hist_set_channel(diz: Ref, current_thread_id: Int, value: Seq[Seq[Int]])
   requires diz != null
   requires 0 <= current_thread_id
