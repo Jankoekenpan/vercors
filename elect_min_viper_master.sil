@@ -230,6 +230,7 @@ predicate method_Program_lock_invariant(diz: Ref, globals: Ref) {
   diz != null && (acc(diz.field_Program_initialised, 1 / 2) && acc(diz.field_Program_size, 1 / 2) && acc(diz.field_Program_maxvalue, 1 / 2) && 0 < diz.field_Program_maxvalue && (diz.field_Program_initialised ? acc(diz.field_Program_f, 1 / 2) && diz.field_Program_f != null : true) && (diz.field_Program_initialised ? acc(diz.field_Program_f.channel_hist_value, write) && acc(diz.field_Program_f.channel_hist_hist, write) && diz.field_Program_size == |diz.field_Program_f.channel_hist_value| : true) && (diz.field_Program_initialised ? acc(diz.field_Program_f.results_hist_value, write) && acc(diz.field_Program_f.results_hist_hist, write) && diz.field_Program_size == |diz.field_Program_f.results_hist_value| : true) && (diz.field_Program_initialised ==> (forall i: Int, j: Int :: { diz.field_Program_f.channel_hist_value[i][j] } 0 <= i && i < diz.field_Program_size && (0 <= j && j < |diz.field_Program_f.channel_hist_value[i]|) ==> 0 <= diz.field_Program_f.channel_hist_value[i][j] && diz.field_Program_f.channel_hist_value[i][j] < diz.field_Program_maxvalue)))
 }
 
+/* REMOVING THESE TWO MAKES STABLE? */
 predicate method_Main_joinToken(diz: Ref, globals: Ref) 
 
 predicate method_Main_idleToken(diz: Ref, globals: Ref) 
