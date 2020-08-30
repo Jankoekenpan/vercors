@@ -164,7 +164,6 @@ def constructSolverCommand(args):
 
 if __name__ == "__main__":
     args = parseArgs()
-
     solver = getSolver(args)
     processArgs = constructSolverCommand(args)
 
