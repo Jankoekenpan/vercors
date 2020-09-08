@@ -1,0 +1,87 @@
+// -*- tab-width:2 ; indent-tabs-mode:nil -*-
+//:: case LeaderElect
+//:: tool silicon
+//:: suite problem-fail
+//:: option --check-history
+
+class Future {
+
+    /* ** Communication primitives */
+
+    seq<seq<int>> channel; // communication channels
+    seq<int> results; // results from leader elections
+
+    /* ** Leader election actions */
+
+    // `v` is the current highest value encountered by the participant
+    // `w` is the value that is being received
+    // `n` is the number of rounds we already had
+    requires 0 <= w;
+    requires 0 <= rank && rank < size && size == |channel|;
+    process SigmaRecv(int rank, int size, int v, int w, int max, int n) =
+        0 < w ? Check(rank, size, v, w, max, n) + SigmaRecv(rank, size, v, w - 1, max, n) :
+                        Check(rank, size, v, w, max, n);
+
+    // compares the received value `w` with the current highest value `v` of a participant, which continues with the biggest of the two values.
+    requires 0 <= w;
+    requires 0 <= rank && rank < size && size == |channel|;
+    process Check(int rank, int size, int v, int w, int max, int n) =
+        Elect(rank, size, v <= w ? w : v, max, n + 1);
+
+    requires n <= size;
+    requires 0 <= rank && rank < size && size == |channel|;
+    process Elect(int rank, int size, int v, int max, int n) =
+        n < size ? SigmaRecv(rank, size, v, max - 1, max, n) : empty;
+}
+
+class Program {
+    boolean initialised;
+    int size;
+    int maxvalue;
+    Future f;
+
+    /* ** Auxiliary lemmas */
+
+    given frac q;
+    requires q != none;
+    requires Perm(maxvalue, 1\2);
+    requires Perm(size, 1\2) ** 0 <= size;
+    requires f != null ** HPerm(f.channel, 1\2);
+    requires 0 <= rank && rank < size;
+    requires 0 <= x && x <= w;
+    requires Future(f, q, f.SigmaRecv(rank, size, v, w, maxvalue, n)); /* PROBLEMATIC REQUIRES? */
+    void lemma_sigmaRecv_choice(Future f, int rank, int v, int w, int x, int n);
+
+    /* ** Message passing primitives */
+
+    given int v;
+    given int n;
+    given frac q1; // ownership of the program `p`
+    given frac q2; // ownershow of the future `f`
+    requires q1 != none && q2 != none;
+    requires Perm(size, q1) ** Perm(maxvalue, q1);
+    requires 0 <= rank && rank < size;
+    requires Perm(initialised, q1) ** initialised;
+    requires Perm(f, q1) ** f != null;
+    requires Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n));
+    void mpi_recv(int rank) { /* UNSTABLE METHOD? */
+        // Inlined:
+        // lock this;
+        // HYPOTHESIS: Factoring out initialised gets rid of instability it seems? VERDICT: Yes, 1000 passes encountered.
+        inhale Perm(initialised, 1\2) ** Perm(size, 1\2) **
+            Perm(maxvalue, 1\2) ** 0 < maxvalue **
+            (initialised ? Perm(f, 1\2) ** f != null: true) **
+            (initialised ? HPerm(f.channel, write) ** size == |f.channel| : true) **
+            (initialised ? HPerm(f.results, write) ** size == |f.results| : true) **
+            (initialised ==> (\forall int i; 0 <= i && i < size; (\forall int j; 0 <= j && j < |f.channel[i]|; 0 <= f.channel[i][j] && f.channel[i][j] < maxvalue)));
+
+        if (0 < |f.channel[(rank - 1) % size]|) {
+            // going to contain the resulting, received value
+            int res = head(f.channel[(rank - 1) % size]); // this is the value we'll receive
+
+            /* HYPOTHESIS: adding assert removes instability? VERDICT: I've seen it fail at some point! */
+            // assert Future(f, q2, f.SigmaRecv(rank, size, v, maxvalue - 1, maxvalue, n)); /* PROBLEMATIC REQUIRES AS ASSERT */
+            lemma_sigmaRecv_choice(f, rank, v, maxvalue - 1, res, n) with { q = q2; }; /* ERROR UNSTABLE? */
+        }
+    }
+}

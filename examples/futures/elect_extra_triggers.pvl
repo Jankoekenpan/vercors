@@ -15,14 +15,14 @@ class Future {
 	context 0 <= rank && rank < |channel|;
 	ensures |channel| == |\old(channel)|;
 	ensures channel[rank] == \old(channel[rank]) + seq<int> { msg };
-	ensures (\forall int i; 0 <= i && i < |channel| && i != rank; channel[i] == \old(channel[i]));
+	ensures (\forall int i; 0 <= i && i < |channel| && i != rank; {: channel[i] :} == \old(channel[i]));
 	process Send(int rank, int msg);
 	
 	modifies channel;
 	context 0 <= rank && rank < |channel|;
 	ensures |channel| == |\old(channel)|;
 	ensures seq<int> { msg } + channel[rank] == \old(channel[rank]);
-	ensures (\forall int i; 0 <= i && i < |channel| && i != rank; channel[i] == \old(channel[i]));
+	ensures (\forall int i; 0 <= i && i < |channel| && i != rank; {: channel[i] :} == \old(channel[i]));
 	process Recv(int rank, int msg);
 	
 	
@@ -32,7 +32,7 @@ class Future {
 	context 0 <= rank && rank < |results|;
 	ensures |results| == |\old(results)|;
 	ensures results[rank] == v;
-	ensures (\forall int i; 0 <= i && i < |results| && i != rank; results[i] == \old(results[i]));
+	ensures (\forall int i; 0 <= i && i < |results| && i != rank; {: results[i] :} == \old(results[i]));
 	process Done(int rank, int v);
 	
 	// `v` is the current highest value encountered by the participant
@@ -60,7 +60,7 @@ class Future {
 	
 	requires 0 <= rank && rank < size && size == |channel|;
 	requires |xs| == size;
-	requires (\forall int i; 0 <= i && i < |xs|; (\forall int j; 0 <= j && j < |xs| && i != j; xs[i] != xs[j])); // uniqueness
+	requires (\forall int i; 0 <= i && i < |xs|; (\forall int j; 0 <= j && j < |xs| && i != j; {: xs[i] :} != xs[j])); // uniqueness
 	requires (\forall int i; 0 <= i && i < |xs|; 0 <= xs[i] && xs[i] < max);
 	process Spawn(int rank, int size, seq<int> xs, int max) =
 		rank < size ? Elect(rank, size, xs[rank], max, 0) || Spawn(rank + 1, size, xs, max) : empty;
