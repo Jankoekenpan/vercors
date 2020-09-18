@@ -2,8 +2,8 @@
 //:: tools silicon
 //:: verdict Pass
 
-import java.io.IOException;
 import java.io.*;
+import java.util.InputMismatchException;
 
 class C {
     void doWork() throws Exception;
@@ -108,41 +108,39 @@ class C {
     }
     */
 
-    /*
-    // From:https://stackoverflow.com/questions/45519655/how-do-i-use-try-catch-statement-with-switch-case-but-loop-the-swich-case
+    // Adapted from:https://stackoverflow.com/questions/45519655/how-do-i-use-try-catch-statement-with-switch-case-but-loop-the-swich-case
+    int getUserInput() throws InputMismatchException;
+
+    void chatWithUser();
+    void gameWithUser();
+    void editWithUser();
+
     void scanUserInput() {
-        Scanner userinput = new Scanner(System.in);
-        int startup;
+        int userChoice = 0;
+        //@ loop_invariant 0 <= userChoice && userChoice <= 3;
         while (true) {
             try {
-                System.out.println("Press \"1\" to chat" + " & " + "\"2\" to play games" + " & \"3\" to edit the conversations");
-                System.out.println("Typing other numbers will end the Chatbot");
-                startup = userinput.nextInt();
-                switch (startup) {
+                userChoice = getUserInput();
+                switch (userChoice) {
                     case 1:
-                        ConversationBot chat = new ConversationBot();
-                        chat.ChattingBot();
+                        chatWithUser();
                         break;
                     case 2:
-                        GameBot game = new GameBot();
-                        game.GamingBot();
+                        gameWithUser();
                         break;
                     case 3:
-                        EditBot edit = new EditBot();
-                        edit.EditingBot();
+                        editWithUser();
                         break;
                     default:
-                        System.exit(0);
+                        return;
                 }
             } catch (InputMismatchException e) {
-                System.out.println("Invalid User Input. Please enter a value from 0 to 4.");
+                assert userChoice == 0; // Hmmmm...
                 continue;
             }
         }
-        //@ assert 1 <= startup && start <= 3;
+        //@ assert 1 <= userChoice && userChoice <= 3;
     }
-    // TODO (Bob): Simplify this example? Can probably do without the dependency on Scanner
-    */
 
     /*
     for (Cat cat : cattery) {
