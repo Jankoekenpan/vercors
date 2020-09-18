@@ -76,7 +76,6 @@ class C {
         //@ assert caughtException ==> total == 70;
     }
 
-    /*
     void throwCheckedException() throws Exception {
         try {
             writeToDatabase();
@@ -85,7 +84,6 @@ class C {
             throw new Exception(e);
         }
     }
-    */
 
     /*
     int countBytesInFile(String path) {
