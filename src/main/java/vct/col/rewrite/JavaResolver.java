@@ -4,8 +4,6 @@ import java.io.File;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -33,6 +31,8 @@ import vct.parsers.rewrite.RemoveBodies;
 public class JavaResolver extends AbstractRewriter {
 
   private ClassLoader path=this.getClass().getClassLoader();
+
+  private Set<String> beingAdded = new HashSet<>();
   
   public JavaResolver(ProgramUnit source) {
     super(source);
@@ -42,6 +42,20 @@ public class JavaResolver extends AbstractRewriter {
           "printStackTrace",
           "getMessage"
   );
+
+  private boolean isThrowable(Class<?> clazz) {
+    // If an interface type is given
+    if (clazz == null) return false;
+
+    String canonicalName = clazz.getCanonicalName();
+    if (canonicalName.equals("java.lang.Object")) {
+      return false;
+    } else if (canonicalName.equals("java.lang.Throwable")) {
+      return true;
+    } else {
+      return isThrowable(clazz.getSuperclass());
+    }
+  }
   
   private boolean ensures_loaded(String ... name){
     {
@@ -57,6 +71,10 @@ public class JavaResolver extends AbstractRewriter {
     if (target().find(ClassName.toString(name,FQN_SEP))!=null){
       return true;
     }
+    if (beingAdded.contains(ClassName.toString(name, FQN_SEP))) {
+      // It is in the process of being added but not yet exists in the target AST
+      return true;
+    }
     if(base_path!=null && tryFileBase(base_path.toFile(),name)){
       return true;
     }
@@ -68,6 +86,7 @@ public class JavaResolver extends AbstractRewriter {
       String cl_name=cln.toString();
       Class<?> cl=path.loadClass(cl_name);
       Debug("loading %s",cl_name);
+      beingAdded.add(ClassName.toString(name, FQN_SEP));
       create.enter();
       create.setOrigin(new MessageOrigin("library class %s",cl_name));
       ClassType superClass = null;
@@ -123,8 +142,12 @@ public class JavaResolver extends AbstractRewriter {
           // (since each parameter type causes another import of a new type with new constructors)
           // Once we figure out how to prune the imported classes
           // (either at import time or as a distinct pass) we can re-enable this again.
+          // As an exception, we allow constructors with one parameter that is a throwable type.
+          // THis is to allow wrapping exception constructors.
     	  if (pars.length != 0) {
-    	    continue;
+    	    if (!(pars.length == 1 && isThrowable(pars[0]))) {
+    	        continue;
+            }
           }
     	  DeclarationStatement args[]=new DeclarationStatement[pars.length];
     	  for(int i=0;i<pars.length;i++){

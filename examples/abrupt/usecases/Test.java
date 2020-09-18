@@ -38,7 +38,6 @@ class C {
         }
     }
 
-    /*
     // Contract is still needed:
     //@ signals (RuntimeException e) true;
     void throwUncheckedException() {
@@ -48,9 +47,7 @@ class C {
             // TODO (Bob): Add constructor with causes from std library
             throw new RuntimeException(e);
         }
-        //@ assert false;
     }
-    */
 
     /*
     void printException() {
