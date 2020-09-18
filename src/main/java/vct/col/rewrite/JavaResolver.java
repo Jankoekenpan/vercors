@@ -4,8 +4,12 @@ import java.io.File;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
 import hre.ast.FileOrigin;
 import hre.ast.MessageOrigin;
@@ -33,6 +37,11 @@ public class JavaResolver extends AbstractRewriter {
   public JavaResolver(ProgramUnit source) {
     super(source);
   }
+
+  final Set<String> allowedMethods = Set.of(
+          "printStackTrace",
+          "getMessage"
+  );
   
   private boolean ensures_loaded(String ... name){
     {
@@ -74,31 +83,39 @@ public class JavaResolver extends AbstractRewriter {
       /* But: we want these methods around if they are used in the rest of the program!
            Once the type system understands inheritance, the unused methods can be pruned. */
       // We use getDeclaredMethods to exclude inherited methods. Inherited methods should be added by a proper inheritance pass.
-//      for(java.lang.reflect.Method m:cl.getDeclaredMethods()){
-//        // Only public methods are allowed since protected is only accesible from the same package (and we're not std) and private is not accesible altogether
-//        if (!Modifier.isPublic(m.getModifiers())) {
-//          continue;
-//        }
-//        // We skip bridge methods (i.e. methods generated to bridge the gap between a method returning float[] and a method returning Object).
-//        // https://stackoverflow.com/questions/1961350/problem-in-the-getdeclaredmethods-java
-//        if (m.isBridge()) {
-//          continue;
-//        }
-//        Class<?> c=m.getReturnType();
-//        Type returns = convert_type(c);
-//        Class<?> pars[]=m.getParameterTypes();
-//        DeclarationStatement args[]=new DeclarationStatement[pars.length];
-//        for(int i=0;i<pars.length;i++){
-//          args[i]=create.field_decl("x"+i, convert_type(pars[i]));
-//        }
-//        if (m.isVarArgs()){
-//          DeclarationStatement old=args[pars.length-1];
-//          args[pars.length-1] = create.field_decl(old.name(), (Type)old.getType().firstarg());
-//        }
-//        Method ast=create.method_kind(Method.Kind.Plain , returns, null, m.getName(),args, m.isVarArgs() , null);
-//        ast.setFlag(ASTFlags.STATIC,Modifier.isStatic(m.getModifiers()));
-//        res.add(ast);
-//      }
+      for(java.lang.reflect.Method m:cl.getDeclaredMethods()){
+        // Only allow a select few methods to prevent blowup
+        if (!allowedMethods.contains(m.getName())) {
+          continue;
+        }
+        // Only allow parameterless methods because otherwise many types get imported transitively
+        if (m.getParameterTypes().length != 0) {
+          continue;
+        }
+        // Only public methods are allowed since protected is only accesible from the same package (and we're not std) and private is not accesible altogether
+        if (!Modifier.isPublic(m.getModifiers())) {
+          continue;
+        }
+        // We skip bridge methods (i.e. methods generated to bridge the gap between a method returning float[] and a method returning Object).
+        // https://stackoverflow.com/questions/1961350/problem-in-the-getdeclaredmethods-java
+        if (m.isBridge()) {
+          continue;
+        }
+        Class<?> c=m.getReturnType();
+        Type returns = convert_type(c);
+        Class<?> pars[]=m.getParameterTypes();
+        DeclarationStatement args[]=new DeclarationStatement[pars.length];
+        for(int i=0;i<pars.length;i++){
+          args[i]=create.field_decl("x"+i, convert_type(pars[i]));
+        }
+        if (m.isVarArgs()){
+          DeclarationStatement old=args[pars.length-1];
+          args[pars.length-1] = create.field_decl(old.name(), (Type)old.getType().firstarg());
+        }
+        Method ast=create.method_kind(Method.Kind.Plain , returns, null, m.getName(),args, m.isVarArgs() , null);
+        ast.setFlag(ASTFlags.STATIC,Modifier.isStatic(m.getModifiers()));
+        res.add(ast);
+      }
       for (java.lang.reflect.Constructor<?> m : cl.getConstructors()) {
     	  Class<?> pars[]=m.getParameterTypes();
     	  // We only allow imported constructors without formal parameters. This is to make sure

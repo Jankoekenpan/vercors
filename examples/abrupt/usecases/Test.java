@@ -6,16 +6,11 @@ import java.io.IOException;
 import java.io.*;
 
 class C {
-    void doWork() throws Exception {
+    void doWork() throws Exception;
 
-    }
+    void writeToDatabase() throws IOException;
 
-    void writeToDatabase() throws IOException {
-
-    }
-
-    void log(String s) {
-    }
+    void log(String s);
 
     void ignoreException() {
         try {
@@ -25,7 +20,6 @@ class C {
         }
     }
 
-    /*
     void logException() {
         try {
             doWork();
@@ -34,9 +28,7 @@ class C {
             log(e.getMessage());
         }
     }
-    */
 
-    /*
     void printStackTrace() {
         try {
             doWork();
@@ -45,7 +37,6 @@ class C {
             e.printStackTrace();
         }
     }
-    */
 
     /*
     // Contract is still needed:
