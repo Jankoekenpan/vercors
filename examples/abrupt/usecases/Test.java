@@ -6,25 +6,23 @@ import java.io.*;
 import java.util.InputMismatchException;
 
 class C {
-    void doWork() throws Exception;
+    ///////////////////////
+    // Utility functions //
+    ///////////////////////
 
-    void writeToDatabase() throws IOException;
-
+    void doWork() throws RuntimeException;
+    void readBuffer() throws IOException;
     void log(String s);
+    void println(String s);
 
-    void ignoreException() {
-        try {
-            doWork();
-        } catch (Exception e) {
-            // Ignore
-        }
-    }
+    ///////////////////
+    // Plain catches //
+    ///////////////////
 
     void logException() {
         try {
             doWork();
-        } catch (Exception e) {
-            // TODO (Bob): Add getMessage()
+        } catch (RuntimeException e) {
             log(e.getMessage());
         }
     }
@@ -32,33 +30,47 @@ class C {
     void printStackTrace() {
         try {
             doWork();
-        } catch (Exception e) {
-            // TODO (Bob): Add printStackTrace()
+        } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }
 
-    // Contract is still needed:
-    //@ signals (RuntimeException e) true;
-    void throwUncheckedException() {
+    void printStackTrace() {
         try {
             doWork();
-        } catch (Exception e) {
-            // TODO (Bob): Add constructor with causes from std library
+        } catch (RuntimeException e) {
+            println(e.getMessage());
+        }
+    }
+
+    void ignoreException() {
+        try {
+            doWork();
+        } catch (RuntimeException e) {
+            // Ignore
+        }
+    }
+
+    //////////////////////////
+    // Exceptional handling //
+    //////////////////////////
+
+    //@ signals (RuntimeException e);
+    void convertIntoUnchecked() {
+        try {
+            readBuffer();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    /*
-    void printException() {
+    void convertIntoChecked() throws IOException {
         try {
             doWork();
-        } catch (Exception e) {
-            // TODO (Bob): Need some string support for this
-            System.out.println("Abcde");
+        } catch (RuntimeException e) {
+            throw new IOException(e);
         }
     }
-    */
 
     void useVariableDeclarations() {
         int total = 0;
@@ -74,15 +86,6 @@ class C {
             total = z;
         }
         //@ assert caughtException ==> total == 70;
-    }
-
-    void throwCheckedException() throws Exception {
-        try {
-            writeToDatabase();
-        } catch (IOException e) {
-            // TODO (Bob): Need a constructor here
-            throw new Exception(e);
-        }
     }
 
     /*
