@@ -49,34 +49,42 @@ final class Heap {
      @*/
 
     /*@
-        requires xs != null;
-        requires Perm(xs[*], read);
-        requires 0 <= j && j < xs.length;
-        private static bool isSubHeap(int[] xs, int j) =
-            (\let int left = childIndex(j, true);
-            (\let int right = childIndex(j, false);
-            (left < xs.length ==>
-                xs[j] >= xs[left] && isSubHeap(xs, left))
-            &&
-            (right < xs.length ==>
-                xs[j] >= xs[right] && isSubHeap(xs, right))));
-     @*/
+    requires xs != null;
+    requires Perm(xs[*], read);
+    requires 0 <= j && j < xs.length;
+    private static bool isSubHeap(int[] xs, int j) =
+        (\let int left = childIndex(j, true);
+        (\let int right = childIndex(j, false);
+        (left < xs.length ==>
+            xs[j] >= xs[left] && isSubHeap(xs, left))
+        &&
+        (right < xs.length ==>
+            xs[j] >= xs[right] && isSubHeap(xs, right))));
+
+    requires xs != null;
+    requires Perm(xs[*], read);
+    private static bool isHeap(int[] xs) = xs.length > 0 ==> isSubHeap(xs, 0);
+    @*/
 
     /*@
-        requires xs != null;
-        requires Perm(xs[*], read);
-        requires 0 <= j && j < xs.length;
-        private static bool isSubHeapSkip(int[] xs, int j, int freshIndex) =
-            (\let int left = childIndex(j, true);
-            (\let int right = childIndex(j, false);
-            (left < xs.length ==>
-                (freshIndex != left ==> xs[j] >= xs[left])
-                && isSubHeapSkip(xs, left, freshIndex))
-            &&
-            (right < xs.length ==>
-                (freshIndex != right ==> xs[j] >= xs[right])
-                && isSubHeapSkip(xs, right, freshIndex))));
-     @*/
+    requires xs != null;
+    requires Perm(xs[*], read);
+    requires 0 <= j && j < xs.length;
+    private static bool isSubHeapSkip(int[] xs, int j, int freshIndex) =
+        (\let int left = childIndex(j, true);
+        (\let int right = childIndex(j, false);
+        (left < xs.length ==>
+            (freshIndex != left ==> xs[j] >= xs[left])
+            && isSubHeapSkip(xs, left, freshIndex))
+        &&
+        (right < xs.length ==>
+            (freshIndex != right ==> xs[j] >= xs[right])
+            && isSubHeapSkip(xs, right, freshIndex))));
+
+    requires xs != null;
+    requires Perm(xs[*], read);
+    private static bool isHeapSkip(int[] xs, int freshIndex) = xs.length > 0 ==> isSubHeapSkip(xs, 0, freshIndex);
+    @*/
 
     /*@
     given frac P;
@@ -89,6 +97,8 @@ final class Heap {
     requires isSubHeap(xs, j);
     ensures isSubHeapSkip(ys, j, xs.length);
     ghost private void lemmaSubHeapToSubHeapSkip(int[] xs, int[] ys, int j) {
+        inhale false;
+
         int left = childIndex(j, true);
         int right = childIndex(j, false);
         int freshIndex = xs.length;
@@ -119,17 +129,35 @@ final class Heap {
         // Now the main postcondition can be asserted:
         assert isSubHeapSkip(ys, j, freshIndex);
     }
-     @*/
+
+    given frac P;
+    context 0 < P && P < write;
+    context xs != null ** Perm(xs[*], P);
+    context ys != null ** Perm(ys[*], P);
+    context ys.length == xs.length + 1;
+    context (\forall int i = 0 .. xs.length; xs[i] == ys[i]);
+    requires isHeap(xs);
+    ensures isHeapSkip(ys, xs.length);
+    ghost private void lemmaHeapToHeapSkip(int[] xs, int[] ys) {
+        if (xs.length == 0) {
+
+        } else {
+            lemmaSubHeapToSubHeapSkip(xs, ys, 0) with { P = P \ 2; };
+        }
+    }
+
+    @*/
 
 
-    //@ requires Perm(buffer, 1\2) ** buffer != null ** Perm(buffer[*], write);
-    //@ requires buffer.length > 0 ==> isSubHeap(buffer, 0);
+    //@ context Perm(buffer, 1\2) ** buffer != null ** Perm(buffer[*], write);
+    //@ requires isHeap(buffer);
+    //@ ensures isHeap(buffer);
     void insert(int x) {
         int[] newBuffer = new int[buffer.length + 1];
         int i;
 
         //@ loop_invariant Perm(newBuffer[*], write);
-        //@ loop_invariant Perm(buffer, 1\2) ** buffer != null ** Perm(buffer[*], 1\2);
+        //@ loop_invariant Perm(buffer, 1\4) ** buffer != null ** Perm(buffer[*], 1\4);
         //@ loop_invariant 0 <= i && i <= buffer.length;
         //@ loop_invariant newBuffer.length == buffer.length + 1;
         //@ loop_invariant (\forall int j = 0 .. i; newBuffer[j] == buffer[j]);
@@ -138,16 +166,32 @@ final class Heap {
         }
 
         newBuffer[buffer.length] = x;
+        int newIndex = buffer.length;
 
-        if (newBuffer.length == 1) {
-            // Already sorted
-            //@ assert isSubHeap(newBuffer, 0);
-        } else {
-            //@ assert buffer.length > 0;
-            //@ assert isSubHeap(buffer, 0);
-            //@ assert newBuffer.length > 1;
-            //@ ghost lemmaSubHeapToSubHeapSkip(buffer, newBuffer, 0) with { P = 1 \ 4; };
-            //@ assert isSubHeapSkip(newBuffer, 0, newBuffer.length - 1);
+        //@ ghost lemmaHeapToHeapSkip(buffer, newBuffer) with { P = 1\1000; };
+        //@ assert isHeapSkip(newBuffer, newIndex);
+
+        //@ loop_invariant Perm(newBuffer[*], write);
+        //@ loop_invariant 0 <= newIndex && newIndex < newBuffer.length;
+        //@ loop_invariant isHeapSkip(newBuffer, newIndex);
+        while ((!(newBuffer[parentIndex(newIndex)] >= newBuffer[newIndex]))) {
+            int insertedValue = newBuffer[newIndex];
+            int oldValue = newBuffer[parentIndex(newIndex)];
+            newBuffer[newIndex] = oldValue;
+            newBuffer[parentIndex(newIndex)] = insertedValue;
+            //@ assert insertedValue > oldValue;
+            //@ assert isSubHeap(newBuffer, newIndex);
+            //@ inhale false;
+            newIndex = parentIndex(newIndex);
+            //@ assert isHeapSkip(newBuffer, newIndex);
+            //@ assert false;
         }
+        /*
+
+        //@ assert isHeap(newBuffer);
+        //@ assert false;
+
+        buffer = newBuffer;
+         */
     }
 }
