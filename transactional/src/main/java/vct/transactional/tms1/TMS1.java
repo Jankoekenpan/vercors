@@ -14,18 +14,18 @@ public class TMS1 {
     public TMS1() {
     }
 
-    public void addTransaction(Transaction transaction) {
+    void addTransaction(Transaction transaction) {
         assert transaction.tms1 == this;
         this.allTransactions.add(transaction);
     }
 
-    public void addTransactions(Iterable<Transaction> transactions) {
+    void addTransactions(Iterable<Transaction> transactions) {
         for (Transaction transaction : transactions) {
             addTransaction(transaction);
         }
     }
 
-    public void addTransactions(Transaction... transactions) {
+    void addTransactions(Transaction... transactions) {
         for (Transaction transaction : transactions) {
             addTransaction(transaction);
         }
@@ -244,5 +244,5 @@ public class TMS1 {
 
         return res;
     }
-    
+
 }
