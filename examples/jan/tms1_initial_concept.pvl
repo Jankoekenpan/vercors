@@ -1,14 +1,14 @@
+/*
 class TMS1 {
 
+    //relation on transactions that models which transactions go before which other transactions.
+    //the first transaction in the tuple happens before the second transaction in the tuple.
     set<tuple<Future/*Transaction*/, Future/*Transaction*/>> extOrder = set<tuple<Future/*Transaction*/, Future/*Transaction*/>> { } ;
 
 }
+*/
 
 class Future /*Transaction*/ {
-
-    Future(set<tuple<Future, Future>> extOrder) {
-        this.
-    }
 
     /*
     enum Status {

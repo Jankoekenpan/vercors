@@ -47,12 +47,14 @@ lazy val hre = project in file("hre")
 lazy val col = (project in file("col")).dependsOn(hre)
 lazy val parsers = (project in file("parsers")).dependsOn(hre, col)
 lazy val viper_api = (project in file("viper")).dependsOn(hre, col, silver_ref, carbon_ref, silicon_ref)
+lazy val transactional = (project in file("transactional"))
 
 lazy val vercors = (project in file("."))
   .dependsOn(hre)
   .dependsOn(col)
   .dependsOn(viper_api)
   .dependsOn(parsers)
+  .dependsOn(transactional)
   .settings(
     name := "Vercors",
     organization := "University of Twente",
