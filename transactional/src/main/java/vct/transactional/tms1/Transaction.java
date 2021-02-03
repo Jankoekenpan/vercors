@@ -121,6 +121,5 @@ public class Transaction {
         status = aborted;
     }
 
-
 }
 

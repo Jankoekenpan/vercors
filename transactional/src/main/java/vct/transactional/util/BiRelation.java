@@ -11,6 +11,14 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
     public BiRelation() {
     }
 
+    public final BiRelation<T, U> clone() {
+        BiRelation<T, U> result = new BiRelation<>();
+        for (Tuple<T, U> tup : this) {
+            result.add(tup);
+        }
+        return result;
+    }
+
     public long size() {
         long sum = 0;
         for (var entry : left2Rights.entrySet()) {
@@ -72,6 +80,7 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
         return remove(pair.getFirst(), pair.getSecond());
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o == this) return true;
         if (!(o instanceof BiRelation)) return false;
@@ -81,15 +90,17 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
         //no need to check for equal right2Lefts because it contains the same information, but stored differently.
     }
 
+    @Override
     public int hashCode() {
         return Objects.hash(this.left2Rights);
         //idem.
     }
 
+    @Override
     public String toString() {
         StringJoiner stringJoiner = new StringJoiner(", ", "{", "}");
         for (Tuple<T, U> pair : this){
-            stringJoiner.add(pair.getFirst() + "<=>" + pair.getSecond());
+            stringJoiner.add(pair.getFirst() + "<~>" + pair.getSecond());
         }
         return stringJoiner.toString();
     }
@@ -189,8 +200,7 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
 
 
     public Set<U> rights(T left) {
-        Set<U> us = left2Rights.get(left);
-        if (us == null) return Collections.emptySet();
+        Set<U> us = left2Rights.computeIfAbsent(left, x -> new HashSet<>());
 
         return new AbstractSet<U>() {
             @Override
@@ -309,8 +319,7 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
     }
 
     public Set<T> lefts(U right) {
-        Set<T> ts = right2Lefts.get(right);
-        if (ts == null) return Collections.emptySet();
+        Set<T> ts = right2Lefts.computeIfAbsent(right, y -> new HashSet<>());
 
         return new AbstractSet<T>() {
 
@@ -428,4 +437,5 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
             }
         };
     }
+
 }
