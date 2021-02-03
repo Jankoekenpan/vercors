@@ -5,7 +5,7 @@ import java.util.*;
 import static vct.transactional.tms1.Transaction.Status.*;
 import vct.transactional.util.Tuple;
 
-public class Transaction {
+public class Transaction<I, R> {
 
     enum Status {
         notStarted,
@@ -18,14 +18,14 @@ public class Transaction {
         aborted;
     }
 
-    final TMS1 tms1;
+    final TMS1<I, R, ? extends ObjectType<I, R>> tms1;
 
     private Status status = notStarted;
-    private List<Tuple<?, ?>> ops = new ArrayList<>();
-    private Object pendingOp;   //initially arbitrairy
+    private final List<Tuple<I, R>> ops = new ArrayList<>();
+    private I pendingOp;   //initially arbitrairy
     private boolean invokedCommit = false;
 
-    public Transaction(TMS1 tms1) {
+    public Transaction(TMS1<I, R, ? extends ObjectType<I,R>> tms1) {
         this.tms1 = Objects.requireNonNull(tms1, "tms1 cannot be null");
         this.tms1.addTransaction(this);
     }
@@ -34,14 +34,12 @@ public class Transaction {
         return status;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    final <I, R> List<Tuple<I, R>> getOps() {
-        return (List<Tuple<I, R>>) (List) ops;
+    final List<Tuple<I, R>> getOps() {
+        return Collections.unmodifiableList(ops); //TODO copy the tuples too or make an unmodifiable wrapper
     }
 
-    @SuppressWarnings("unchecked")
-    final <I> I getPendingOp() {
-        return (I) pendingOp;
+    final I getPendingOp() {
+        return pendingOp;
     }
 
     final public boolean hasInvokedCommit() {
@@ -68,7 +66,7 @@ public class Transaction {
         assert getStatus() == notStarted;
 
         status = beginPending;
-        for (Transaction doneTransaction : tms1.doneTransactions()) {
+        for (Transaction<I, R> doneTransaction : tms1.doneTransactions()) {
             tms1.extOrder.add(doneTransaction, this);
         }
     }
@@ -79,19 +77,19 @@ public class Transaction {
         status = ready;
     }
 
-    public <I> void inv(I i) {
+    public void inv(I i) {
         assert getStatus() == ready;
 
         status = opPending;
         pendingOp = i;
     }
 
-    public <R> void resp(R r) {
+    public void resp(R r) {
         assert getStatus() == opPending;
-        assert tms1.validResp(this, pendingOp, r);
+        assert tms1.validResp(this, getPendingOp(), r);
 
         status = ready;
-        ops.add(new Tuple<>(pendingOp, r));
+        ops.add(new Tuple<>(getPendingOp(), r));
     }
 
     public void commit() {
