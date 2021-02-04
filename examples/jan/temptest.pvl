@@ -1,0 +1,7 @@
+class C {
+    pure static int myConstant() = 3;
+
+    void method() {
+        assert 3 == myConstant();
+    }
+}

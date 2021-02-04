@@ -6,6 +6,12 @@ import java.util.stream.*;
 import vct.transactional.tms1.Transaction.Status;
 import vct.transactional.util.*;
 
+/**
+ * Models Transactional Memory Standard 1 as defined by Simon Doherty, Lindsay Groves, Victor Luchangco and Mark Moir
+ * in "Towards formally specifying and verifying transactional memory", section 3.
+ *
+ * @see <a href=https://doi.org/10.1007/s00165-012-0225-8>Towards formally specifying and verifying transactional memory</a>
+ */
 public class TMS1<I, R, O extends ObjectType<I, R>> {
 
     private final O objectType; //type-class pattern.

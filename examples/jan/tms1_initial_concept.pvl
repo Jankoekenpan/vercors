@@ -1,123 +1,133 @@
-/*
-class TMS1 {
 
-    //relation on transactions that models which transactions go before which other transactions.
-    //the first transaction in the tuple happens before the second transaction in the tuple.
-    set<tuple<Future/*Transaction*/, Future/*Transaction*/>> extOrder = set<tuple<Future/*Transaction*/, Future/*Transaction*/>> { } ;
+//class TMS1 {
+//
+//    //relation on transactions that models which transactions go before which other transactions.
+//    //the first transaction in the tuple happens before the second transaction in the tuple.
+//    set<tuple<Future/*Transaction*/, Future/*Transaction*/>> extOrder = set<tuple<Future/*Transaction*/, Future/*Transaction*/>> { } ;
+//
+//}
 
-}
-*/
 
 class Future /*Transaction*/ {
 
-    /*
-    enum Status {
-    	notStarted, beginPending, ready, opPending, commitPending, cancelPending, committed, aborted;
-    }
-    */
+    //enum Status {
+    //	notStarted, beginPending, ready, opPending, commitPending, cancelPending, committed, aborted;
+    //}
 
-    static final int STATUS_NOT_STARTED = 0;
-    static final int STATUS_BEGIN_PENDING = 1;
-    static final int STATUS_READY = 2;
-    static final int STATUS_OP_PENDING = 3;
-    static final int STATUS_COMMIT_PENDING = 4;
-    static final int STATUS_CANCEL_PENDING = 5;
-    static final int STATUS_COMMITTED = 6;
-    static final int STATUS_ABORTED = 7;
+    static pure int notStarted() = 0;
+    static pure int beginPending() = 1;
+    static pure int ready() = 2;
+    static pure int opPending() = 3;
+    static pure int commitPending() = 4;
+    static pure int cancelPending() = 5;
+    static pure int committed() = 6;
+    static pure int aborted() = 7;
 
-    static final int OP_I = 0;
-    static final int OP_R = 1;
+    static pure int i() = 0;
+    static pure int r() = 1;
 
     //some helper functions for lists (unfortunately there is no generic support yet, so now I'm hardcoding for int)
-    static pure int/*T*/ head(seq<int/*T*/> list) = list[0];
-    static pure int/*T*/ tail(seq<int/*T*/> list) = list[1..];
-    static pure seq<seq<int/*T*/>> tails(seq<int/*T*/> list) =
+    //pure int/*T*/ head(seq<int/*T*/> list) = list[0];
+    //pure int/*T*/ tail(seq<int/*T*/> list) = list[1..];
+    pure seq<seq<int/*T*/>> tails(seq<int/*T*/> list) =
         (list == seq<int/*T*/>{})
-            ? (seq<int/*T*/>{})
-            : (list :: tails(tail(list));
-    static pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
-    static pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2 = list1 + list2;
+            ? (seq<seq<int/*T*/>>{})
+            : (list :: tails(tail(list)));
+    pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
+    pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;
+    pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2) = list1 + list2;
     //Contrary to Haskell and Scala, PVL uses a single plus for concatenation and a double plus for appending!!
 
     //some helper functions for validation of this transaction
-    pure boolean validResp(int/*I*/ i, int/*R*/ r) = true;  //TODO implement this   (can use instance fields! :))
+    pure boolean validResp(Future self, int/*I*/ i, int/*R*/ r) = true;  //TODO implement this   (can use instance fields! :))
     pure boolean validCommit() = true;                      //TODO implement        (can use instance fields! :))
 
-    private static final int NUM_TRANSACTIONS = 10; //TODO convert fields to sequences of size NUM_TRANSACTIONS.
+    //int NUM_TRANSACTIONS = 10; //TODO convert fields to sequences of size NUM_TRANSACTIONS.
+
 
     //the 'current' status of this transaction
-    int status = STATUS_NOT_STARTED;
+    int status; // = notStarted()
 
     //the operations of this transaction
-    seq<tuple<int/*I*/, int/*R*/> ops = seq<tuple<int/*I*/, int/*R*/>> {};
+    seq<tuple<int/*I*/, int/*R*/>> ops; // seq<tuple<int/*I*/, int/*R*/>> {};
 
     //whether the commit transition has been taken
-    boolean invokedCommit = false;
+    boolean invokedCommit; // false;
 
-
+    //the last operation that is being tested whether it is allowed or not
+    int/*I*/ pendingOp; //initially arbitrary.
 
     //processes
-    process total(seq<int/*I*/> is, seq<int/*R*/> rs) = begin() * (abort() + (beginOk() + doOps(is, rs)));
+    process total(seq<int/*I*/> is, seq<int/*R*/> rs) = init() * begin() * (abort() + (beginOk() + doOps(is, rs)));
     process doOps(seq<int/*I*/> is, seq<int/*R*/> rs) = actions(is, rs) + (cancel() * abort()) + (commit() * (abort() + commitOk()));
     process actions(seq<int/*I*/> is, seq<int/*R*/> rs) = inv(head(is)) * responseOrAbort(tail(is), rs);
     process responseOrAbort(seq<int/*I*/> is, seq<int/*R*/> rs) = abort() + (resp(head(rs)) * actions(is, tail(rs)));
 
+    //init
+    modifies status;
+    modifies ops;
+    modifies invokedCommit;
+    ensures status == notStarted();
+    ensures ops == seq<tuple<int/*I*/, int/*R*/>> { };
+    ensures invokedCommit == true;
+    process init();
+
     //begin
     modifies status;
-    requires status == notStarted;
-    ensures status == beginPending;
+    requires status == notStarted();
+    ensures status == beginPending();
     //TODO modifies tms1.extOrder;
     //TODO ensures tms1.extOrder == \old(tms1.extOrder) \intersect (tms1.DT(), {this});
     process begin();
 
     //beginOk
     modifies status;
-    requires status == beginPending;
-    ensures status == ready;
+    requires status == beginPending();
+    ensures status == ready();
     process beginOk();
 
     //inv
     modifies status;
-    modifies pendingOp
-    requires status == ready;
-    ensures status == opPending;
+    modifies pendingOp;
+    requires status == ready();
+    ensures status == opPending();
     ensures pendingOp == i;
     process inv(int/*OP_I*/ i);
 
     //resp
     modifies status;
     modifies ops;
-    requires status == opPending;
+    requires status == opPending();
     requires validResp(this, pendingOp, r);
-    ensures status == ready;
-    ensures ops == append(\old(ops), tuple<int/*I*/, int/*R*/> {pendingOp, r})
+    ensures status == ready();
+    ensures ops == append(\old(ops), tuple<int/*I*/, int/*R*/> {pendingOp, r});
     process resp(int/*R*/ r);
 
     //commit
     modifies status;
     modifies invokedCommit;
-    requires status == ready;
-    ensures status == commitPending;
+    requires status == ready();
+    ensures status == commitPending();
     ensures invokedCommit == true;
     process commit();
 
     //commitOk
     modifies status;
-    requires status == commitPending;
+    requires status == commitPending();
     //TODO requires validCommit(t);
-    ensures status == committed;
-    proccss commitOk();
+    ensures status == committed();
+    process commitOk();
 
     //cancel
     modifies status;
-    requires status == ready;
-    ensures status == cancelPending;
+    requires status == ready();
+    ensures status == cancelPending();
     process cancel();
 
     //abort
     modifies status;
-    requires status in set<int/*Status*/> {STATUS_BEGIN_PENDING, STATUS_OP_PENDING, STATUS_COMMIT_PENDING, STATUS_CANCEL_PENDING};
-    ensures status == aborted;
+    requires status in set<int/*Status*/> {beginPending(), opPending(), commitPending(), cancelPending()};
+    ensures status == aborted();
     process abort();
 
 
