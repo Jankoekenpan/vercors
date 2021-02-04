@@ -58,9 +58,9 @@ class Future /*Transaction*/ {
 
     //processes
     process total(seq<int/*I*/> is, seq<int/*R*/> rs) = begin() * (abort() + (beginOk() + doOps(is, rs)));
-    process doOps(seq<int/*I*/> is, seq<int/*R*/> rs) = actions(is, rs) + (cancel() * abort()) + (commit() * (abort() + commitOk());
-    process actions(seq<int/*I*/> is, seq<int/*R*/> rs) = inv(head(is)) * responseOrAbort(tail(is));    //TODO add seceond argument!
-    process responseOrAbort(seq<int/*I*/> is, seq<int/*R*/> rs) = abort() + (response(head(rs) * actions(is, tails(rs)));   //TODO types don't match! seq<int> and seq<seq<int>>
+    process doOps(seq<int/*I*/> is, seq<int/*R*/> rs) = actions(is, rs) + (cancel() * abort()) + (commit() * (abort() + commitOk()));
+    process actions(seq<int/*I*/> is, seq<int/*R*/> rs) = inv(head(is)) * responseOrAbort(tail(is), rs);
+    process responseOrAbort(seq<int/*I*/> is, seq<int/*R*/> rs) = abort() + (resp(head(rs)) * actions(is, tail(rs)));
 
     //begin
     modifies status;

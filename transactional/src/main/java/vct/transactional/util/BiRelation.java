@@ -80,6 +80,11 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
         return remove(pair.getFirst(), pair.getSecond());
     }
 
+    public void clear() {
+        left2Rights.clear();
+        right2Lefts.clear();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
