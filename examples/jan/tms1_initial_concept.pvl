@@ -1,14 +1,10 @@
 
-//class TMS1 {
-//
-//    //relation on transactions that models which transactions go before which other transactions.
-//    //the first transaction in the tuple happens before the second transaction in the tuple.
-//    set<tuple<Future/*Transaction*/, Future/*Transaction*/>> extOrder = set<tuple<Future/*Transaction*/, Future/*Transaction*/>> { } ;
-//
-//}
+class TMS1 {
 
+    //relation on transactions that models which transactions go before which other transactions.
+    //the first transaction in the tuple happens before the second transaction in the tuple.
+    set<tuple<Future/*Transaction*/, Future/*Transaction*/>> extOrder;
 
-class Future /*Transaction*/ {
 
     //enum Status {
     //	notStarted, beginPending, ready, opPending, commitPending, cancelPending, committed, aborted;
@@ -29,21 +25,29 @@ class Future /*Transaction*/ {
     //some helper functions for lists (unfortunately there is no generic support yet, so now I'm hardcoding for int)
     //pure int/*T*/ head(seq<int/*T*/> list) = list[0];
     //pure int/*T*/ tail(seq<int/*T*/> list) = list[1..];
-    pure seq<seq<int/*T*/>> tails(seq<int/*T*/> list) =
+    static pure seq<seq<int/*T*/>> tails(seq<int/*T*/> list) =
         (list == seq<int/*T*/>{})
             ? (seq<seq<int/*T*/>>{})
             : (list :: tails(tail(list)));
-    pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
-    pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;
-    pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2) = list1 + list2;
+    static pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
+    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;
+    static pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2) = list1 + list2;
     //Contrary to Haskell and Scala, PVL uses a single plus for concatenation and a double plus for appending!!
 
+
+    TMS1() {
+        //initialize the extOrder relation usingan empty set.
+        extOrder = set<tuple<Future/*Transaction*/, Future/*Transaction*/>> { } ;
+    }
+
     //some helper functions for validation of this transaction
-    pure boolean validResp(Future self, int/*I*/ i, int/*R*/ r) = true;  //TODO implement this   (can use instance fields! :))
-    pure boolean validCommit() = true;                      //TODO implement        (can use instance fields! :))
+    static pure boolean validResp(Future/*Transaction*/ transaction, int/*I*/ i, int/*R*/ r) = true;   //TODO implement this
+    static pure boolean validCommit(Future/*Transaction*/ transaction) = true;                         //TODO implement this
 
-    //int NUM_TRANSACTIONS = 10; //TODO convert fields to sequences of size NUM_TRANSACTIONS.
+}
 
+
+class Future /*Transaction*/ {
 
     //the 'current' status of this transaction
     int status; // = notStarted()
@@ -67,67 +71,67 @@ class Future /*Transaction*/ {
     modifies status;
     modifies ops;
     modifies invokedCommit;
-    ensures status == notStarted();
+    ensures status == TMS1.notStarted();
     ensures ops == seq<tuple<int/*I*/, int/*R*/>> { };
     ensures invokedCommit == true;
     process init();
 
     //begin
     modifies status;
-    requires status == notStarted();
-    ensures status == beginPending();
+    requires status == TMS1.notStarted();
+    ensures status == TMS1.beginPending();
     //TODO modifies tms1.extOrder;
     //TODO ensures tms1.extOrder == \old(tms1.extOrder) \intersect (tms1.DT(), {this});
     process begin();
 
     //beginOk
     modifies status;
-    requires status == beginPending();
-    ensures status == ready();
+    requires status == TMS1.beginPending();
+    ensures status == TMS1.ready();
     process beginOk();
 
     //inv
     modifies status;
     modifies pendingOp;
-    requires status == ready();
-    ensures status == opPending();
+    requires status == TMS1.ready();
+    ensures status == TMS1.opPending();
     ensures pendingOp == i;
     process inv(int/*OP_I*/ i);
 
     //resp
     modifies status;
     modifies ops;
-    requires status == opPending();
-    requires validResp(this, pendingOp, r);
-    ensures status == ready();
-    ensures ops == append(\old(ops), tuple<int/*I*/, int/*R*/> {pendingOp, r});
+    requires status == TMS1.opPending();
+    requires TMS1.validResp(this, pendingOp, r);
+    ensures status == TMS1.ready();
+    ensures ops == TMS1.append(\old(ops), tuple<int/*I*/, int/*R*/> {pendingOp, r});
     process resp(int/*R*/ r);
 
     //commit
     modifies status;
     modifies invokedCommit;
-    requires status == ready();
-    ensures status == commitPending();
+    requires status == TMS1.ready();
+    ensures status == TMS1.commitPending();
     ensures invokedCommit == true;
     process commit();
 
     //commitOk
     modifies status;
-    requires status == commitPending();
-    //TODO requires validCommit(t);
-    ensures status == committed();
+    requires status == TMS1.commitPending();
+    requires TMS1.validCommit(this);
+    ensures status == TMS1.committed();
     process commitOk();
 
     //cancel
     modifies status;
-    requires status == ready();
-    ensures status == cancelPending();
+    requires status == TMS1.ready();
+    ensures status == TMS1.cancelPending();
     process cancel();
 
     //abort
     modifies status;
-    requires status in set<int/*Status*/> {beginPending(), opPending(), commitPending(), cancelPending()};
-    ensures status == aborted();
+    requires status in set<int/*Status*/> {TMS1.beginPending(), TMS1.opPending(), TMS1.commitPending(), TMS1.cancelPending()};
+    ensures status == TMS1.aborted();
     process abort();
 
 
@@ -158,7 +162,7 @@ class Future /*Transaction*/ {
     def validResp(t: Transaction, i: I, r: R): Boolean = \exists(S: set<Transaction>; S `subset` VT(); \exists(sigma: seq<Transaction>; sigma `in` ser(S, extOrder); extConstPrefix(S `union` {t}) && legal(ops(sigma `append` t) `append` (i, r))));
 
     //serializations
-    def ser(set1: set<Transaction>, set2: set<(Transaction, Transaction)>): set<seq<Transaction>> = //TODO all possible combinations of sequences of transactions
+    def ser(transactions: set<Transaction>, relation: set<(Transaction, Transaction)>): set<seq<Transaction>> = //TODO all possible combinations of sequences of transactions, according to the order of the relation
 
     //check whether a serialization is leagal
     def legal(sigma: seq<seq<(I, R)>>): Boolean = //TODO check that reads only read values that were previously written, or abitrary values if nothing was written yet

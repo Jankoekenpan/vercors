@@ -1,1 +1,6 @@
 //TODO!
+//class TMS1 {
+//
+//    static pure int NUM_TRANSACTIONS() = 10; //TODO convert fields in Future to sequences of size NUM_TRANSACTIONS.
+//
+//}

@@ -1,0 +1,11 @@
+class Hello {
+     pure static boolean alwaysTrue() = true;
+}
+
+
+class Future {
+
+    requires Hello.alwaysTrue();
+    process hello();
+
+}
