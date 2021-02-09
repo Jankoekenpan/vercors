@@ -102,9 +102,10 @@ class Future /*Transaction*/ {
     modifies status;
     modifies ops;
     requires status == TMS1.opPending();
+    accessible pendingOp;
     requires TMS1.validResp(this, pendingOp, r);
     ensures status == TMS1.ready();
-    ensures ops == TMS1.append(\old(ops), tuple<int/*I*/, int/*R*/> {pendingOp, r});
+    ensures ops == TMS1.append(\old(ops), tuple<int/*I*/, int/*R*/> {this.pendingOp, r});
     process resp(int/*R*/ r);
 
     //commit
