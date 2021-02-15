@@ -36,22 +36,22 @@ int main(int argc, char** argv)
 
   int N = 1024; // size of the array
 
-  // allocate host sharedMemoryType
+  // allocate host memory
   int* host_array = (int*) malloc(sizeof(int)*N);
   int host_sum = 0;
-  // initalize the sharedMemoryType
+  // initalize the memory
   for(unsigned int i = 0; i < N; i++)
   {
     host_array[i] = i;
   }
 
 
-  //Copy the array to device sharedMemoryType
+  //Copy the array to device memory
   int* device_array;
   cudaMalloc( (void**) &device_array, sizeof(int)*N) ;
   cudaMemcpy( device_array, host_array, sizeof(int)*N, cudaMemcpyHostToDevice) ;
 
-  //Copy the int variable to device sharedMemoryType
+  //Copy the int variable to device memory
   int* device_sum;
   cudaMalloc((void**) &device_sum, sizeof(int));
   cudaMemcpy( device_sum, host_sum, sizeof(int), cudaMemcpyHostToDevice);
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
   //print the result
   printf( "Sum of the array values: %d \n", host_sum);
 
-  // cleanup sharedMemoryType
+  // cleanup memory
   free(host_array);
   cudaFree(device_array);
 
