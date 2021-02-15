@@ -8,7 +8,7 @@
 class BinarySearch {
 	boolean found;
 
-	// we require permissions for all shared memory involved
+	// we require permissions for all shared sharedMemoryType involved
 	context_everywhere items != null;
 	context_everywhere Perm(this.found, write);
 	context_everywhere (\forall* int j; 0 <= j && j < items.length; Perm(items[j], write));

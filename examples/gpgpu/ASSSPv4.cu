@@ -642,7 +642,7 @@ int main(int argc, char** argv)
 	int V = 1024; // no. of vertices
 	int A = 10 * V; // no. of arcs
     	
-	// allocate host memory
+	// allocate host sharedMemoryType
   int* host_start = vercorsMallocInt(A);
   int* host_end = vercorsMallocInt(A);
   int* host_weight = vercorsMallocInt(A);
@@ -676,32 +676,32 @@ int main(int argc, char** argv)
   
   //@ assert host_cost[source] == 0;
 
-  //Copy the arrays to device memory
+  //Copy the arrays to device sharedMemoryType
   int* device_start;
   device_start = vercorsCudaMallocInt(A);
   vercorsCudaMemcpyInt( device_start, host_start, A, cudaMemcpyHostToDevice) ;
   //@ assume (\forall int i; i >= 0 && i < A; host_start[i] == device_start[i]);
 
-  //Copy the arrays to device memory
+  //Copy the arrays to device sharedMemoryType
   int* device_end;
   device_end = vercorsCudaMallocInt(A);
   vercorsCudaMemcpyInt( device_end, host_end, A, cudaMemcpyHostToDevice) ;
   //@ assume (\forall int i; i >= 0 && i < A; host_end[i] == device_end[i]);
   
-  //Copy the arrays to device memory
+  //Copy the arrays to device sharedMemoryType
   int* device_weight;
   device_weight = vercorsCudaMallocInt(A);
   vercorsCudaMemcpyInt( device_weight, host_weight, A, cudaMemcpyHostToDevice) ;
   //@ assume (\forall int i; i >= 0 && i < A; host_weight[i] == device_weight[i]);
 
 
-  //Copy the arrays to device memory
+  //Copy the arrays to device sharedMemoryType
   int* device_cost;
   device_cost = vercorsCudaMallocInt(V);
   vercorsCudaMemcpyInt( device_cost, host_cost, V, cudaMemcpyHostToDevice) ;
   //@ assume (\forall int i; i >= 0 && i < V; host_cost[i] == device_cost[i]);
   
-  //Copy the arrays to device memory
+  //Copy the arrays to device sharedMemoryType
   int* device_old_cost;
   device_old_cost = vercorsCudaMallocInt(V);
   device_old_cost = device_cost;
@@ -778,7 +778,7 @@ int main(int argc, char** argv)
   vercorsCudaMemcpyInt(host_cost, device_cost, V, cudaMemcpyDeviceToHost);	
 	 
   
-  // cleanup memory
+  // cleanup sharedMemoryType
   vercorsFreeInt(host_start);
   vercorsFreeInt(host_end);
   vercorsFreeInt(host_weight);

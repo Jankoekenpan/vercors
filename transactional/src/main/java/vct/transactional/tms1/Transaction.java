@@ -21,13 +21,14 @@ public class Transaction<I, R> {
     final TMS1<I, R, ? extends ObjectType<I, R>> tms1;
 
     private Status status = notStarted;
-    private final List<Tuple<I, R>> ops = new ArrayList<>();
+    private final List<Tuple<I, R>> ops;
     private I pendingOp;   //initially arbitrairy
     private boolean invokedCommit = false;
 
-    public Transaction(TMS1<I, R, ? extends ObjectType<I,R>> tms1) {
+    public Transaction(TMS1<I, R, ? extends ObjectType<I,R>> tms1, List<Tuple<I, R>> operations) {
         this.tms1 = Objects.requireNonNull(tms1, "tms1 cannot be null");
         this.tms1.addTransaction(this);
+        this.ops = List.copyOf(operations);
     }
 
     final Status getStatus() {

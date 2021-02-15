@@ -40,13 +40,13 @@ int main( int argc, char** argv)
 
   int N = 1024; // size of the array
 
-  // allocate host memory
+  // allocate host sharedMemoryType
   // int* host_array1 = (int*) malloc(sizeof(int)*N);
   // int* host_array2 = (int*) malloc(sizeof(int)*N);
   int* host_array1 = vercorsMallocInt(N);
   int* host_array2 = vercorsMallocInt(N);
     
-  // initalize the memory
+  // initalize the sharedMemoryType
   //@ loop_invariant 0 <= i && i <= N;
   //@ loop_invariant \pointer(host_array1, N, write);
   //@ loop_invariant \pointer(host_array2, N, write);
@@ -58,7 +58,7 @@ int main( int argc, char** argv)
   }   
 
 
-  //Copy the arrays to device memory
+  //Copy the arrays to device sharedMemoryType
   int* device_array1;
   device_array1 = vercorsCudaMallocInt(N);
   vercorsCudaMemcpyInt( device_array1, host_array1, N, cudaMemcpyHostToDevice) ;
@@ -98,7 +98,7 @@ int main( int argc, char** argv)
   //print kernel execution time 
   // printf( "Processing time: %d (ms)\n", time);
 
-  // cleanup memory
+  // cleanup sharedMemoryType
   vercorsFreeInt(host_array1);
   vercorsFreeInt(host_array2);
   vercorsCudaFreeInt(device_array1);

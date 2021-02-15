@@ -23,14 +23,14 @@ class TMS1 {
     static pure int r() = 1;
 
     //some helper functions for lists (unfortunately there is no generic support yet, so now I'm hardcoding for int)
-    //pure int/*T*/ head(seq<int/*T*/> list) = list[0];
-    //pure int/*T*/ tail(seq<int/*T*/> list) = list[1..];
-    static pure seq<seq<int/*T*/>> tails(seq<int/*T*/> list) =
+    //pure int/*T*/ head(seq<int/*T*/> list) = list[0];     //can't re-implement this because 'head' is a reserved word in PVL.
+    //pure int/*T*/ tail(seq<int/*T*/> list) = list[1..];   //can't re-implement this because 'tail' is a reserved word in PVL.
+    static pure seq<seq<int/*T*/>> tails(seq<int/*T*/> list) =      //I don't think this is needed anymore but it's cool nonetheless
         (list == seq<int/*T*/>{})
             ? (seq<seq<int/*T*/>>{})
             : (list :: tails(tail(list)));
     static pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
-    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;
+    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;    //if PVL had generic support I wouldn't have to implement this twice.
     static pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2) = list1 + list2;
     //Contrary to Haskell and Scala, PVL uses a single plus for concatenation and a double plus for appending!!
 
@@ -81,7 +81,7 @@ class Future /*Transaction*/ {
     requires status == TMS1.notStarted();
     ensures status == TMS1.beginPending();
     //TODO modifies tms1.extOrder;
-    //TODO ensures tms1.extOrder == \old(tms1.extOrder) \intersect (tms1.DT(), {this});
+    //TODO ensures tms1.extOrder == \old(tms1.extOrder) \union (tms1.DT().map(doneTransaction -> (doneTransaction, this)));
     process begin();
 
     //beginOk
