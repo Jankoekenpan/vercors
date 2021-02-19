@@ -1,12 +1,15 @@
 package vct.transactional.tms1.impl;
 
+import vct.transactional.tms1.InvOperation;
 import vct.transactional.tms1.ObjectType;
+import vct.transactional.tms1.RespOperation;
+import vct.transactional.tms1.impl.operation.*;
 import vct.transactional.util.Tuple;
 
 import java.util.HashMap;
 import java.util.List;
 
-public class SharedMemoryType implements ObjectType<InvOperation, RespOperation> {
+public class SharedMemoryType implements ObjectType {
 
     @Override
     public boolean isLegal(List<Tuple<InvOperation, RespOperation>> operations) {

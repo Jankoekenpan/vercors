@@ -12,19 +12,19 @@ import vct.transactional.util.*;
  *
  * @see <a href=https://doi.org/10.1007/s00165-012-0225-8>Towards formally specifying and verifying transactional memory</a>
  */
-public class TMS1<I, R, O extends ObjectType<I, R>> {
+public class TMS1 {
 
-    private final O objectType; //type-class pattern.
+    private final ObjectType objectType; //type-class pattern.
 
-    final BiRelation<Transaction<I, R>, Transaction<I, R>> extOrder = new BiRelation<>();
+    final BiRelation<Transaction, Transaction> extOrder = new BiRelation<>();
 
-    private final Set<Transaction<I, R>> allTransactions = new HashSet<>();
+    private final Set<Transaction> allTransactions = new HashSet<>();
 
-    public TMS1(O objectType /*type-class pattern*/) {
+    public TMS1(ObjectType objectType /*type-class pattern*/) {
         this.objectType = objectType;
     }
 
-    void addTransaction(Transaction<I, R> transaction) {
+    void addTransaction(Transaction transaction) {
         assert transaction.tms1 == this;
         this.allTransactions.add(transaction);
     }
@@ -126,7 +126,7 @@ public class TMS1<I, R, O extends ObjectType<I, R>> {
     // side note: should Scala's immutable collections be used instead?
     //
 
-    Set<Transaction<I, R>> doneTransactions() {
+    Set<Transaction> doneTransactions() {
         return allTransactions.stream().filter(t -> {
             switch (t.getStatus()) {
                 case committed:
@@ -138,48 +138,48 @@ public class TMS1<I, R, O extends ObjectType<I, R>> {
         }).collect(Collectors.toSet());
     }
 
-    Set<Transaction<I, R>> committedTransactions() {
+    Set<Transaction> committedTransactions() {
         return allTransactions.stream()
                 .filter(t -> t.getStatus() == Status.committed)
                 .collect(Collectors.toSet());
     }
 
-    Set<Transaction<I, R>> commitPendingTransactions() {
+    Set<Transaction> commitPendingTransactions() {
         return allTransactions.stream()
                 .filter(t -> t.getStatus() == Status.commitPending)
                 .collect(Collectors.toSet());
     }
 
-    Set<Transaction<I, R>> invokedCommitTransactions() {
+    Set<Transaction> invokedCommitTransactions() {
         return allTransactions.stream()
                 .filter(Transaction::hasInvokedCommit)
                 .collect(Collectors.toSet());
     }
 
-    static <I, R> List<Tuple<I, R>> ops(List<Transaction<I, R>> transactions) {
+    static List<Tuple<InvOperation, RespOperation>> ops(List<Transaction> transactions) {
         return transactions.stream()
                 .flatMap(t -> t.getOps().stream())
                 .collect(Collectors.toList());
     }
 
-    boolean extConsPrefix(Set<Transaction<I, R>> serialization) {
+    boolean extConsPrefix(Set<Transaction> serialization) {
         boolean res = true;
-        for (Transaction<I, R> t : allTransactions) {
-            for (Transaction<I, R> tPrime : allTransactions) {
+        for (Transaction t : allTransactions) {
+            for (Transaction tPrime : allTransactions) {
                 res &= serialization.contains(tPrime) && implies(extOrder.contains(t, tPrime), serialization.contains(t) == (t.getStatus() == Status.committed));
             }
         }
         return res;
     }
 
-    private static <I, R> Set<List<Transaction<I, R>>> ser(Set<Transaction<I, R>> transactions, BiRelation<Transaction<I, R>, Transaction<I, R>> extOrder) {
-        Comparator<Transaction<I, R>> comparator = new Comparator<Transaction<I, R>>() {
+    private static Set<List<Transaction>> ser(Set<Transaction> transactions, BiRelation<Transaction, Transaction> extOrder) {
+        Comparator<Transaction> comparator = new Comparator<Transaction>() {
             @Override
             public int compare(Transaction first, Transaction second) {
                 if (Objects.equals(first, second)) return 0;
 
-                Set<Transaction<I, R>> leftHandSide = Set.of(first);
-                Set<Transaction<I, R>> rightHandSide;
+                Set<Transaction> leftHandSide = Set.of(first);
+                Set<Transaction> rightHandSide;
                 do {
                     rightHandSide = leftHandSide.stream()
                             .flatMap(lhs -> extOrder.rights(lhs).stream())
@@ -193,7 +193,7 @@ public class TMS1<I, R, O extends ObjectType<I, R>> {
         };
 
         //get permutations of transactions, then sort using the comparator. do not care about illegal histories here.
-        List<List<Transaction<I, R>>> permutations = permutations(transactions);
+        List<List<Transaction>> permutations = permutations(transactions);
         permutations.replaceAll(list -> {
             list.sort(comparator);
             return list;
@@ -203,15 +203,15 @@ public class TMS1<I, R, O extends ObjectType<I, R>> {
         return new HashSet<>(permutations);
     }
 
-    private boolean legal(List<Tuple<I, R>> operations) {
+    private boolean legal(List<Tuple<InvOperation, RespOperation>> operations) {
         return objectType.isLegal(operations);
     }
 
-    boolean validCommit(Transaction<I, R> t) {
+    boolean validCommit(Transaction t) {
         boolean res = false;
 
-        for (Set<Transaction<I, R>> subset : power(commitPendingTransactions())) {
-            for (List<Transaction<I, R>> serialization : ser(union(committedTransactions(), subset), extOrder)) {
+        for (Set<Transaction> subset : power(commitPendingTransactions())) {
+            for (List<Transaction> serialization : ser(union(committedTransactions(), subset), extOrder)) {
                 res |= subset.contains(t) && legal(ops(serialization));
             }
         }
@@ -219,11 +219,11 @@ public class TMS1<I, R, O extends ObjectType<I, R>> {
         return res;
     }
 
-    boolean validFail(Transaction<I, R> t) {
+    boolean validFail(Transaction t) {
         boolean res = false;
 
-        for (Set<Transaction<I, R>> subset : power(commitPendingTransactions())) {
-            for (List<Transaction<I, R>> serialization : ser(union(committedTransactions(), subset), extOrder)) {
+        for (Set<Transaction> subset : power(commitPendingTransactions())) {
+            for (List<Transaction> serialization : ser(union(committedTransactions(), subset), extOrder)) {
                 res |= !subset.contains(t) && legal(ops(serialization));
             }
         }
@@ -231,11 +231,11 @@ public class TMS1<I, R, O extends ObjectType<I, R>> {
         return res;
     }
 
-    boolean validResp(Transaction<I, R> t, I i, R r) {
+    boolean validResp(Transaction t, InvOperation i, RespOperation r) {
         boolean res = false;
 
-        for (Set<Transaction<I, R>> subset : power(invokedCommitTransactions())) {
-            for (List<Transaction<I, R>> serialization : ser(subset, extOrder)) {
+        for (Set<Transaction> subset : power(invokedCommitTransactions())) {
+            for (List<Transaction> serialization : ser(subset, extOrder)) {
                 res |= extConsPrefix(union(subset, Set.of(t))) && legal(append(ops(append(serialization, t)), new Tuple<>(i, r)));
             }
         }
