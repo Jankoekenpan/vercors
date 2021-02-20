@@ -19,6 +19,12 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
         return result;
     }
 
+    public synchronized boolean isEmpty() {
+        boolean empty = left2Rights.isEmpty() || left2Rights.values().stream().allMatch(Set::isEmpty);
+        assert empty == (right2Lefts.isEmpty() || right2Lefts.values().stream().allMatch(Set::isEmpty));
+        return empty;
+    }
+
     public synchronized long size() {
         long sum = 0;
         for (var entry : left2Rights.entrySet()) {
@@ -78,6 +84,30 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
 
     public synchronized boolean remove(Tuple<T, U> pair) {
         return remove(pair.getFirst(), pair.getSecond());
+    }
+
+    public synchronized boolean removeAll(Collection<? extends Tuple<T, U>> coll) {
+        boolean removed = false;
+        for (Tuple<T, U> tup : coll) {
+            removed |= remove(tup);
+        }
+        return removed;
+    }
+
+    public synchronized boolean removeAllRights(T left) {
+        Set<U> rights = left2Rights.remove(left);
+        boolean removedLeft = rights != null && !rights.isEmpty();
+        boolean removedRight = right2Lefts.values().stream().reduce(false, (b, set) -> b || set.remove(left), Boolean::logicalOr); //use reduce instead of anyMatch because anyMatch is lazy.
+        assert removedLeft == removedRight;
+        return removedLeft;
+    }
+
+    public synchronized boolean removeAllLefts(U right) {
+        Set<T> lefts = right2Lefts.remove(right);
+        boolean removedRight = lefts != null && !lefts.isEmpty();
+        boolean removedLeft = left2Rights.values().stream().reduce(false, (b, set) -> b || set.remove(right), Boolean::logicalOr); //use reduce instead of anyMatch because anyMatch is lazy.
+        assert removedRight == removedLeft;
+        return removedRight;
     }
 
     public synchronized void clear() {
@@ -220,14 +250,14 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
             @Override
             public int size() {
                 int res = us.size();
-                assert res == right2Lefts.keySet().size();
+                assert res == (int) right2Lefts.entrySet().stream().filter(e -> e.getValue().contains(left)).count();
                 return res;
             }
 
             @Override
             public boolean isEmpty() {
                 boolean res = us.isEmpty();
-                assert res == right2Lefts.keySet().isEmpty();
+                assert res == (right2Lefts.entrySet().stream().filter(e -> e.getValue().contains(left)).count() == 0L);
                 return res;
             }
 
@@ -340,14 +370,14 @@ public class BiRelation<T, U> implements Iterable<Tuple<T, U>> {
             @Override
             public int size() {
                 int res = ts.size();
-                assert res == left2Rights.keySet().size();
+                assert res == (int) left2Rights.entrySet().stream().filter(e -> e.getValue().contains(right)).count();
                 return res;
             }
 
             @Override
             public boolean isEmpty() {
                 boolean res = ts.isEmpty();
-                assert res == left2Rights.keySet().isEmpty();
+                assert res == (left2Rights.entrySet().stream().filter(e -> e.getValue().contains(right)).count() == 0L);
                 return res;
             }
 

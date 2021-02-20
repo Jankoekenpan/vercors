@@ -47,7 +47,12 @@ lazy val hre = project in file("hre")
 lazy val col = (project in file("col")).dependsOn(hre)
 lazy val parsers = (project in file("parsers")).dependsOn(hre, col)
 lazy val viper_api = (project in file("viper")).dependsOn(hre, col, silver_ref, carbon_ref, silicon_ref)
-lazy val transactional = (project in file("transactional")).settings(javacOptions ++= Seq("--release", "15", "--enable-preview"))
+lazy val transactional = (project in file("transactional"))
+  .settings(
+    javacOptions ++= Seq("--release", "15", "--enable-preview"),
+    resolvers += Resolver.jcenterRepo,
+    libraryDependencies += "net.aichler" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
+  )
 
 lazy val vercors = (project in file("."))
   .dependsOn(hre)
