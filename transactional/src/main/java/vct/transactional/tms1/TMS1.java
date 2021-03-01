@@ -24,7 +24,7 @@ public class TMS1 {
         this.objectType = objectType;
     }
 
-    void addTransaction(Transaction transaction) {
+    synchronized void addTransaction(Transaction transaction) {
         assert transaction.tms1 == this;
         this.allTransactions.add(transaction);
     }
@@ -63,8 +63,8 @@ public class TMS1 {
     }
 
     //TODO I want this to be lazy... so I should return a Stream<Set<A>> instead (and adjust the implementation of course)
-    private static <A> Set<Set<A>> power(Set<A> set) {
-        if (set.isEmpty()) return Collections.emptySet();
+    static <A> Set<Set<A>> power(Set<A> set) {
+        if (set.isEmpty()) return Set.of(Set.of());
 
         Set<A> subsetWithoutElement = new HashSet<>(set);
         Iterator<A> it = subsetWithoutElement.iterator();
@@ -93,7 +93,7 @@ public class TMS1 {
 
     //https://en.wikipedia.org/wiki/Heap%27s_algorithm#Details_of_the_algorithm
     private static <A> List<List<A>> permutations(Collection<A> coll) {
-        List<A> list = coll instanceof List ? (List<A>) coll : List.copyOf(coll);
+        List<A> list = coll instanceof List ? (List<A>) coll : new ArrayList<>(coll);
 
         final int n = list.size();
         int[] c = new int[n];
@@ -126,7 +126,9 @@ public class TMS1 {
     // side note: should Scala's immutable collections be used instead?
     //
 
-    Set<Transaction> doneTransactions() {
+    synchronized Set<Transaction> doneTransactions() {
+        System.out.println("doneTransactions() start!");
+        System.out.println("doneTransactions() allTransactions = " + allTransactions);
         return allTransactions.stream().filter(t -> {
             switch (t.getStatus()) {
                 case committed:
@@ -138,19 +140,19 @@ public class TMS1 {
         }).collect(Collectors.toSet());
     }
 
-    Set<Transaction> committedTransactions() {
+    synchronized Set<Transaction> committedTransactions() {
         return allTransactions.stream()
                 .filter(t -> t.getStatus() == Status.committed)
                 .collect(Collectors.toSet());
     }
 
-    Set<Transaction> commitPendingTransactions() {
+    synchronized Set<Transaction> commitPendingTransactions() {
         return allTransactions.stream()
                 .filter(t -> t.getStatus() == Status.commitPending)
                 .collect(Collectors.toSet());
     }
 
-    Set<Transaction> invokedCommitTransactions() {
+    synchronized Set<Transaction> invokedCommitTransactions() {
         return allTransactions.stream()
                 .filter(Transaction::hasInvokedCommit)
                 .collect(Collectors.toSet());
@@ -162,7 +164,7 @@ public class TMS1 {
                 .collect(Collectors.toList());
     }
 
-    boolean extConsPrefix(Set<Transaction> serialization) {
+    synchronized boolean extConsPrefix(Set<Transaction> serialization) {
         boolean res = true;
         for (Transaction t : allTransactions) {
             for (Transaction tPrime : allTransactions) {
@@ -172,7 +174,7 @@ public class TMS1 {
         return res;
     }
 
-    private static Set<List<Transaction>> ser(Set<Transaction> transactions, BiRelation<Transaction, Transaction> extOrder) {
+    static Set<List<Transaction>> ser(Set<Transaction> transactions, BiRelation<Transaction, Transaction> extOrder) {
         Comparator<Transaction> comparator = new Comparator<Transaction>() {
             @Override
             public int compare(Transaction first, Transaction second) {
@@ -203,11 +205,11 @@ public class TMS1 {
         return new HashSet<>(permutations);
     }
 
-    private boolean legal(List<Tuple<InvOperation, RespOperation>> operations) {
+    synchronized private boolean legal(List<Tuple<InvOperation, RespOperation>> operations) {
         return objectType.isLegal(operations);
     }
 
-    boolean validCommit(Transaction t) {
+    synchronized boolean validCommit(Transaction t) {
         boolean res = false;
 
         for (Set<Transaction> subset : power(commitPendingTransactions())) {
@@ -219,7 +221,7 @@ public class TMS1 {
         return res;
     }
 
-    boolean validFail(Transaction t) {
+    synchronized boolean validFail(Transaction t) {
         boolean res = false;
 
         for (Set<Transaction> subset : power(commitPendingTransactions())) {
@@ -231,7 +233,7 @@ public class TMS1 {
         return res;
     }
 
-    boolean validResp(Transaction t, InvOperation i, RespOperation r) {
+    synchronized boolean validResp(Transaction t, InvOperation i, RespOperation r) {
         boolean res = false;
 
         for (Set<Transaction> subset : power(invokedCommitTransactions())) {

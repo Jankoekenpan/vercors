@@ -71,9 +71,14 @@ public class Transaction {
             throw new InvalidStatus("beginOk() expected status notStarted.");
 
         status = beginPending;
+        System.out.println("status updated to beginPending");
+        System.out.println("done transactions = " + tms1.doneTransactions());
         for (Transaction doneTransaction : tms1.doneTransactions()) {
+            System.out.println("doneTransaction: " + doneTransaction);
+            //TODO another thread has claimed the monitor of tms1.extOrder o.0??
             tms1.extOrder.add(doneTransaction, this);
         }
+        System.out.println("end of begin()");
     }
 
     public synchronized void beginOk() throws InvalidStatus {

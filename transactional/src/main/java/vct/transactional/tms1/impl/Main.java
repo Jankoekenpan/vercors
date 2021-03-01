@@ -27,6 +27,9 @@ public class Main {
         t2Ops.addAll(IntStream.rangeClosed(1, 5).mapToObj(i -> invReadOp(i)).collect(Collectors.toList()));
         Transaction t2 = new Transaction(tms);
 
+        System.out.println("t1 ops = " + t1Ops);
+        System.out.println("t2 ops = " + t2Ops);
+
         TransactionRunner tr1 = new TransactionRunner(t1, sharedMemory, t1Ops);
         TransactionRunner tr2 = new TransactionRunner(t2, sharedMemory, t2Ops);
 
@@ -34,13 +37,16 @@ public class Main {
         Thread thread2 = new Thread(tr2);
 
         thread1.start();
-        thread2.start();
+        //thread2.start();
 
         try {
             thread1.join();
-            thread2.join();
+            //thread2.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        //TODO we don't seem to finish. investigate whether we are infinitely looping, whether there is deadlocked, or whether there is a combinatoric explosion :)
+        //TODO might need to write a unit test for the PowerSet implementation and other utility functions in TMS1.java
     }
 }
