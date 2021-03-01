@@ -128,7 +128,7 @@ public class TMS1 {
 
     synchronized Set<Transaction> doneTransactions() {
         System.out.println("doneTransactions() start!");
-        System.out.println("doneTransactions() allTransactions = " + allTransactions);
+        //System.out.println("doneTransactions() allTransactions = " + allTransactions);
         return allTransactions.stream().filter(t -> {
             switch (t.getStatus()) {
                 case committed:

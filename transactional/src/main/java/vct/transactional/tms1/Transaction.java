@@ -3,6 +3,8 @@ package vct.transactional.tms1;
 import java.util.*;
 
 import static vct.transactional.tms1.Transaction.Status.*;
+import vct.transactional.tms1.ex.Cancel;
+import vct.transactional.tms1.ex.InvalidBegin;
 import vct.transactional.tms1.ex.InvalidCommit;
 import vct.transactional.tms1.ex.InvalidFail;
 import vct.transactional.tms1.ex.InvalidResp;
@@ -35,7 +37,7 @@ public class Transaction {
     }
 
     public synchronized String toString() {
-        return "Transaction(status="+getStatus()+", ops=" + getOps() + ", pendingOp=" + getPendingOp() + ", invokedCommit=" + hasInvokedCommit() + ")";
+        return "Transaction(status=" + getStatus() + ", ops=" + getOps() + ", pendingOp=" + getPendingOp() + ", invokedCommit=" + hasInvokedCommit() + ")";
     }
 
     synchronized final Status getStatus() {
@@ -70,11 +72,14 @@ public class Transaction {
     //
     //
 
-    public synchronized void begin() throws InvalidStatus {
+    public void begin() throws InvalidStatus {
         if (getStatus() != notStarted)
-            throw new InvalidStatus("beginOk() expected status notStarted.");
+            throw new InvalidStatus("begin() expected status notStarted.");
 
-        status = beginPending;
+        synchronized (this) {
+            status = beginPending;
+        }
+
         System.out.println("status updated to beginPending");
         System.out.println("done transactions = " + tms1.doneTransactions());
         for (Transaction doneTransaction : tms1.doneTransactions()) {
@@ -85,55 +90,70 @@ public class Transaction {
         System.out.println("end of begin()");
     }
 
-    public synchronized void beginOk() throws InvalidStatus {
+    public void beginOk() throws InvalidStatus, InvalidBegin {
         if (getStatus() != beginPending)
             throw new InvalidStatus("beginOk() expected status beginPending.");
 
-        status = ready;
+        synchronized (this) {
+            status = ready;
+        }
     }
 
-    public synchronized void inv(InvOperation i) throws InvalidStatus {
+    public void inv(InvOperation i) throws InvalidStatus {
         if (getStatus() != ready)
             throw new InvalidStatus("inv(i) expected status ready.");
 
-        status = opPending;
-        pendingOp = i;
+        synchronized (this) {
+            status = opPending;
+            pendingOp = i;
+        }
     }
 
-    public synchronized void resp(RespOperation r) throws InvalidStatus, InvalidResp {
+    public void resp(RespOperation r) throws InvalidStatus, InvalidResp {
         if (getStatus() != opPending)
             throw new InvalidStatus("resp(r) expected status opPending.");
 
         if (tms1.validResp(this, getPendingOp(), r))
             throw new InvalidResp("cannot make a legal serialized history using response: " + r + ".");
 
-        status = ready;
-        ops.add(new Tuple<>(getPendingOp(), r));
+        synchronized (this) {
+            status = ready;
+            ops.add(new Tuple<>(getPendingOp(), r));
+        }
+
+        synchronized (this) {
+        }
     }
 
-    public synchronized void commit() throws InvalidStatus {
+    public void commit() throws InvalidStatus {
         if (getStatus() != ready)
             throw new InvalidStatus("commit() expected status ready.");
 
-        status = commitPending;
-        invokedCommit = true;
+        synchronized (this) {
+            status = commitPending;
+            invokedCommit = true;
+        }
     }
 
-    public synchronized void commitOk() throws InvalidStatus, InvalidCommit {
+    public void commitOk() throws InvalidStatus, InvalidCommit {
         if (getStatus() != commitPending)
             throw new InvalidStatus("commitOk() expected status commitPending.");
 
         if (!tms1.validCommit(this))
             throw new InvalidCommit("cannot call commitOk() because there is no legal serial history of operations.");
 
-        status = committed;
+        synchronized (this) {
+            status = committed;
+        }
     }
 
-    public synchronized void cancel() throws InvalidStatus {
+    public void cancel() throws InvalidStatus, Cancel {
         if (getStatus() != ready)
             throw new InvalidStatus("cancel() expected status ready.");
 
-        status = cancelPending;
+        synchronized (this) {
+            status = cancelPending;
+        }
     }
 
     public synchronized void abort() throws InvalidStatus, InvalidFail {
@@ -143,7 +163,9 @@ public class Transaction {
         if (!tms1.validFail(this))
             throw new InvalidFail("cannot call abort() because there is a legal serial history of operations.");
 
-        status = aborted;
+        synchronized (this) {
+            status = aborted;
+        }
     }
 
 }

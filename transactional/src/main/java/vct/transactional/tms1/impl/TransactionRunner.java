@@ -26,6 +26,8 @@ public class TransactionRunner implements Runnable {
             System.out.println("before-beginOk()");
             transaction.beginOk();
 
+            //TMS1 allows us to cancel the transaction at this point, but we never do that in this implementation.
+
             for (InvOperation invOp : invOps) {
                 if (invOp instanceof InvWriteOperation iwo) {
                     System.out.println("before inv(" + invOp + ")");
@@ -33,12 +35,17 @@ public class TransactionRunner implements Runnable {
                     sharedMemory.set(iwo.address(), iwo.value());
                     System.out.println("before resp(writeOk)");
                     transaction.resp(Operation.respWriteOp());
+                    //TMS1 allows us to cancel the transaction at this point, but we never do that in this implementation.
                 } else if (invOp instanceof InvReadOperation iro) {
                     System.out.println("before inv(" + invOp + ")");
                     transaction.inv(invOp);
                     int value = sharedMemory.get(iro.address());
                     System.out.println("before resp(read(" + value + "))");
                     transaction.resp(Operation.respReadOp(value));
+                    //TMS1 allows us to cancel the transaction at this point, but we never do that in this implementation.
+                } else {
+                    //this branch is never taken, but it stops the compiler from complaining later on where we catch Cancel
+                    transaction.cancel();
                 }
             }
 
@@ -49,11 +56,8 @@ public class TransactionRunner implements Runnable {
         } catch (InvalidStatus invalidStatus) {
             //should never occur!
             invalidStatus.printStackTrace();
-        } catch (InvalidCommit | InvalidResp invalidResponseOrCommit) {
+        } catch (InvalidCommit | InvalidResp | InvalidBegin | Cancel invalidResponseOrCommit) {
             try {
-                System.out.println("invalid commit or response");
-                invalidResponseOrCommit.printStackTrace();
-                System.out.println("before abort()");
                 transaction.abort();
             } catch (InvalidFail invalidFail) {
                 //should also not occur, but is more delicate.
