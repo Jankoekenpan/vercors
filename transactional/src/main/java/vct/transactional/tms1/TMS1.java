@@ -210,15 +210,28 @@ public class TMS1 {
     }
 
     synchronized boolean validCommit(Transaction t) {
-        boolean res = false;
-
         for (Set<Transaction> subset : power(commitPendingTransactions())) {
             for (List<Transaction> serialization : ser(union(committedTransactions(), subset), extOrder)) {
-                res |= subset.contains(t) && legal(ops(serialization));
+                boolean transactionInSubset = subset.contains(t);
+                List<Tuple<InvOperation, RespOperation>> operations = ops(serialization);
+                boolean legalHistory = legal(operations);
+
+                if (transactionInSubset && legalHistory) {
+                    return true;
+                } else {
+                    System.out.println();
+                    System.out.println("checking transaction: " + t);
+                    System.out.println("in subset " + subset + "? = " + transactionInSubset);
+                    System.out.println("operations = " + operations);
+                    System.out.println("legal history? = " + legalHistory);
+                    System.out.println();
+                }
             }
         }
 
-        return res;
+
+        System.out.println("!!!not a valid commit!!!");
+        return false;
     }
 
     synchronized boolean validFail(Transaction t) {

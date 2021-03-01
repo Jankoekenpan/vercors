@@ -27,8 +27,10 @@ public class SharedMemoryType implements ObjectType {
                 if (memoryValue == null) return false;                          //no value was written to that location yet
                 if (memoryValue.intValue() != expectedValue) return false;      //different value was written to that location
             } else if (inv instanceof InvWriteOperation iwo && resp instanceof RespWriteOperation wro) {
-                //RespWriteOperation hasn't got any members, so there is nothing to check in this case.
-                //just continue!
+                int addr = iwo.address();
+                int value = iwo.value();
+                memory.put(addr, value);
+                //RespWriteOperation hasn't got any members, so there is nothing to check in this case, just continue!
             } else {
                 return false;   //invalid combination of operations
             }

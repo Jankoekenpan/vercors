@@ -34,6 +34,10 @@ public class Transaction {
         this.tms1.addTransaction(this);
     }
 
+    public synchronized String toString() {
+        return "Transaction(status="+getStatus()+", ops=" + getOps() + ", pendingOp=" + getPendingOp() + ", invokedCommit=" + hasInvokedCommit() + ")";
+    }
+
     synchronized final Status getStatus() {
         return status;
     }

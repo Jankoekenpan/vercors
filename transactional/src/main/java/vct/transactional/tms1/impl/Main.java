@@ -47,6 +47,6 @@ public class Main {
         }
 
         //TODO we don't seem to finish. investigate whether we are infinitely looping, whether there is deadlocked, or whether there is a combinatoric explosion :)
-        //TODO might need to write a unit test for the PowerSet implementation and other utility functions in TMS1.java
+        //TODO might need to write some unit test for the utility functions in TMS1.java
     }
 }
