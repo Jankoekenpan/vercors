@@ -46,7 +46,8 @@ public class Main {
             e.printStackTrace();
         }
 
-        //TODO we don't seem to finish. investigate whether we are infinitely looping, whether there is deadlocked, or whether there is a combinatoric explosion :)
-        //TODO might need to write some unit test for the utility functions in TMS1.java
+        //we seem to finish every time now which is good.
+        //TODO now actually check whether runs are correct!
+        //TODO I think our validCommit check is too loose!
     }
 }

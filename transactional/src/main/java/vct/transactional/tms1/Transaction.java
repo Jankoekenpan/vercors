@@ -80,10 +80,10 @@ public class Transaction {
             status = beginPending;
         }
 
-        synchronized (tms1) {
-            for (Transaction doneTransaction : tms1.doneTransactions()) {
-                tms1.addExtOrder(doneTransaction, this);
-            }
+        //TODO synchronize on this? the effect of 'begin()' is that this transaction is added for every done transaction!
+        //TODO does the current locking scheme guarantee that?
+        for (Transaction doneTransaction : tms1.doneTransactions()) {
+            tms1.addExtOrder(doneTransaction, this);
         }
     }
 
