@@ -212,50 +212,37 @@ public class TMS1 {
     synchronized boolean validCommit(Transaction t) {
         for (Set<Transaction> subset : power(commitPendingTransactions())) {
             for (List<Transaction> serialization : ser(union(committedTransactions(), subset), extOrder)) {
-                boolean transactionInSubset = subset.contains(t);
-                List<Tuple<InvOperation, RespOperation>> operations = ops(serialization);
-                boolean legalHistory = legal(operations);
-
-                if (transactionInSubset && legalHistory) {
+                if (subset.contains(t) && legal(ops(serialization))) {
                     return true;
-                } else {
-                    System.out.println();
-                    System.out.println("checking transaction: " + t);
-                    System.out.println("in subset " + subset + "? = " + transactionInSubset);
-                    System.out.println("operations = " + operations);
-                    System.out.println("legal history? = " + legalHistory);
-                    System.out.println();
                 }
             }
         }
 
-
-        System.out.println("!!!not a valid commit!!!");
         return false;
     }
 
     synchronized boolean validFail(Transaction t) {
-        boolean res = false;
-
         for (Set<Transaction> subset : power(commitPendingTransactions())) {
             for (List<Transaction> serialization : ser(union(committedTransactions(), subset), extOrder)) {
-                res |= !subset.contains(t) && legal(ops(serialization));
+                if (!subset.contains(t) && legal(ops(serialization))) {
+                    return true;
+                }
             }
         }
 
-        return res;
+        return false;
     }
 
     synchronized boolean validResp(Transaction t, InvOperation i, RespOperation r) {
-        boolean res = false;
-
         for (Set<Transaction> subset : power(invokedCommitTransactions())) {
             for (List<Transaction> serialization : ser(subset, extOrder)) {
-                res |= extConsPrefix(union(subset, Set.of(t))) && legal(append(ops(append(serialization, t)), new Tuple<>(i, r)));
+                if (extConsPrefix(union(subset, Set.of(t))) && legal(append(ops(append(serialization, t)), new Tuple<>(i, r)))) {
+                    return true;
+                }
             }
         }
 
-        return res;
+        return false;
     }
 
 }
