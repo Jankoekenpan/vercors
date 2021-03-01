@@ -23,10 +23,15 @@ public class TransactionRunner implements Runnable {
         try {
             System.out.println("before-begin()");
             transaction.begin();
+
+            //TMS1 allows us the abort the transaction at the point, but we never do that in this implementation.
+            //throw new InvalidBegin("can't begin this transaction");
+
             System.out.println("before-beginOk()");
             transaction.beginOk();
 
             //TMS1 allows us to cancel the transaction at this point, but we never do that in this implementation.
+            //transaction.cancel();
 
             for (InvOperation invOp : invOps) {
                 if (invOp instanceof InvWriteOperation iwo) {
@@ -67,6 +72,7 @@ public class TransactionRunner implements Runnable {
                 invalidStatus.printStackTrace();
             }
         }
+        System.out.println("done!");
     }
 
 }

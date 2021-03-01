@@ -16,7 +16,7 @@ public class TMS1 {
 
     private final ObjectType objectType; //type-class pattern.
 
-    final BiRelation<Transaction, Transaction> extOrder = new BiRelation<>();
+    private final BiRelation<Transaction, Transaction> extOrder = new BiRelation<>();
 
     private final Set<Transaction> allTransactions = new HashSet<>();
 
@@ -92,7 +92,7 @@ public class TMS1 {
     }
 
     //https://en.wikipedia.org/wiki/Heap%27s_algorithm#Details_of_the_algorithm
-    private static <A> List<List<A>> permutations(Collection<A> coll) {
+    static <A> List<List<A>> permutations(Collection<A> coll) {
         List<A> list = coll instanceof List ? (List<A>) coll : new ArrayList<>(coll);
 
         final int n = list.size();
@@ -121,14 +121,16 @@ public class TMS1 {
         return result;
     }
 
+    synchronized boolean addExtOrder(Transaction before, Transaction after) {
+        return extOrder.add(before, after);
+    }
+
     //
     // derived state variables:
     // side note: should Scala's immutable collections be used instead?
     //
 
     synchronized Set<Transaction> doneTransactions() {
-        System.out.println("doneTransactions() start!");
-        //System.out.println("doneTransactions() allTransactions = " + allTransactions);
         return allTransactions.stream().filter(t -> {
             switch (t.getStatus()) {
                 case committed:
@@ -159,9 +161,11 @@ public class TMS1 {
     }
 
     static List<Tuple<InvOperation, RespOperation>> ops(List<Transaction> transactions) {
-        return transactions.stream()
-                .flatMap(t -> t.getOps().stream())
-                .collect(Collectors.toList());
+        List<Tuple<InvOperation, RespOperation>> result = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            result.addAll(transaction.getOps());
+        }
+        return result;
     }
 
     synchronized boolean extConsPrefix(Set<Transaction> serialization) {
@@ -174,35 +178,16 @@ public class TMS1 {
         return res;
     }
 
+    //TODO ideally this would be lazy.
     static Set<List<Transaction>> ser(Set<Transaction> transactions, BiRelation<Transaction, Transaction> extOrder) {
-        Comparator<Transaction> comparator = new Comparator<Transaction>() {
-            @Override
-            public int compare(Transaction first, Transaction second) {
-                if (Objects.equals(first, second)) return 0;
-
-                Set<Transaction> leftHandSide = Set.of(first);
-                Set<Transaction> rightHandSide;
-                do {
-                    rightHandSide = leftHandSide.stream()
-                            .flatMap(lhs -> extOrder.rights(lhs).stream())
-                            .collect(Collectors.toSet());
-                } while (!rightHandSide.contains(second) || !(leftHandSide = rightHandSide).isEmpty());
-
-                //if the second transaction is in the rhs set, then 'first' comes before 'second'!
-                //we check the inverse condition (if the transaction is not in the right hand side set, then 'second' comes before 'first'!
-                return rightHandSide.isEmpty() ? 1 : -1;
-            }
-        };
+        Comparator<Transaction> comparator = new AcyclicRelationComparator<>(extOrder);
 
         //get permutations of transactions, then sort using the comparator. do not care about illegal histories here.
         List<List<Transaction>> permutations = permutations(transactions);
-        permutations.replaceAll(list -> {
-            list.sort(comparator);
-            return list;
-        });
-
-
-        return new HashSet<>(permutations);
+        for (List<Transaction> permutation : permutations) {
+            permutation.sort(comparator);
+        }
+        return Set.copyOf(permutations);
     }
 
     synchronized private boolean legal(List<Tuple<InvOperation, RespOperation>> operations) {

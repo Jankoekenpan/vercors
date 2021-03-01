@@ -80,14 +80,11 @@ public class Transaction {
             status = beginPending;
         }
 
-        System.out.println("status updated to beginPending");
-        System.out.println("done transactions = " + tms1.doneTransactions());
-        for (Transaction doneTransaction : tms1.doneTransactions()) {
-            System.out.println("doneTransaction: " + doneTransaction);
-            //TODO another thread has claimed the monitor of tms1.extOrder o.0??
-            tms1.extOrder.add(doneTransaction, this);
+        synchronized (tms1) {
+            for (Transaction doneTransaction : tms1.doneTransactions()) {
+                tms1.addExtOrder(doneTransaction, this);
+            }
         }
-        System.out.println("end of begin()");
     }
 
     public void beginOk() throws InvalidStatus, InvalidBegin {
@@ -120,9 +117,6 @@ public class Transaction {
             status = ready;
             ops.add(new Tuple<>(getPendingOp(), r));
         }
-
-        synchronized (this) {
-        }
     }
 
     public void commit() throws InvalidStatus {
@@ -154,9 +148,11 @@ public class Transaction {
         synchronized (this) {
             status = cancelPending;
         }
+
+        throw new Cancel("cancel()");
     }
 
-    public synchronized void abort() throws InvalidStatus, InvalidFail {
+    public void abort() throws InvalidStatus, InvalidFail {
         if (!Set.of(beginPending, opPending, commitPending, cancelPending).contains(getStatus()))
             throw new InvalidStatus("abort() expected status beginPending, opPending, commitPending or cancelPending.");
 
