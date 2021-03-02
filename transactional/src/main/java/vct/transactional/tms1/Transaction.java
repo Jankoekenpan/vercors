@@ -3,12 +3,7 @@ package vct.transactional.tms1;
 import java.util.*;
 
 import static vct.transactional.tms1.Transaction.Status.*;
-import vct.transactional.tms1.ex.Cancel;
-import vct.transactional.tms1.ex.InvalidBegin;
-import vct.transactional.tms1.ex.InvalidCommit;
-import vct.transactional.tms1.ex.InvalidFail;
-import vct.transactional.tms1.ex.InvalidResp;
-import vct.transactional.tms1.ex.InvalidStatus;
+import vct.transactional.tms1.ex.*;
 import vct.transactional.util.Tuple;
 
 public class Transaction {
@@ -80,7 +75,7 @@ public class Transaction {
             status = beginPending;
         }
 
-        //TODO synchronize on this? the effect of 'begin()' is that this transaction is added for every done transaction!
+        //TODO synchronize on 'this'? the effect of 'begin()' is that this transaction is added for every done transaction!
         //TODO does the current locking scheme guarantee that?
         for (Transaction doneTransaction : tms1.doneTransactions()) {
             tms1.addExtOrder(doneTransaction, this);
@@ -133,6 +128,7 @@ public class Transaction {
         if (getStatus() != commitPending)
             throw new InvalidStatus("commitOk() expected status commitPending.");
 
+        //TODO synchronize on 'this' first?
         if (!tms1.validCommit(this))
             throw new InvalidCommit("cannot call commitOk() because there is no legal serial history of operations.");
 

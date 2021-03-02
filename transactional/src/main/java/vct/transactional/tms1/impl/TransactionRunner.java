@@ -58,12 +58,14 @@ public class TransactionRunner implements Runnable {
             transaction.commit();
             System.out.println("before commitOk()");
             transaction.commitOk();
+            System.out.println("committed!");
         } catch (InvalidStatus invalidStatus) {
             //should never occur!
             invalidStatus.printStackTrace();
         } catch (InvalidCommit | InvalidResp | InvalidBegin | Cancel invalidResponseOrCommit) {
             try {
                 transaction.abort();
+                System.out.println("aborted!");
             } catch (InvalidFail invalidFail) {
                 //should also not occur, but is more delicate.
                 invalidFail.printStackTrace();
@@ -72,7 +74,6 @@ public class TransactionRunner implements Runnable {
                 invalidStatus.printStackTrace();
             }
         }
-        System.out.println("done!");
     }
 
 }
