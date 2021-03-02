@@ -1,0 +1,15 @@
+class Repro {
+
+    //should refer to an instance of the class defined below
+    //however, VerCors shits itself and complains that "Future" is reserved and cannot be declared.
+    //Future x;
+
+    //same issue when Future is used as a type argument to a generic type.
+    //set<Future> set;
+
+}
+
+class Future {
+
+
+}

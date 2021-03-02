@@ -11,6 +11,8 @@ import vct.transactional.util.*;
  * in "Towards formally specifying and verifying transactional memory", section 3.
  *
  * @see <a href=https://doi.org/10.1007/s00165-012-0225-8>Towards formally specifying and verifying transactional memory</a>
+ *
+ * @author Jan Boerman
  */
 public class TMS1 {
 
@@ -49,7 +51,7 @@ public class TMS1 {
 
     //idem
     static <A> List<A> concat(List<A> lhs, List<A> rhs) {
-        List<A> result = new ArrayList<>();
+        List<A> result = new ArrayList<>(lhs.size() + rhs.size());
         result.addAll(lhs);
         result.addAll(rhs);
         return result;
@@ -57,7 +59,7 @@ public class TMS1 {
 
     //idem
     static <A> List<A> append(List<A> list, A lastItem) {
-        List<A> result = new ArrayList<>(list);
+        List<A> result = new ArrayList<>(list.size() + 1);
         result.addAll(list);
         result.add(lastItem);
         return result;

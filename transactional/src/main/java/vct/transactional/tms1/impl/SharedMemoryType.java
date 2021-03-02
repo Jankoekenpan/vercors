@@ -32,7 +32,7 @@ public class SharedMemoryType implements ObjectType {
                 memory.put(addr, value);
                 //RespWriteOperation hasn't got any members, so there is nothing to check in this case, just continue!
             } else {
-                return false;   //invalid combination of operations
+                throw new IllegalArgumentException("Illegal combination of InvOperation: " + inv + ", and RespOperation: " + resp);
             }
         }
 

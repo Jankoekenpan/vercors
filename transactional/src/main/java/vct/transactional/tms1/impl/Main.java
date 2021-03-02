@@ -46,8 +46,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        //we seem to finish every time now which is good.
-        //TODO now actually check whether runs are correct!
-        //TODO I think our validCommit check is too loose!
+        //we seem to finish every time now which is good. and all the runs I do are correct, but that's not a proof.
+        //TODO use concurrency reasoning to 'prove' that runs are guaranteed to be correct!
     }
 }

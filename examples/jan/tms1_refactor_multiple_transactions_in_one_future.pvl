@@ -1,0 +1,57 @@
+class Utils {
+
+    static pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
+    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;    //if PVL had generic support I wouldn't have to implement this twice.
+    static pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2) = list1 + list2;
+    //why implement append and concat? because I'd rather use alphabetic names than symbolic names!
+    //especially because PVL diverts from Haskell's and Scala's convention to use the double plus for concatenation!
+}
+
+class Status {
+
+    static pure int notStarted() = 0;
+    static pure int beginPending() = 1;
+    static pure int ready() = 2;
+    static pure int opPending() = 3;
+    static pure int commitPending() = 4;
+    static pure int cancelPending() = 5;
+    static pure int committed() = 6;
+    static pure int aborted() = 7;
+
+}
+
+/**
+ *  This class models the 'TMS1' I/O automaton, as described in
+ *  "Towards formally specifying and verifying transactional memory"
+ *  by Simon Doherty, Lindsay Groves, Victor Luchangco and Mark Moir.
+ *
+ *  @see <a href=https://doi.org/10.1007/s00165-012-0225-8>Towards formally specifying and verifying transactional memory</a>
+ */
+class Future {
+    /*
+    The general gist of things is that that there is a 'global' relation of transactions
+    which defines a partial order in which the transactions can occur.
+    The left element of a pair in the relation 'happens before' the right element of that pair.
+
+    Because VerCors requires that processes reside in a class called Future, we model transactions not using a separate Transaction class,
+    but instead we use sequences for all the properties of a transaction such that 'seq(index)' refers to the property of transaction labeled with subscript 'index'
+    */
+
+    //the 'current' status of a transaction.
+    //note that this is a sequence because this field models the statuses of all transactions.
+    seq<int/*Status*/> status;
+
+    //the list of operations of a transaction.
+    //note that this is a sequence because this field models the operationss of all transactions.
+    seq<seq<tuple<int/*InvOperation*/, int/*RespOperation*/>>> ops;
+
+    //whether the commit transition has been taken.
+    //note that this is a sequence because this field models the invokedCommit status of all transactions.
+    seq<boolean> invokedCommit;
+
+    //the last operation that is being tested whether it is allowed ornot
+    //note that this is a sequence because this field models the pendingOps of all transactions.
+    int/*InvOperation*/ pendingOp;
+
+
+}

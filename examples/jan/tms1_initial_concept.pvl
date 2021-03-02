@@ -36,7 +36,7 @@ class TMS1 {
 
 
     TMS1() {
-        //initialize the extOrder relation usingan empty set.
+        //initialize the extOrder relation using an empty set.
         extOrder = set<tuple<Future/*Transaction*/, Future/*Transaction*/>> { } ;
     }
 
