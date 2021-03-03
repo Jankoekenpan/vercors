@@ -20,14 +20,21 @@ class Status {
 
 }
 
+class TMS1 {
+
+    static pure int NUM_TRANSACTIONS() = 10;
+
+}
+
 /**
  *  This class models the 'TMS1' I/O automaton, as described in
  *  "Towards formally specifying and verifying transactional memory"
  *  by Simon Doherty, Lindsay Groves, Victor Luchangco and Mark Moir.
  *
  *  @see <a href=https://doi.org/10.1007/s00165-012-0225-8>Towards formally specifying and verifying transactional memory</a>
+ *  @author Jan Boerman
  */
-class Future {
+class `Future` {
     /*
     The general gist of things is that that there is a 'global' relation of transactions
     which defines a partial order in which the transactions can occur.
@@ -36,6 +43,12 @@ class Future {
     Because VerCors requires that processes reside in a class called Future, we model transactions not using a separate Transaction class,
     but instead we use sequences for all the properties of a transaction such that 'seq(index)' refers to the property of transaction labeled with subscript 'index'
     */
+
+    //the relation that defines the order between transactions.
+    //the id of a transaction is used to index into the sequences defined below.
+    set<tuple<int/*transaction id*/, int/*transaction id*/>> extOrder;
+
+    // ========= Transaction state =========
 
     //the 'current' status of a transaction.
     //note that this is a sequence because this field models the statuses of all transactions.
@@ -53,5 +66,18 @@ class Future {
     //note that this is a sequence because this field models the pendingOps of all transactions.
     int/*InvOperation*/ pendingOp;
 
+
+    // ========= Processes =========
+
+    //init
+    modifies status;
+    modifies ops;
+    modifies invokedCommit;
+    ensures status[i] == Status.notStarted();
+    ensures \forall(int x; x <= 0 && x < |status| && x != i; \old(status[x]) == status[x]);
+    ensures ops[i] == seq<tuple<int/*InvOperation*/, int/*RespOperation*/>> { };
+    ensures \forall(int x; x <= 0 && x < |ops| && x != i; \old(ops[x]) == ops[x]);
+    ensures invokedCommit[i] == true;
+    process init(int i);
 
 }
