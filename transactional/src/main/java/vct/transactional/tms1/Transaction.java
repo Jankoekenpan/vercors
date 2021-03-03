@@ -6,6 +6,8 @@ import static vct.transactional.tms1.Transaction.Status.*;
 import vct.transactional.tms1.ex.*;
 import vct.transactional.util.Tuple;
 
+
+
 public class Transaction {
 
     enum Status {

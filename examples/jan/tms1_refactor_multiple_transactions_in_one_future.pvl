@@ -42,6 +42,11 @@ class `Future` {
 
     Because VerCors requires that processes reside in a class called Future, we model transactions not using a separate Transaction class,
     but instead we use sequences for all the properties of a transaction such that 'seq(index)' refers to the property of transaction labeled with subscript 'index'
+
+    All of this is actually a workaround for limitations in VerCors:
+        - custom classes cannot be used in Futures.
+        - processes can only reside in Futures.
+        - 'dynamic dispatch' of processes in a process in another class/Future is therefore not possible right now.
     */
 
     // ========= Order of Transactions =========
@@ -72,15 +77,26 @@ class `Future` {
 
     // ========= Processes =========
 
+    //TODO fix bug with comma in generated name
+    //TODO report that \old in an ensures generates and \old in a requires clause in the silver code
+
     //init
+    requires 0 <= i;
+    requires i < |status|;
+    requires i < |ops|;
+    requires i < |invokedCommit|;
     modifies status;
     modifies ops;
     modifies invokedCommit;
+    ensures |\old(status)| == |status|;
+    ensures |\old(ops)| == |ops|;
+    ensures |\old(invokedCommit)| == |invokedCommit|;
     ensures status[i] == Status.notStarted();
     ensures (\forall int x; x <= 0 && x < |status| && x != i; \old(status[x]) == status[x]);
     ensures ops[i] == seq<tuple<int/*InvOperation*/, int/*RespOperation*/>> { };
     ensures (\forall int x; x <= 0 && x < |ops| && x != i; \old(ops[x]) == ops[x]);
     ensures invokedCommit[i] == true;
+    ensures (\forall int x; x <= 0 && x < |invokedCommit| && x != i; \old(invokedCommit[x]) == invokedCommit[x]);
     process init(int i);
 
     //TODO all the other processes

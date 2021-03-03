@@ -6,6 +6,7 @@ class TMS1 {
     set<tuple<Future/*Transaction*/, Future/*Transaction*/>> extOrder;
 
 
+
     //enum Status {
     //	notStarted, beginPending, ready, opPending, commitPending, cancelPending, committed, aborted;
     //}

@@ -1,0 +1,16 @@
+class Operation {
+
+    int x;
+
+}
+
+class `Future` {
+
+    Operation yoloSwag;
+
+    modifies yoloSwag.x;
+    ensures yoloSwag.x == y;
+    process test(int y);
+
+
+}
