@@ -44,9 +44,12 @@ class `Future` {
     but instead we use sequences for all the properties of a transaction such that 'seq(index)' refers to the property of transaction labeled with subscript 'index'
     */
 
+    // ========= Order of Transactions =========
+
     //the relation that defines the order between transactions.
     //the id of a transaction is used to index into the sequences defined below.
     set<tuple<int/*transaction id*/, int/*transaction id*/>> extOrder;
+
 
     // ========= Transaction state =========
 
@@ -64,7 +67,7 @@ class `Future` {
 
     //the last operation that is being tested whether it is allowed ornot
     //note that this is a sequence because this field models the pendingOps of all transactions.
-    int/*InvOperation*/ pendingOp;
+    seq<int/*InvOperation*/> pendingOp;
 
 
     // ========= Processes =========
@@ -74,10 +77,12 @@ class `Future` {
     modifies ops;
     modifies invokedCommit;
     ensures status[i] == Status.notStarted();
-    ensures \forall(int x; x <= 0 && x < |status| && x != i; \old(status[x]) == status[x]);
+    ensures (\forall int x; x <= 0 && x < |status| && x != i; \old(status[x]) == status[x]);
     ensures ops[i] == seq<tuple<int/*InvOperation*/, int/*RespOperation*/>> { };
-    ensures \forall(int x; x <= 0 && x < |ops| && x != i; \old(ops[x]) == ops[x]);
+    ensures (\forall int x; x <= 0 && x < |ops| && x != i; \old(ops[x]) == ops[x]);
     ensures invokedCommit[i] == true;
     process init(int i);
+
+    //TODO all the other processes
 
 }

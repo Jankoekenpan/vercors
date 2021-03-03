@@ -1,0 +1,14 @@
+class ConsistencyError {
+
+    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;
+
+}
+
+class `Future` {
+
+    seq<tuple<int, int>> daSequence;
+
+    ensures daSequence == \old(daSequence) ++ item;
+    process error(tuple<int, int> item);
+
+}
