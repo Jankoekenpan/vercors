@@ -1,8 +1,8 @@
-class Future {
+class `Future` {
 
     int myVar;
 
-    accessible myVar;
+    //accessible myVar;
     requires myVar == 0;
     process p();
 

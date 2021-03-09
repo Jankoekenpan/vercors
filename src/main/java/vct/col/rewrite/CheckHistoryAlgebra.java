@@ -215,7 +215,11 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
             }
           } else if (m.getReturnType().isPrimitive(PrimitiveSort.Resource)) {
             hist_class.add(rewrite(m));
-          } else {
+          }
+          else if (m.kind == Method.Kind.Pure) {
+            hist_class.add(rewrite(m));
+          }
+          else {
             add_lemma_to_adt(m);
           }
         }

@@ -40,9 +40,8 @@ public class Tuple<T, U> {
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-        if (!(o instanceof Tuple)) return false;
+        if (!(o instanceof Tuple that)) return false;
 
-        Tuple<?, ?> that = (Tuple<?, ?>) o;
         return Objects.equals(this.getFirst(), that.getFirst())
                 && Objects.equals(this.getSecond(), that.getSecond());
     }

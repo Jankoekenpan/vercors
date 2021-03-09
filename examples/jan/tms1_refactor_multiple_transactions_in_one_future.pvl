@@ -24,6 +24,13 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
+    /*
+    pure static boolean validResp(set<tuple<int, int>> extOrder, int tid, int pendingOp, int respOp) = true;
+    pure static boolean validCommit(set<tuple<int, int>> extOrder, int tid) = true;
+    pure static boolean validFail(set<tuple<int, int>> extOrder, int tid) = true;
+    */
+
+
 }
 
 /**
@@ -77,9 +84,11 @@ class `Future` {
     // ========= Functions =========
 
     //TODO actually implement these predicates
+
     pure boolean validResp(int tid, int pendingOp, int respOp) = true;
     pure boolean validCommit(int tid) = true;
     pure boolean validFail(int tid) = true;
+
 
     //TODO derived state
 
@@ -87,7 +96,7 @@ class `Future` {
 
     // ========= Processes =========
 
-    //TODO report that \old in an ensures generates and \old in a requires clause in the silver code
+    //TODO combine these processes into one 'total' process.
 
     //init
     context 0 <= i;
@@ -146,7 +155,7 @@ class `Future` {
     accessible pendingOp;
     modifies status;
     modifies ops;
-    requires validResp(tid, pendingOp[tid], respOp);
+    requires this.validResp(tid, this.pendingOp[tid], respOp);
     ensures status[tid] == Status.ready();
     ensures ops[tid] == Utils.append(\old(ops[tid]), tuple<int, int> {pendingOp[tid], respOp});
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
@@ -188,6 +197,7 @@ class `Future` {
     //abort
     context 0 <= tid;
     context tid <= |status|;
+    modifies status;
     requires (status[tid] == Status.beginPending()) ||
             (status[tid] == Status.opPending()) ||
             (status[tid] == Status.commitPending()) ||
@@ -199,7 +209,5 @@ class `Future` {
 
 
 
-
-    //TODO all the other processes
 
 }
