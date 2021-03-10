@@ -24,13 +24,6 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
-    /*
-    pure static boolean validResp(set<tuple<int, int>> extOrder, int tid, int pendingOp, int respOp) = true;
-    pure static boolean validCommit(set<tuple<int, int>> extOrder, int tid) = true;
-    pure static boolean validFail(set<tuple<int, int>> extOrder, int tid) = true;
-    */
-
-
 }
 
 /**

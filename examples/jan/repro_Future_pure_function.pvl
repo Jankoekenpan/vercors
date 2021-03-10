@@ -1,0 +1,10 @@
+class `Future` {
+
+    int x;
+
+    accessible x;
+    pure boolean testEqX(int anInt) = anInt == x;
+
+    requires testEqX(myInt);
+    process myProcess(int myInt);
+}

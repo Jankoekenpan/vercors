@@ -1,6 +1,8 @@
 package vct.col.rewrite;
 
 import hre.lang.HREError;
+import scala.collection.Seq$;
+import scala.collection.immutable.List$;
 import vct.col.ast.expr.*;
 import vct.col.ast.generic.ASTNode;
 import vct.col.ast.stmt.composite.ActionBlock;
@@ -545,8 +547,21 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
   @Override
   public void visit(MethodInvokation e){
     Method m=e.getDefinition();
-    if (m.getReturnType().isPrimitive(PrimitiveSort.Process)){
-      result=create.domain_call("Process", "p_"+e.method(),rewrite(e.getArgs()));
+    if (m.getReturnType().isPrimitive(PrimitiveSort.Process)) {
+      result = create.domain_call("Process", "p_" + e.method(), rewrite(e.getArgs()));
+    } else if (m.name().startsWith("Future_") && !m.isStatic() && !e.getArg(0).isName("diz")) {
+      //TODO I don't think this is the most VerCors-idiomatic code.
+      //instance method declared by ourself.
+      //make sure we pass 'diz'
+      ASTNode[] oldArgs = e.getArgs();
+      ASTNode[] resultArgs = new ASTNode[oldArgs.length +  1];
+      resultArgs[0] = create.this_expression(new ClassType("Ref"));
+      System.arraycopy(oldArgs, 0, resultArgs, 1, oldArgs.length);
+
+      MethodInvokation resInvocation = create.invokation(null, null, e.method(), resultArgs);
+      resInvocation.set_before(rewrite(e.get_before()));
+      resInvocation.set_after(rewrite(e.get_after()));
+      result = resInvocation;
     } else {
       ASTNode in_args[]=e.getArgs();
       ASTNode args[]=new ASTNode[in_args.length];
