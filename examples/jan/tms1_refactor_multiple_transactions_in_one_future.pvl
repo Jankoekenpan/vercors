@@ -77,14 +77,16 @@ class `Future` {
     //note that this is a sequence because this field models the invokedCommit status of all transactions.
     seq<boolean> invokedCommit;
 
-    //the last operation that is being tested whether it is allowed ornot
+    //the last operation that is being tested whether it is allowed or not.
     //note that this is a sequence because this field models the pendingOps of all transactions.
     seq<int/*InvOperation*/> pendingOp;
 
     // ========= Functions =========
 
-    //TODO actually implement these predicates
+    //TODO fix that VerCors actually correctly translates these functions!
+    //TODO suggested locations where to fix this: SilverClassReduction, CheckHistoryAlgebra, AddTypeADT (encodeInheritanceToDomain)
 
+    //TODO actually implement these predicates
     pure boolean validResp(int tid, int pendingOp, int respOp) = true;
     pure boolean validCommit(int tid) = true;
     pure boolean validFail(int tid) = true;
