@@ -546,10 +546,16 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
   
   @Override
   public void visit(MethodInvokation e){
+    if (e.isName("Future_testEqX_Integer")) {
+      //TODO debug!
+      System.out.println("======= DEBUG WE ARE TRANSFORMING Future_testEqX_Integer =======");
+    }
+
+
     Method m=e.getDefinition();
     if (m.getReturnType().isPrimitive(PrimitiveSort.Process)) {
       result = create.domain_call("Process", "p_" + e.method(), rewrite(e.getArgs()));
-    } else if (m.name().startsWith("Future_") && !m.isStatic() && !e.getArg(0).isName("diz")) {
+    } else if (m.name().startsWith("Future_") && !e.getArg(0).isName("diz")) {
       //TODO I don't think this is the most VerCors-idiomatic code.
       //instance method declared by ourself.
       //make sure we pass 'diz'

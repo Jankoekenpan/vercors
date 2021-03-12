@@ -8,3 +8,11 @@ class `Future` {
     requires testEqX(myInt);
     process myProcess(int myInt);
 }
+
+class Program {
+
+    pure boolean alwaysTrue() = true;
+
+    requires alwaysTrue();
+    void myMethod();
+}
