@@ -23,11 +23,6 @@ import static hre.lang.System.Debug;
 
 public class Contract extends ASTNode {
 
-  @Override
-  public <R,A> R accept_simple(ASTMapping1<R,A> map, A arg){
-    return map.map(this,arg);
-  }
-
   public final static ASTNode default_true;
   static {
     Origin origin=new MessageOrigin("contract default true");
@@ -43,18 +38,8 @@ public class Contract extends ASTNode {
   public final SignalsClause[] signals;
   public final ASTNode modifies[];
   public final ASTNode accesses[];
-  
-  public boolean isEmpty() {
-    return invariant.isConstant(default_true)
-        && pre_condition.isConstant(default_true)
-        && post_condition.isConstant(default_true)
-        && given.length==0 && yields.length==0
-        && signals.length==0
-        && modifies == null
-        ;
-  }
 
-  private HashSet<String> labels=new HashSet<String>();
+  private HashSet<String> labels = new HashSet<String>();
     
   public Contract(
       DeclarationStatement given[],
@@ -128,10 +113,24 @@ public class Contract extends ASTNode {
       }     
     }
   }
+
   public boolean hasLabel(String name) {
      return labels.contains(name);
   }
 
+  public boolean isEmpty() {
+    return invariant.isConstant(default_true)
+        && pre_condition.isConstant(default_true)
+        && post_condition.isConstant(default_true)
+        && given.length==0 && yields.length==0
+        && signals.length==0
+        && modifies == null;
+  }
+
+  @Override
+  public <R,A> R accept_simple(ASTMapping1<R,A> map, A arg){
+    return map.map(this,arg);
+  }
   
   @Override
   public <T> void accept_simple(ASTVisitor<T> visitor){

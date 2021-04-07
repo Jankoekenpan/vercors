@@ -32,7 +32,8 @@ public class Simplify extends AbstractRewriter {
   
   public void visit(MethodInvokation e){
     ASTNode object;
-    if (e.object().isReserved(ASTReserved.This)){
+    //don't throw away 'this' for method invocations in contracts of processes. TODO will this break stuff?
+    if (false && e.object().isReserved(ASTReserved.This)){
       object=null;
     } else {
       object=rewrite(e.object());

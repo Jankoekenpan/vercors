@@ -3,12 +3,14 @@ class `Future` {
     int x;
 
     accessible x;
+    requires x > 3;
     pure boolean testEqX(int anInt) = anInt == x;
 
     requires testEqX(myInt);
     process myProcess(int myInt);
 }
 
+/*
 class Program {
 
     pure boolean alwaysTrue() = true;
@@ -16,3 +18,4 @@ class Program {
     requires alwaysTrue();
     void myMethod();
 }
+*/

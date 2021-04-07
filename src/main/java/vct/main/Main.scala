@@ -531,7 +531,7 @@ class Main {
       }
 
       if (debugAfter.has(pass.key)) report.getOutput.dump()
-      if (show_after.contains(pass.key)) show(pass)
+      /*if (show_after.contains(pass.key))*/ show(pass)
       if (stop_after.contains(pass.key)) Fail("exit after pass %s", pass)
     }
 

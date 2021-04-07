@@ -25,7 +25,7 @@ public class Transaction {
 
     private Status status = notStarted;
     private final List<Tuple<InvOperation, RespOperation>> ops = new ArrayList<>();
-    private InvOperation pendingOp;   //initially arbitrairy
+    private InvOperation pendingOp;   //initially arbitrary
     private boolean invokedCommit = false;
 
     public Transaction(TMS1 tms1) {

@@ -220,6 +220,10 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
           }
           else if (m.kind == Method.Kind.Pure) {
             hist_class.add(rewrite(m));
+            //~~TODO add parts of add_begin_and_commit_to_class(m, is_history)~~ TODO this is unnecessary probably!
+            //TODO to this else-if arm TODO this can be done by overriding visit(Method method) because that is called through rewrite(m);
+            //TODO can also override rewrite(Contract, ContractBuilder)
+            //TODO order: add accessible first (<fieldName> + "_hist_value"), then do the super call.
           }
           else {
             add_lemma_to_adt(m);
@@ -250,6 +254,16 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
       super.visit(cl);
     }
   }
+
+  @Override
+  public void rewrite(Contract contract, ContractBuilder builder) {
+    if (contract == null) return;
+    super.rewrite(contract, builder);
+
+    //TODO rewrite accesses from <fieldName> to <fieldName>.concat("_hist_value")
+
+  }
+
 
   private void add_setters_and_getter(ASTClass cl, String name, Type type) {
     ContractBuilder hist_set_cb=new ContractBuilder();
@@ -543,6 +557,15 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
     }
     adt.add_cons(create.function_decl(adt_type, null,"p_" + m.name(), args, null));
   }
+
+  @Override
+  public void visit(Method method) {
+    super.visit(method);
+
+    //TODO add accessible clauses to the result.
+    //TODO this is actually done by rewrite(Contract, ContractBuilder)
+    //TODO because our superclass AbstractRewriter calls that method.
+  }
   
   @Override
   public void visit(MethodInvokation e){
@@ -555,7 +578,7 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
     Method m=e.getDefinition();
     if (m.getReturnType().isPrimitive(PrimitiveSort.Process)) {
       result = create.domain_call("Process", "p_" + e.method(), rewrite(e.getArgs()));
-    } else if (m.name().startsWith("Future_") && !e.getArg(0).isName("diz")) {
+    } /*else if (m.name().startsWith("Future_") && !e.getArg(0).isName("diz")) {
       //TODO I don't think this is the most VerCors-idiomatic code.
       //instance method declared by ourself.
       //make sure we pass 'diz'
@@ -568,7 +591,7 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
       resInvocation.set_before(rewrite(e.get_before()));
       resInvocation.set_after(rewrite(e.get_after()));
       result = resInvocation;
-    } else {
+    }*/ else {
       ASTNode in_args[]=e.getArgs();
       ASTNode args[]=new ASTNode[in_args.length];
       for(int i=0;i<in_args.length;i++){

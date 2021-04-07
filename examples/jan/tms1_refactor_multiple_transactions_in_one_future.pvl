@@ -24,6 +24,17 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
+    static pure set<int> transactionIndices() = TMS1.genIndices(NUM_TRANSACTIONS());
+    static pure set<int> genIndices(int size) = TMS1.genIndicesHelper(set<int>{}, 0, size);
+    static pure set<int> genIndicesHelper(set<int> acc, int nextIndex, int size) =
+        nextIndex < size
+            ? TMS1.genIndicesHelper(acc + set<int> { nextIndex }, nextIndex + 1, size)
+            : acc;
+
+    static pure seq<tuple<int, int>> join(seq<seq<tuple<int, int>>> seqOfSeqs) =
+        |seqOfSeqs| == 0
+            ? seq<tuple<int, int>> {}
+            : seqOfSeqs[0]::join(tail(seqOfSeqs));
 }
 
 /**
@@ -74,19 +85,68 @@ class `Future` {
     //note that this is a sequence because this field models the pendingOps of all transactions.
     seq<int/*InvOperation*/> pendingOp;
 
-    // ========= Functions =========
+    // ========= Derived state variables, functions and predicates =========
 
     //TODO fix that VerCors actually correctly translates these functions!
     //TODO suggested locations where to fix this: SilverClassReduction, CheckHistoryAlgebra, AddTypeADT (encodeInheritanceToDomain)
 
     //TODO actually implement these predicates
-    pure boolean validResp(int tid, int pendingOp, int respOp) = true;
-    pure boolean validCommit(int tid) = true;
+    //TODO define 'ser' and 'legal'
+
+    // derived state
+
+    pure set<int> doneTransactions() =
+        set<int> { i | int i <- TMS1.transactionIndices(); (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
+    pure set<int> committedTransactions() =
+        set<int> { i | int i <- TMS1.transactionIndices(); status[i] == Status.committed() };
+    pure set<int> commitPendingTransactions() =
+        set<int> { i | int i <- TMS1.transactionIndices(); status[i] == Status.commitPending() };
+    pure set<int> invokedCommitTransactions() =
+        set<int> { i | int i <- TMS1.transactionIndices(); invokedCommit[i] };
+
+    // functions
+
+    //this is called 'ops(sigma)' in the paper, but we're calling it allOps to prevent name collisions.
+    pure seq<tuple<int, int>> allOps(seq<int> serialization/*the ints here are the transaction ids*/) =
+        TMS1.join(serialization[id -> ops[id]]);
+    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
+        set<seq<int>> {};
+        //TODO all possible serializations of the transactions, respecting the given order
+        //TODO transactions.permutations().filter(sequence -> respects(order, sequence))
+
+
+    // predicates
+    pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
+        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
+        //TODO can I abuse bit-properties of ints to make this work?
+
+    pure boolean extConstPrefix(seq<int> serialization/*the ints here are transaction ids*/) =
+        (\forall int idOne; idOne <= 0 && idOne < TMS1.NUM_TRANSACTIONS();
+            (\forall int idTwo; idTwo <= 0 && idTwo < TMS1.NUM_TRANSACTIONS();
+                (idTwo in serialization) &&
+                ((tuple<int, int> {idOne, idTwo} in extOrder) ==>
+                    ((idOne in serialization) == (status[idOne] == Status.committed()))
+                )
+            )
+        );
+    pure boolean validCommit(int tid) =
+        (\exists set<int> S; S <= commitPendingTransactions();
+            (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
+                (tid in S) && legal(allOps(serialization))
+            )
+        );
     pure boolean validFail(int tid) = true;
-
-
-    //TODO derived state
-
+        (\exists set<int> S; S <= commitPendingTransactions();
+            (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
+                (!(tid in S)) && legal(allOps(serialization))
+            )
+        );
+    pure boolean validResp(int tid, int pendingOp, int respOp) =
+        (\exists set<int> S; S <= invokedCommitTransactions();
+            (\exists seq<int> serialization; serialization in ser(S, extOrder);
+                extConsPrefix(S + set<int> { tid }) && legal(allOps(serialization ++ tid) ++ tuple<int, int>{pendingOp, respOp})
+            )
+        );
 
 
     // ========= Processes =========
