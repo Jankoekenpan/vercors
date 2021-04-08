@@ -71,7 +71,7 @@ scalaVersion in ProjectRef(silicon_url, "common") := (scalaVersion in silver_ref
 lazy val printMainClasspath = taskKey[Unit]("Prints classpath of main vercors executable")
 
 lazy val vercors: Project = (project in file("."))
-  .dependsOn(hre, col, viper_api, parsers, transactional)
+  .dependsOn(hre, col, viper_api, parsers)
   .aggregate(hre, col, viper_api, parsers, transactional)
   .settings(
     name := "Vercors",
