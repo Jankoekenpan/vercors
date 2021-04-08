@@ -48,5 +48,8 @@ public class Main {
 
         //we seem to finish every time now which is good. and all the runs I do are correct, but that's not a proof.
         //TODO use concurrency reasoning to 'prove' that runs are guaranteed to be correct!
+        //TODO idea: when a method of transaction needs synchronization, always synchronize on the tms1 instance first,
+        //TODO and then on the transaction itself. This should work because TransactionRunner doesn't call methods on the TMS1 instance directly.
+
     }
 }

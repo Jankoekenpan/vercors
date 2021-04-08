@@ -13,9 +13,9 @@ import vct.col.rewrite._
 import vct.col.util.{JavaTypeCheck, LocalVariableChecker, SimpleTypeCheck}
 import vct.experiments.learn.{NonLinCountVisitor, Oracle}
 import vct.logging.{ExceptionMessage, PassReport}
-import vct.parsers.rewrite.{AnnotationInterpreter, ConvertTypeExpressions, EncodeAsClass, FilterSpecIgnore, FlattenVariableDeclarations, InferADTTypes, KernelInvocationToMethodInvocation, RewriteWithThen, StripUnusedExtern}
+import vct.parsers.rewrite.{AnnotationInterpreter, ConvertTypeExpressions, EncodeAsClass, FilterSpecIgnore, FlattenVariableDeclarations, InferADTTypes, RewriteWithThen, StripUnusedExtern}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -441,11 +441,6 @@ object Passes {
       ),
       removes=Set(features.NoLockInvariantProof),
     ),
-    SimplePass(
-      "kernelInvocationToMethodInvocation", "Translate CUDA kernel invocation to regular method invocations",
-      KernelInvocationToMethodInvocation(_).rewriteAll(),
-      removes=Set(features.KernelInvocations),
-    )
   )
 
   val ONE_SHOT_FEATURE = Seq(
@@ -657,7 +652,15 @@ object Passes {
         features.NotJavaResolved,
         features.NotStandardized,
       ),
-      removes=Set(features.TypeExpressions),
+      removes=Set(features.TypeExpressions, features.KernelInvocations),
+      introduces=Feature.DEFAULT_INTRODUCE ++ Set(
+        features.ParallelBlocks,
+        features.GivenYields,
+        features.MemberOfRange,
+        features.QuantifierWithoutTriggers,
+        features.NestedQuantifiers,
+        features.BeforeAfter,
+      )
     ),
     SimplePass(
       "stringClassToPrimitive", "Translate the java String class to its internal type",
@@ -767,10 +770,6 @@ object Passes {
       removes=Set(features.MemberOfRange),
       introduces=Feature.EXPR_ONLY_INTRODUCE,
     ),
-    SimplePass("optimizeForChalice", "Optimize expressions for Chalice", arg => {
-      val trs = RewriteSystems.getRewriteSystem("chalice_optimize")
-      trs.normalize(arg)
-    }),
     ErrorMapPass("returnTypeToOutParameter",
       "Replace return value by out parameter.",
       new CreateReturnParameter(_, _).rewriteAll,
@@ -786,7 +785,6 @@ object Passes {
         features.NestedQuantifiers,
         features.InlineQuantifierPattern,
       )),
-    SimplePass("preprocessForChalice", "Pre processing for chalice", new ChalicePreProcess(_).rewriteAll),
   )
 
   val SIMPLIFYING: Seq[AbstractPass] = Seq(
@@ -800,6 +798,7 @@ object Passes {
         val trs = RewriteSystems.getRewriteSystem("simplify_quant_pass1")
         var res = trs.normalize(arg)
         res = RewriteSystems.getRewriteSystem("simplify_quant_pass2").normalize(res)
+        res = new SimplifyQuantifiedRelations(res).rewriteAll()
         res
       },
       permits=Feature.EXPR_ONLY_PERMIT,
@@ -813,7 +812,6 @@ object Passes {
       removes=Set(features.Summation),
       introduces=Feature.EXPR_ONLY_INTRODUCE + features.MemberOfRange,
     ),
-    SimplePass("simplifyQuantifiedIntegerRelations", "simplify quantified relational expressions", new SimplifyQuantifiedRelations(_).rewriteAll),
     SimplePass("reduceQuantifierNesting",
       "Removes nesting of quantifiers in chains of forall/starall and implies",
       new OptimizeQuantifiers(_).rewriteAll,
@@ -888,17 +886,11 @@ object Passes {
   )
 
   val OLD_OR_UNUSED: Seq[AbstractPass] = Seq(
-    SimplePass("encodePredicatesForChalice", "encode required and ensured permission as ghost arguments", new ExplicitPermissionEncoding(_).rewriteAll),
     SimplePass("dsinherit", "rewrite contracts to reflect inheritance, predicate chaining", arg => new DynamicStaticInheritance(arg).rewriteOrdered),
-    SimplePass("deriveModifies", "Derive modifies clauses for all contracts", arg => {
-      new DeriveModifies().annotate(arg)
-      arg
-    }),
     Pass("applyRewriteSystem", "Apply a term rewrite system", (arg, args) => {
       val trs = RewriteSystems.getRewriteSystem(args(0))
       trs.normalize(arg)
     }),
-    SimplePass("removeConstructorsForChalice", "???", new ConstructorRewriter(_).rewriteAll),
     Pass("generateQuantifierTriggersOld", "Add triggers to quantifiers if possible", (arg, args) => {
       var res = arg
       val `val` = Integer.valueOf(args(0))

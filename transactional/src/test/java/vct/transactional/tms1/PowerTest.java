@@ -36,6 +36,8 @@ public class PowerTest {
                 Set.of("world"),
                 Set.of()
         );
-        Set<Set<String>> acutal = TMS1.power(set);
+        Set<Set<String>> actual = TMS1.power(set);
+
+        assertEquals(expected, actual);
     }
 }
