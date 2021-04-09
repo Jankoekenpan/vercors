@@ -6,6 +6,9 @@ import java.net.URL
 import java.util.Comparator
 import sbt.internal._
 
+val Name = "Vercors"
+val Version = "1.4.0-SNAPSHOT"
+
 ThisBuild / turbo := true // en wat is daar het praktisch nut van?
 ThisBuild / scalaVersion := "2.13.5"
 
@@ -49,6 +52,15 @@ lazy val hre = project in file("hre")
 lazy val col = (project in file("col")).dependsOn(hre)
 lazy val parsers = (project in file("parsers")).dependsOn(hre, col)
 lazy val viper_api = (project in file("viper")).dependsOn(hre, col, silver_ref, carbon_ref, silicon_ref)
+  .settings(
+    //use only the first logback.xml because it is un-mergeable
+    assemblyMergeStrategy in assembly := {
+      case "logback.xml" => MergeStrategy.first
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    },
+  )
 lazy val transactional = (project in file("transactional"))
   .settings(
     javacOptions ++= Seq("--release", "16"),
@@ -74,9 +86,9 @@ lazy val vercors: Project = (project in file("."))
   .dependsOn(hre, col, viper_api, parsers)
   .aggregate(hre, col, viper_api, parsers, transactional)
   .settings(
-    name := "Vercors",
+    name := Name,
     organization := "University of Twente",
-    version := "1.4.0-SNAPSHOT",
+    version := Version,
     maintainer := "VerCors Team <vercors@lists.utwente.nl>",
     packageSummary := "A tool for static verification of parallel programs",
     packageDescription :=
@@ -146,6 +158,8 @@ lazy val vercors: Project = (project in file("."))
     publishArtifact in(Test, packageBin) := true,
 
     cleanFiles += baseDirectory.value / "bin" / ".classpath",
+
+    vercorsAssemblySettings,
   )
 
 Global / printMainClasspath := {
@@ -156,3 +170,16 @@ Global / printMainClasspath := {
     println(joinedPaths)
 }
 
+lazy val vercorsAssemblySettings = Seq(
+  assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = true),
+  mainClass in assembly := Some("vct.main.Main"),
+  assemblyJarName in assembly := Name + "-" + Version + ".jar",
+
+  //use only the first logback.xml because it is un-mergeable
+  assemblyMergeStrategy in assembly := {
+    case "logback.xml" => MergeStrategy.first
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
+  },
+)

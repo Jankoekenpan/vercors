@@ -4,3 +4,6 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.10.0")
 //for 'transactional' java project
 resolvers += Resolver.jcenterRepo
 addSbtPlugin("net.aichler" % "sbt-jupiter-interface" % "0.8.4")
+
+//create 'fat' JARs
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.15.0")
