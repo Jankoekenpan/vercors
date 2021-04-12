@@ -220,11 +220,7 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
             hist_class.add(rewrite(m));
           }
           else if (m.kind == Method.Kind.Pure) {
-            hist_class.add(rewrite(m));
-            //~~TODO add parts of add_begin_and_commit_to_class(m, is_history)~~ TODO this is unnecessary probably!
-            //TODO to this else-if arm TODO this can be done by overriding visit(Method method) because that is called through rewrite(m);
-            //TODO can also override rewrite(Contract, ContractBuilder)
-            //TODO order: add accessible first (<fieldName> + "_hist_value"), then do the super call.
+            hist_class.add(rewrite(m)); //eventually this calls rewrite(Conctract, ContractBuilder) which will transform the accessible clause!
           }
           else {
             add_lemma_to_adt(m);
@@ -261,9 +257,9 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
     if (contract == null) return;
 
     //  rewrite
-    //      'accessible x'
+    //      'accessible ref.x'
     //  to
-    //      'requires Perm(x_hist_value, read)'
+    //      'requires Perm(ref.x_hist_value, read)'
 
     if (contract.accesses != null && contract.accesses.length != 0) {
       //the contract has at least one accessible clause!
@@ -286,7 +282,9 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
       for (ASTNode heapLocation : contract.accesses) {
         if (heapLocation instanceof FieldAccess fieldAccess
                 && fieldAccess.object() instanceof NameExpression obj
-                && obj.reserved() == ASTReserved.This) {
+                && obj.reserved() == ASTReserved.This
+                //&& obj is a Future
+                ) {
 
           //It seems that requires clauses don't use FieldAccess, they use Dereference.
           final ASTNode rewrittenHeapLocation = create.dereference(rewrite(fieldAccess.object()), fieldAccess.name() + "_hist_value");

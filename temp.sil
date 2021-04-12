@@ -1,4 +1,4 @@
-// Generated on 2021-04-12 at 16:38:42
+// Generated on 2021-04-12 at 17:33:57
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -136,27 +136,44 @@ function new_zfrac(x: Perm): zfrac
   ensures zfrac_val(result) == x
 
 
-predicate Future_hist_do_myProcess_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+predicate Future_hist_do_myProcess_Fraction_Process_ZFraction(diz: Ref, fr: frac, proc: Process, x_frac: zfrac) 
 
 predicate Future_hist_idle_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
-method Future_myProcess_begin_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, myInt: Int)
+method Future_myProcess_begin_Fraction_Process_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, x_frac: zfrac, myInt: Int)
   requires diz != null
   requires frac_val(fr) != none
   requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_myProcess(myInt), proc)), write)
+  requires zfrac_val(x_frac) != none
+  requires acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_hist, zfrac_val(x_frac))
   requires Future_testEqX_Integer(diz, myInt)
   ensures frac_val(fr) != none
-  ensures acc(Future_hist_do_myProcess_Fraction_Process(diz, fr, proc), write)
+  ensures acc(Future_hist_do_myProcess_Fraction_Process_ZFraction(diz, fr, proc, x_frac), write)
+  ensures acc(diz.Future_x_hist_act, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_write, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_action, zfrac_val(x_frac))
+  ensures diz.Future_x_hist_value == diz.Future_x_hist_act
+  ensures diz.Future_x_hist_value == old(diz.Future_x_hist_value)
 {
   inhale false
 }
 
-method Future_myProcess_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, myInt: Int)
+method Future_myProcess_commit_Fraction_Process_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, x_frac: zfrac, myInt: Int)
   requires diz != null
   requires frac_val(fr) != none
-  requires acc(Future_hist_do_myProcess_Fraction_Process(diz, fr, proc), write)
+  requires acc(Future_hist_do_myProcess_Fraction_Process_ZFraction(diz, fr, proc, x_frac), write)
+  requires zfrac_val(x_frac) != none
+  requires acc(diz.Future_x_hist_act, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_write, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_action, zfrac_val(x_frac))
   ensures frac_val(fr) != none
   ensures acc(Future_hist_idle_Fraction_Process(diz, fr, proc), write)
+  ensures acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_hist, zfrac_val(x_frac))
+  ensures diz.Future_x_hist_value == old(diz.Future_x_hist_value)
 {
   inhale false
 }

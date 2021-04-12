@@ -6,6 +6,7 @@ class `Future` {
     requires x > 3;
     pure boolean testEqX(int anInt) = anInt == x;
 
+    accessible x;
     requires testEqX(myInt);
     process myProcess(int myInt);
 }
