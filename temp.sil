@@ -1,4 +1,4 @@
-// Generated on 2021-04-12 at 17:33:57
+// Generated on 2021-04-12 at 17:44:26
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -147,6 +147,7 @@ method Future_myProcess_begin_Fraction_Process_ZFraction_Integer(diz: Ref, fr: f
   requires zfrac_val(x_frac) != none
   requires acc(diz.Future_x_hist_value, zfrac_val(x_frac))
   requires acc(diz.Future_x_hist_hist, zfrac_val(x_frac))
+  requires 3 < diz.Future_x_hist_value
   requires Future_testEqX_Integer(diz, myInt)
   ensures frac_val(fr) != none
   ensures acc(Future_hist_do_myProcess_Fraction_Process_ZFraction(diz, fr, proc, x_frac), write)
