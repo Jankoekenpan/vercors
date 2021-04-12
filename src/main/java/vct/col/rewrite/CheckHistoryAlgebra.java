@@ -11,6 +11,7 @@ import vct.col.ast.stmt.decl.*;
 import vct.col.ast.stmt.decl.ASTSpecial.Kind;
 import vct.col.ast.type.*;
 import vct.col.ast.util.AbstractRewriter;
+import vct.col.ast.util.ClassName;
 import vct.col.ast.util.Configuration;
 import vct.col.ast.util.ContractBuilder;
 import vct.col.util.AstToId;
@@ -256,12 +257,55 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
   }
 
   @Override
-  public void rewrite(Contract contract, ContractBuilder builder) {
+  public void rewrite(final Contract contract, final ContractBuilder builder) {
     if (contract == null) return;
-    super.rewrite(contract, builder);
 
-    //TODO rewrite accesses from <fieldName> to <fieldName>.concat("_hist_value")
+    //  rewrite
+    //      'accessible x'
+    //  to
+    //      'requires Perm(x_hist_value, read)'
 
+    if (contract.accesses != null && contract.accesses.length != 0) {
+      //the contract has at least one accessible clause!
+
+      //get rid of all the accessible clauses
+      //Contract has no wither-methods, so just call the copy-constructor
+      final Contract contractWithoutAccessibles = new Contract(
+              contract.given,
+              contract.yields,
+              contract.modifies,
+              null,
+              contract.invariant,
+              contract.kernelInvariant,
+              contract.pre_condition,
+              contract.post_condition,
+              contract.signals
+      );
+
+      //for every field access, add a requires Perm(Dereference(obj, fieldName), ReadPerm))
+      for (ASTNode heapLocation : contract.accesses) {
+        if (heapLocation instanceof FieldAccess fieldAccess
+                && fieldAccess.object() instanceof NameExpression obj
+                && obj.reserved() == ASTReserved.This) {
+
+          //It seems that requires clauses don't use FieldAccess, they use Dereference.
+          final ASTNode rewrittenHeapLocation = create.dereference(rewrite(fieldAccess.object()), fieldAccess.name() + "_hist_value");
+          final ASTNode readPerm = create.reserved_name(ASTReserved.ReadPerm);
+
+          final OperatorExpression readPermissionClause = create.expression(StandardOperator.Perm, rewrittenHeapLocation, readPerm);
+
+          builder.requires(readPermissionClause);
+        }
+      }
+
+      //transform the rest of the contract
+      super.rewrite(contractWithoutAccessibles, builder);
+    }
+
+    else {
+      //contract hasn't got any 'accessible' clauses - just delegate to super!
+      super.rewrite(contract, builder);
+    }
   }
 
 

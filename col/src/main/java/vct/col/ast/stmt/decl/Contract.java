@@ -85,12 +85,12 @@ public class Contract extends ASTNode {
       DeclarationStatement yields[],
       ASTNode modifies[],
       ASTNode accesses[],
-      ASTNode inv,
+      ASTNode invariant,
       ASTNode kernelInvariant,
       ASTNode pre_condition,
       ASTNode post_condition,
       SignalsClause[] signals){
-    this.invariant=inv;
+    this.invariant=invariant;
     this.kernelInvariant = kernelInvariant;
     this. pre_condition= pre_condition;
     this.post_condition=post_condition;

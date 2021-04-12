@@ -10,15 +10,26 @@ class `Future` {
     process myProcess(int myInt);
 }
 
-/*
-class Program {
 
-    pure boolean alwaysTrue() = true;
+//class Program {
+//
+//    int y;
+//
+//    accessible y;
+//    requires y > 3;
+//    pure boolean testEqY(int anInt) = anInt == y;
+//
+//    requires testEqY(myInt);
+//    void myProcess(int myInt) {};
+//
+//    /*
+//    pure boolean alwaysTrue() = true;
+//
+//    requires alwaysTrue();
+//    void myMethod();
+//    */
+//}
 
-    requires alwaysTrue();
-    void myMethod();
-}
-*/
 
 // ================== CLASS STRUCTURE BEFORE CHECK-HISTORY ==================
 //public class Future{
