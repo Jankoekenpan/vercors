@@ -19,3 +19,121 @@ class Program {
     void myMethod();
 }
 */
+
+// ================== CLASS STRUCTURE BEFORE CHECK-HISTORY ==================
+//public class Future{
+//  int x;
+//  /*@
+//    requires ((this.x)) > 3;
+//    accessible ((this.x));
+//  @*/
+//  /*@pure@*/ boolean /*@ pure */ testEqX(int anInt)=anInt == ((this.x));
+//
+//  /*@
+//    requires (this.testEqX(myInt));
+//  @*/
+//  final process myProcess(int myInt);
+//
+//}
+//
+//public class EncodedGlobalVariables{
+//}
+
+// ================== CLASS STRUCTURE AFTER CHECK-HISTORY ==================
+//
+//public class Future{
+//  /*@
+//    requires this.x_hist_value > 3;
+//    accessible this.x_hist_value;
+//  @*/
+//  /*@pure@*/ boolean /*@ pure */ testEqX(int anInt)=anInt == this.x_hist_value;
+//
+//  /*@
+//    context fr != none;
+//    requires (this.hist_idle(fr,Process.p_seq(Process.p_myProcess(myInt),proc)));
+//    requires (this.testEqX(myInt));
+//    ensures (this.hist_do_myProcess(fr,proc));
+//  @*/
+//  void myProcess_begin(frac fr,Process proc,int myInt);
+//
+//  /*@
+//    context fr != none;
+//    requires (this.hist_do_myProcess(fr,proc));
+//    ensures (this.hist_idle(fr,proc));
+//  @*/
+//  void myProcess_commit(frac fr,Process proc,int myInt);
+//
+//  /*@
+//    predicate resource hist_do_myProcess(frac fr,Process proc);
+//  */
+//
+//  int x_hist_value;
+//  int x_hist_init;
+//  int x_hist_act;
+//  int x_hist_write;
+//  int x_hist_free;
+//  int x_hist_hist;
+//  int x_hist_action;
+//  /*@
+//    requires Perm( this.x_hist_value , write );
+//    context Perm( this.x_hist_write , write );
+//    ensures PointsTo( this.x_hist_value , write , value );
+//  @*/
+//  void hist_set_x(int value);
+//
+//  /*@
+//    context Perm( this.x_hist_value , write );
+//    requires Perm( this.x_hist_hist , write );
+//    requires Perm( this.x_hist_init , write );
+//    requires (this.hist_idle(write,Process.p_empty()));
+//    ensures Perm( this.x_hist_write , write );
+//    ensures Perm( this.x_hist_free , write );
+//    ensures this.x_hist_value == \old( this.x_hist_value );
+//    ensures this.x_hist_value == \old( this.x_hist_init );
+//  @*/
+//  void end_future();
+//
+//  /*@
+//    requires frac1 + frac2 <= write;
+//    requires (this.hist_idle(frac1 + frac2,Process.p_merge(proc1,proc2)));
+//    ensures (this.hist_idle(frac1,proc1));
+//    ensures (this.hist_idle(frac2,proc2));
+//  @*/
+//  void split(frac frac1,Process proc1,frac frac2,Process proc2);
+//
+//  /*@
+//    requires frac1 + frac2 <= write;
+//    requires (this.hist_idle(frac1,proc1));
+//    requires (this.hist_idle(frac2,proc2));
+//    ensures (this.hist_idle(frac1 + frac2,Process.p_merge(proc1,proc2)));
+//  @*/
+//  void merge(frac frac1,Process proc1,frac frac2,Process proc2);
+//
+//  /*@
+//    predicate resource hist_idle(frac fr,Process proc);
+//  */
+//
+//}
+//
+//public class EncodedGlobalVariables{
+//}
+//
+//ADT Process [] {
+//  //constructors
+//  static /*@pure@*/ boolean /*@ pure */ p_is_choice(Process p1,Process p2);
+//  static /*@pure@*/ Process /*@ pure */ p_empty();
+//  static /*@pure@*/ Process /*@ pure */ p_merge(Process p1,Process p2);
+//  static /*@pure@*/ Process /*@ pure */ p_choice(Process p1,Process p2);
+//  static /*@pure@*/ Process /*@ pure */ p_seq(Process p1,Process p2);
+//  static /*@pure@*/ Process /*@ pure */ p_myProcess(int myInt);
+//  //mappings
+//  //axioms
+//  axioms empty_1L: (\forall Process p;true;{:Process.p_merge(Process.p_empty(),p):} == p);
+//  axioms empty_2L: (\forall Process p;true;{:Process.p_seq(Process.p_empty(),p):} == p);
+//  axioms empty_2R: (\forall Process p;true;{:Process.p_seq(p,Process.p_empty()):} == p);
+//  axioms choice_L: (\forall Process p1,Process p2;true;{:Process.p_is_choice(Process.p_choice(p1,p2),p1):});
+//  axioms choice_R: (\forall Process p1,Process p2;true;{:Process.p_is_choice(Process.p_choice(p1,p2),p2):});
+//  axioms choice_dist: (\forall Process p1,Process p2,Process p3;true;{:Process.p_seq(Process.p_choice(p1,p2),p3):} == Process.p_choice(Process.p_seq(p1,p3),Process.p_seq(p2,p3)));
+//  axioms seq_assoc: (\forall Process p1,Process p2,Process p3{Process.p_seq(Process.p_seq(p1,p2),p3)};true;Process.p_seq(Process.p_seq(p1,p2),p3) == Process.p_seq(p1,Process.p_seq(p2,p3)));
+//  axioms myProcess_def_2: (\forall Process p,int myInt{Process.p_seq(p,Process.p_myProcess(myInt))};true;Process.p_seq(p,Process.p_myProcess(myInt)) == Process.p_seq(p,Process.p_seq(Process.p_myProcess(myInt),Process.p_empty())));
+//}

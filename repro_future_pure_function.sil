@@ -123,6 +123,9 @@ field Future_x_hist_action: Int
 function Future_testEqX_Integer(diz: Ref, anInt: Int): Bool
   requires diz != null
   requires 3 < diz.Future_x_hist_value
+  //the 'accessible' clause is not generated.
+  //we expect a 'requires acc(diz.Future_x_hist_value, read)'
+  //why is this not generated? TODO fix this
 {
   anInt == diz.Future_x_hist_value
 }

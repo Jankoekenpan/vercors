@@ -34,11 +34,11 @@ public class Contract extends ASTNode {
   public final ASTNode kernelInvariant;
   public final ASTNode pre_condition;
   public final ASTNode post_condition;
-  public final DeclarationStatement given[];
-  public final DeclarationStatement yields[];
+  public final DeclarationStatement[] given;
+  public final DeclarationStatement[] yields;
   public final SignalsClause[] signals;
-  public final ASTNode modifies[];
-  public final ASTNode accesses[];
+  public final ASTNode[] modifies;
+  public final ASTNode[] accesses;
 
   private HashSet<String> labels = new HashSet<String>();
     
