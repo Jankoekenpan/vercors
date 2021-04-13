@@ -1,4 +1,4 @@
-// Generated on 2021-04-06 at 11:32:16
+// Generated on 2021-04-12 at 17:44:26
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -52,8 +52,6 @@ domain TYPE {
   
   unique function class_java_DOT_lang_DOT_Object(): TYPE
   
-  unique function class_Program(): TYPE
-  
   unique function class_EncodedGlobalVariables(): TYPE
   
   function directSuperclass(t: TYPE): TYPE
@@ -62,10 +60,6 @@ domain TYPE {
   
   axiom Future_directSuperclass {
     directSuperclass(class_Future()) == class_java_DOT_lang_DOT_Object()
-  }
-  
-  axiom Program_directSuperclass {
-    directSuperclass(class_Program()) == class_java_DOT_lang_DOT_Object()
   }
   
   axiom EncodedGlobalVariables_directSuperclass {
@@ -122,18 +116,10 @@ field Future_x_hist_action: Int
 
 function Future_testEqX_Integer(diz: Ref, anInt: Int): Bool
   requires diz != null
+  requires acc(diz.Future_x_hist_value, wildcard)
   requires 3 < diz.Future_x_hist_value
-  //the 'accessible' clause is not generated.
-  //we expect a 'requires acc(diz.Future_x_hist_value, read)'
-  //why is this not generated? TODO fix this
 {
   anInt == diz.Future_x_hist_value
-}
-
-function Program_alwaysTrue(diz: Ref): Bool
-  requires diz != null
-{
-  true
 }
 
 function instanceof_TYPE_TYPE(t: TYPE, u: TYPE): Bool
@@ -150,28 +136,45 @@ function new_zfrac(x: Perm): zfrac
   ensures zfrac_val(result) == x
 
 
-predicate Future_hist_do_myProcess_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+predicate Future_hist_do_myProcess_Fraction_Process_ZFraction(diz: Ref, fr: frac, proc: Process, x_frac: zfrac) 
 
 predicate Future_hist_idle_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
-method Future_myProcess_begin_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, myInt: Int)
+method Future_myProcess_begin_Fraction_Process_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, x_frac: zfrac, myInt: Int)
   requires diz != null
   requires frac_val(fr) != none
   requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_myProcess(myInt), proc)), write)
-  //also needs: requires acc(diz.Future_x_hist_value, read)
+  requires zfrac_val(x_frac) != none
+  requires acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_hist, zfrac_val(x_frac))
+  requires 3 < diz.Future_x_hist_value
   requires Future_testEqX_Integer(diz, myInt)
   ensures frac_val(fr) != none
-  ensures acc(Future_hist_do_myProcess_Fraction_Process(diz, fr, proc), write)
+  ensures acc(Future_hist_do_myProcess_Fraction_Process_ZFraction(diz, fr, proc, x_frac), write)
+  ensures acc(diz.Future_x_hist_act, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_write, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_action, zfrac_val(x_frac))
+  ensures diz.Future_x_hist_value == diz.Future_x_hist_act
+  ensures diz.Future_x_hist_value == old(diz.Future_x_hist_value)
 {
   inhale false
 }
 
-method Future_myProcess_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, myInt: Int)
+method Future_myProcess_commit_Fraction_Process_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, x_frac: zfrac, myInt: Int)
   requires diz != null
   requires frac_val(fr) != none
-  requires acc(Future_hist_do_myProcess_Fraction_Process(diz, fr, proc), write)
+  requires acc(Future_hist_do_myProcess_Fraction_Process_ZFraction(diz, fr, proc, x_frac), write)
+  requires zfrac_val(x_frac) != none
+  requires acc(diz.Future_x_hist_act, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_write, zfrac_val(x_frac))
+  requires acc(diz.Future_x_hist_action, zfrac_val(x_frac))
   ensures frac_val(fr) != none
   ensures acc(Future_hist_idle_Fraction_Process(diz, fr, proc), write)
+  ensures acc(diz.Future_x_hist_value, zfrac_val(x_frac))
+  ensures acc(diz.Future_x_hist_hist, zfrac_val(x_frac))
+  ensures diz.Future_x_hist_value == old(diz.Future_x_hist_value)
 {
   inhale false
 }
@@ -217,13 +220,6 @@ method Future_merge_Fraction_Process_Fraction_Process(diz: Ref, frac1: frac, pro
   requires acc(Future_hist_idle_Fraction_Process(diz, frac1, proc1), write)
   requires acc(Future_hist_idle_Fraction_Process(diz, frac2, proc2), write)
   ensures acc(Future_hist_idle_Fraction_Process(diz, new_frac(frac_val(frac1) + frac_val(frac2)), p_merge(proc1, proc2)), write)
-{
-  inhale false
-}
-
-method Program_myMethod_EncodedGlobalVariables(diz: Ref, globals: Ref)
-  requires diz != null
-  requires Program_alwaysTrue(diz)
 {
   inhale false
 }
