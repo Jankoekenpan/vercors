@@ -1,0 +1,96 @@
+// Generated on 2021-04-13 at 12:50:15
+domain TYPE {
+  
+  unique function class_Future(): TYPE
+  
+  unique function class_java_DOT_lang_DOT_Object(): TYPE
+  
+  unique function class_EncodedGlobalVariables(): TYPE
+  
+  function directSuperclass(t: TYPE): TYPE
+  
+  function type_of(val: Ref): TYPE
+  
+  axiom Future_directSuperclass {
+    directSuperclass(class_Future()) == class_java_DOT_lang_DOT_Object()
+  }
+  
+  axiom EncodedGlobalVariables_directSuperclass {
+    directSuperclass(class_EncodedGlobalVariables()) == class_java_DOT_lang_DOT_Object()
+  }
+}
+
+domain frac {
+  
+  function frac_val(a: frac): Perm
+  
+  axiom frac_eq {
+    (forall a: frac, b: frac :: { frac_val(a),frac_val(b) } (frac_val(a) == frac_val(b)) == (a == b))
+  }
+  
+  axiom frac_bound {
+    (forall a: frac :: { frac_val(a) } 0 / 1 < frac_val(a) && frac_val(a) <= 1 / 1)
+  }
+}
+
+domain zfrac {
+  
+  function zfrac_val(a: zfrac): Perm
+  
+  axiom zfrac_eq {
+    (forall a: zfrac, b: zfrac :: { zfrac_val(a),zfrac_val(b) } (zfrac_val(a) == zfrac_val(b)) == (a == b))
+  }
+  
+  axiom zfrac_bound {
+    (forall a: zfrac :: { zfrac_val(a) } 0 / 1 <= zfrac_val(a) && zfrac_val(a) <= 1 / 1)
+  }
+}
+
+//  a field 
+field Future_x: Int
+
+function Future_testEqX_Integer(diz: Ref, anInt: Int): Bool
+  requires diz != null
+  requires acc(diz.Future_x, wildcard)
+  requires 3 < diz.Future_x
+{
+  anInt == diz.Future_x
+}
+
+function instanceof_TYPE_TYPE(t: TYPE, u: TYPE): Bool
+  ensures result == (t == u || directSuperclass(t) == u)
+
+
+function new_frac(x: Perm): frac
+  requires 0 / 1 < x && x <= 1 / 1
+  ensures frac_val(result) == x
+
+
+function new_zfrac(x: Perm): zfrac
+  requires 0 / 1 <= x && x <= 1 / 1
+  ensures zfrac_val(result) == x
+
+
+method Future_myProcess_Integer_ZFraction(diz: Ref, myInt: Int, f_This_x: zfrac)
+  requires diz != null
+  requires none < zfrac_val(f_This_x)
+  requires zfrac_val(f_This_x) < write
+  requires acc(diz.Future_x, zfrac_val(f_This_x))
+  requires 3 < diz.Future_x
+  requires Future_testEqX_Integer(diz, myInt)
+  ensures acc(diz.Future_x, zfrac_val(f_This_x))
+{
+  inhale false
+}
+
+method Future_if_any_random(diz: Ref) returns (sys__result: Bool)
+  requires diz != null
+{
+  inhale false
+}
+
+method EncodedGlobalVariables_if_any_random(diz: Ref) returns (sys__result: Bool)
+  requires diz != null
+{
+  inhale false
+}

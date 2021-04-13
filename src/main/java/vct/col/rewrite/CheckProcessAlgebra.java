@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 
 import vct.col.ast.expr.Dereference;
+import vct.col.ast.expr.FieldAccess;
 import vct.col.ast.expr.MethodInvokation;
 import vct.col.ast.expr.NameExpression;
 import vct.col.ast.expr.OperatorExpression;
@@ -230,13 +231,72 @@ public class CheckProcessAlgebra extends AbstractRewriter {
       }
       result=create.method_decl(create.primitive_type(PrimitiveSort.Void), cb.getContract(), m.name(), args, body);
     }
-    else { 	
-    	if (m.kind == Kind.Pure) {
-    		super.visit(m);
-    	}
-    	else {
-    		result = null;
-    	}
+    else if (m.kind == Kind.Pure) {
+      super.visit(m); // TODO should eventually call rewrite(Conctract, ContractBuilder)
+    }
+    else {
+      result = null;
+    }
+  }
+
+  @Override
+  public void rewrite(final Contract contract, final ContractBuilder builder) {
+    //Copied from CheckHistoryAlgebra. Might want to extract to a static method or something.
+    //It's not an exact copy anymore but still lots of code is in common.
+
+    if (contract == null) return;
+
+    //  rewrite
+    //      'accessible ref.x'
+    //  to
+    //      'requires Perm(ref.x, read)'
+
+    if (contract.accesses != null && contract.accesses.length != 0) {
+      //the contract has at least one accessible clause!
+
+      //get rid of all the accessible clauses
+      //Contract has no wither-methods, so just call the copy-constructor
+      final Contract contractWithoutAccessibles = new Contract(
+              contract.given,
+              contract.yields,
+              contract.modifies,
+              null,
+              contract.invariant,
+              contract.kernelInvariant,
+              contract.pre_condition,
+              contract.post_condition,
+              contract.signals
+      );
+
+      //for every field access, add a requires Perm(Dereference(obj, fieldName), ReadPerm))
+      for (ASTNode heapLocation : contract.accesses) {
+        //NOTE:
+        // Unlike --check-history / CheckHistoryAlgebra
+        // --check-defined / CheckProcessAlgebra parses an accessible clause as a Dereference Node!
+        // --check-history / CheckHistoryAlgebra use a FieldAccess instead.
+
+        if (heapLocation instanceof Dereference dereference
+                && dereference.obj() instanceof NameExpression obj
+                && obj.reserved() == ASTReserved.This
+          //&& obj is a Future
+        ) {
+
+          final ASTNode rewrittenHeapLocation = create.dereference(rewrite(dereference.obj()), dereference.field());
+          final ASTNode readPerm = create.reserved_name(ASTReserved.ReadPerm);
+
+          final OperatorExpression readPermissionClause = create.expression(StandardOperator.Perm, rewrittenHeapLocation, readPerm);
+
+          builder.requires(readPermissionClause);
+        }
+      }
+
+      //transform the rest of the contract
+      super.rewrite(contractWithoutAccessibles, builder);
+    }
+
+    else {
+      //contract hasn't got any 'accessible' clauses - just delegate to super!
+      super.rewrite(contract, builder);
     }
   }
 

@@ -1,10 +1,12 @@
 class Utils {
 
     static pure seq<int/*T*/> append(seq<int/*T*/> list, int/*T*/ item) = list ++ item;
-    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;    //if PVL had generic support I wouldn't have to implement this twice.
+    static pure seq<tuple<int, int>> append(seq<tuple<int, int>> list, tuple<int, int> item) = list ++ item;            //if PVL had generic support I wouldn't have to implement this twice.
     static pure seq<int/*T*/> concat(seq<int/*T*/> list1, seq<int/*T*/> list2) = list1 + list2;
+    static pure seq<tuple<int, int>> concat(seq<tuple<int, int>> list1, seq<tuple<int, int>> list2) = list1 + list2;    //idem
     //why implement append and concat? because I'd rather use alphabetic names than symbolic names!
     //especially because PVL diverts from Haskell's and Scala's convention to use the double plus for concatenation!
+
 }
 
 class Status {
@@ -24,17 +26,6 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
-    static pure set<int> transactionIndices() = TMS1.genIndices(NUM_TRANSACTIONS());
-    static pure set<int> genIndices(int size) = TMS1.genIndicesHelper(set<int>{}, 0, size);
-    static pure set<int> genIndicesHelper(set<int> acc, int nextIndex, int size) =
-        nextIndex < size
-            ? TMS1.genIndicesHelper(acc + set<int> { nextIndex }, nextIndex + 1, size)
-            : acc;
-
-    static pure seq<tuple<int, int>> join(seq<seq<tuple<int, int>>> seqOfSeqs) =
-        |seqOfSeqs| == 0
-            ? seq<tuple<int, int>> {}
-            : seqOfSeqs[0]::join(tail(seqOfSeqs));
 }
 
 /**
@@ -95,58 +86,67 @@ class `Future` {
 
     // derived state
 
-    pure set<int> doneTransactions() =
-        set<int> { i | int i <- TMS1.transactionIndices(); (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
-    pure set<int> committedTransactions() =
-        set<int> { i | int i <- TMS1.transactionIndices(); status[i] == Status.committed() };
-    pure set<int> commitPendingTransactions() =
-        set<int> { i | int i <- TMS1.transactionIndices(); status[i] == Status.commitPending() };
-    pure set<int> invokedCommitTransactions() =
-        set<int> { i | int i <- TMS1.transactionIndices(); invokedCommit[i] };
+//    pure set<int> doneTransactions() =
+//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
+//    pure set<int> committedTransactions() =
+//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.committed() };
+//    pure set<int> commitPendingTransactions() =
+//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.commitPending() };
+//    pure set<int> invokedCommitTransactions() =
+//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
+//
+//
+//    // functions
+//
+//    //this is called 'ops(sigma)' in the paper, but we're calling it allOps to prevent name collisions.
+//    pure seq<tuple<int, int>> allOps(seq<int> serialization/*the ints here are the transaction ids*/) =
+//        Utils.concat(ops[head(serialization)], allOps(tail(serialization)));
+//
+//    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
+//        set<seq<int>> {};
+//        //TODO all possible serializations of the transactions, respecting the given order
+//        //TODO transactions.permutations().filter(sequence -> respects(order, sequence))
+//
+//
+//    // predicates
+//    pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
+//        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
+//        //TODO can I abuse bit-properties of ints to make this work?
+//
+//    pure boolean extConsPrefix(seq<int> serialization/*the ints here are transaction ids*/) =
+//        (\forall int idOne; idOne <= 0 && idOne < TMS1.NUM_TRANSACTIONS();
+//            (\forall int idTwo; idTwo <= 0 && idTwo < TMS1.NUM_TRANSACTIONS();
+//                (idTwo in serialization) &&
+//                ((tuple<int, int> {idOne, idTwo} in extOrder) ==>
+//                    ((idOne in serialization) == (status[idOne] == Status.committed()))
+//                )
+//            )
+//        );
 
-    // functions
-
-    //this is called 'ops(sigma)' in the paper, but we're calling it allOps to prevent name collisions.
-    pure seq<tuple<int, int>> allOps(seq<int> serialization/*the ints here are the transaction ids*/) =
-        TMS1.join(serialization[id -> ops[id]]);
-    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
-        set<seq<int>> {};
-        //TODO all possible serializations of the transactions, respecting the given order
-        //TODO transactions.permutations().filter(sequence -> respects(order, sequence))
-
-
-    // predicates
-    pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
-        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
-        //TODO can I abuse bit-properties of ints to make this work?
-
-    pure boolean extConstPrefix(seq<int> serialization/*the ints here are transaction ids*/) =
-        (\forall int idOne; idOne <= 0 && idOne < TMS1.NUM_TRANSACTIONS();
-            (\forall int idTwo; idTwo <= 0 && idTwo < TMS1.NUM_TRANSACTIONS();
-                (idTwo in serialization) &&
-                ((tuple<int, int> {idOne, idTwo} in extOrder) ==>
-                    ((idOne in serialization) == (status[idOne] == Status.committed()))
-                )
-            )
-        );
-    pure boolean validCommit(int tid) =
+    pure boolean validCommit(int tid) = true;
+        /*
         (\exists set<int> S; S <= commitPendingTransactions();
             (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
                 (tid in S) && legal(allOps(serialization))
             )
         );
+        */
     pure boolean validFail(int tid) = true;
+        /*
         (\exists set<int> S; S <= commitPendingTransactions();
             (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
                 (!(tid in S)) && legal(allOps(serialization))
             )
         );
-    pure boolean validResp(int tid, int pendingOp, int respOp) =
+        */
+    pure boolean validResp(int tid, int pendingOp, int respOp) = true;
+        /*
         (\exists set<int> S; S <= invokedCommitTransactions();
             (\exists seq<int> serialization; serialization in ser(S, extOrder);
                 extConsPrefix(S + set<int> { tid }) && legal(allOps(serialization ++ tid) ++ tuple<int, int>{pendingOp, respOp})
             )
         );
+        */
 
 
     // ========= Processes =========
@@ -154,7 +154,7 @@ class `Future` {
     //TODO combine these processes into one 'total' process.
 
     //init
-    context 0 <= i;
+    context i >= 0;
     context i < |status|;
     context i < |ops|;
     context i < |invokedCommit|;
@@ -179,6 +179,9 @@ class `Future` {
     requires status[tid] == Status.notStarted();
     ensures status[tid] == Status.beginPending();
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
+    ensures |\old(status)| == |status|;
+    ensures |\old(ops)| == |ops|;
+    ensures |\old(invokedCommit)| == |invokedCommit|;
     process begin(int tid);
 
     //beginOk

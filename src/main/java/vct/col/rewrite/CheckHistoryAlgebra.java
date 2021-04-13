@@ -254,6 +254,9 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
 
   @Override
   public void rewrite(final Contract contract, final ContractBuilder builder) {
+    //Copied in CheckProcessAlgebra (that's used by --check-defined). Might want to extract this to a separate method.
+    //Although the code there was slightly adjusted for Vercors' inconsisten representation of accessible clauses.
+
     if (contract == null) return;
 
     //  rewrite
@@ -601,39 +604,11 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
   }
 
   @Override
-  public void visit(Method method) {
-    super.visit(method);
-
-    //TODO add accessible clauses to the result.
-    //TODO this is actually done by rewrite(Contract, ContractBuilder)
-    //TODO because our superclass AbstractRewriter calls that method.
-  }
-  
-  @Override
   public void visit(MethodInvokation e){
-    if (e.isName("Future_testEqX_Integer")) {
-      //TODO debug!
-      System.out.println("======= DEBUG WE ARE TRANSFORMING Future_testEqX_Integer =======");
-    }
-
-
     Method m=e.getDefinition();
     if (m.getReturnType().isPrimitive(PrimitiveSort.Process)) {
       result = create.domain_call("Process", "p_" + e.method(), rewrite(e.getArgs()));
-    } /*else if (m.name().startsWith("Future_") && !e.getArg(0).isName("diz")) {
-      //TODO I don't think this is the most VerCors-idiomatic code.
-      //instance method declared by ourself.
-      //make sure we pass 'diz'
-      ASTNode[] oldArgs = e.getArgs();
-      ASTNode[] resultArgs = new ASTNode[oldArgs.length +  1];
-      resultArgs[0] = create.this_expression(new ClassType("Ref"));
-      System.arraycopy(oldArgs, 0, resultArgs, 1, oldArgs.length);
-
-      MethodInvokation resInvocation = create.invokation(null, null, e.method(), resultArgs);
-      resInvocation.set_before(rewrite(e.get_before()));
-      resInvocation.set_after(rewrite(e.get_after()));
-      result = resInvocation;
-    }*/ else {
+    } else {
       ASTNode in_args[]=e.getArgs();
       ASTNode args[]=new ASTNode[in_args.length];
       for(int i=0;i<in_args.length;i++){

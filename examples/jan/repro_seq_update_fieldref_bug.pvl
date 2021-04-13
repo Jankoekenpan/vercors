@@ -1,0 +1,14 @@
+class `Future` {
+    seq<int> ints;
+
+    context |input| == |ints|;
+    pure seq<boolean> largerThanFive(seq<boolean> input, int i) =
+        input[i -> ints[i] > 5];
+
+    /*
+        context |input| == |ints|;
+        pure seq<boolean> largerThanFiveFixed(seq<int> input) =
+            (ints[head(input)] > 5) :: largerThanFiveFixed(tail(input));
+    */
+
+}
