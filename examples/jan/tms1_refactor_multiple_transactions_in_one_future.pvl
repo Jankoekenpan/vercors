@@ -154,7 +154,7 @@ class `Future` {
     //TODO combine these processes into one 'total' process.
 
     //init
-    context i >= 0;
+    context 0 <= i;
     context i < |status|;
     context i < |ops|;
     context i < |invokedCommit|;
@@ -177,11 +177,9 @@ class `Future` {
     context tid < |status|;
     modifies status;
     requires status[tid] == Status.notStarted();
-    ensures status[tid] == Status.beginPending();
-    ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
     ensures |\old(status)| == |status|;
-    ensures |\old(ops)| == |ops|;
-    ensures |\old(invokedCommit)| == |invokedCommit|;
+    ensures status[tid] == Status.beginPending();
+    ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status)[x] == status[x]);
     process begin(int tid);
 
     //beginOk
@@ -199,6 +197,8 @@ class `Future` {
     modifies status;
     modifies pendingOp;
     requires status[tid] == Status.ready();
+    ensures |\old(status)| == |status|;
+    ensures |\old(pendingOp)| == |pendingOp|;
     ensures status[tid] == Status.opPending();
     ensures pendingOp[tid] == invOp;
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
@@ -214,6 +214,8 @@ class `Future` {
     modifies status;
     modifies ops;
     requires this.validResp(tid, this.pendingOp[tid], respOp);
+    ensures |\old(status)| == |status|;
+    ensures |\old(ops)| == |ops|;
     ensures status[tid] == Status.ready();
     ensures ops[tid] == Utils.append(\old(ops[tid]), tuple<int, int> {pendingOp[tid], respOp});
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
@@ -222,50 +224,53 @@ class `Future` {
 
     //commit
     context 0 <= tid;
-    context tid <= |status|;
-    context tid <= |invokedCommit|;
+    context tid < |status|;
+    context tid < |invokedCommit|;
     modifies status;
     modifies invokedCommit;
     requires status[tid] == Status.ready();
+    ensures |\old(status)| == |status|;
+    ensures |\old(invokedCommit)| == |invokedCommit|;
     ensures status[tid] == Status.commitPending();
     ensures invokedCommit[tid] == true;
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
-    ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(invokedCommit[x]) == invokedCommit[x]);
+    ensures (\forall int x; 0 <= x && x < |invokedCommit| && x != tid; \old(invokedCommit[x]) == invokedCommit[x]);
     process commit(int tid);
 
     //commitOk
     context 0 <= tid;
-    context tid <= |status|;
+    context tid < |status|;
     modifies status;
     requires status[tid] == Status.commitPending();
     requires validCommit(tid);
+    ensures |\old(status)| == |status|;
     ensures status[tid] == Status.committed();
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
     process commitOk(int tid);
 
     //cancel
     context 0 <= tid;
-    context tid <= |status|;
+    context tid < |status|;
     modifies status;
     requires status[tid] == Status.ready();
+    ensures |\old(status)| == |status|;
     ensures status[tid] == Status.cancelPending();
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
     process cancel(int tid);
 
     //abort
     context 0 <= tid;
-    context tid <= |status|;
+    context tid < |status|;
     modifies status;
     requires (status[tid] == Status.beginPending()) ||
             (status[tid] == Status.opPending()) ||
             (status[tid] == Status.commitPending()) ||
             (status[tid] == Status.cancelPending());
     requires validFail(tid);
+    ensures |\old(status)| == |status|;
     ensures status[tid] == Status.aborted();
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
     process abort(int tid);
-
-
 
 
 }

@@ -232,7 +232,7 @@ public class CheckProcessAlgebra extends AbstractRewriter {
       result=create.method_decl(create.primitive_type(PrimitiveSort.Void), cb.getContract(), m.name(), args, body);
     }
     else if (m.kind == Kind.Pure) {
-      super.visit(m); // TODO should eventually call rewrite(Conctract, ContractBuilder)
+      super.visit(m); //eventually calls rewrite(Conctract, ContractBuilder)
     }
     else {
       result = null;
