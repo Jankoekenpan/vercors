@@ -86,8 +86,11 @@ class `Future` {
 
     // derived state
 
-//    pure set<int> doneTransactions() =
-//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
+    accessible status;
+    ensures (\forall int tid; tid in \result; (status[tid] == Status.committed()) || (status[tid] == Status.aborted()));
+    ensures (\forall int tid; !(tid in \result); (status[tid] != Status.committed()) && (status[tid] != Status.aborted()));
+    pure set<int> doneTransactions() =
+        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
 //    pure set<int> committedTransactions() =
 //        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.committed() };
 //    pure set<int> commitPendingTransactions() =

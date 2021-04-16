@@ -1,0 +1,11 @@
+class `Future` {
+
+    seq<int> mySequence;
+
+    accessible mySequence;
+    ensures (\forall int x; x in \result; x > 5);
+    ensures (\forall int y; !(y in \result); y <= 5);
+    pure set<int> myFunction() =
+        set<int> { i | int i <- {0 .. (|mySequence| - 1)}; mySequence[i] > 5 };
+
+}
