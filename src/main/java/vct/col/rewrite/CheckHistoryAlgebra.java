@@ -56,7 +56,7 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
     for(Method m:cl.dynamicMethods()){
       is_algebra|=m.getReturnType().isPrimitive(PrimitiveSort.Process);
     }
-    if (is_algebra){
+    if (is_algebra) {
       boolean is_history = cl.name().equals("History");
       adt=create.adt("Process");
       adt_type=create.class_type("Process");
@@ -187,66 +187,67 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
               )
           )
       ));
-      switch(mode){
-      case AxiomVerification:{
-        ASTClass res = create.new_class(cl.name(), new DeclarationStatement[0], null);
-        res.setFlag(ASTFlags.FINAL, true);
-        for(Method m:cl.dynamicMethods()){
-          if (m.getKind()==Method.Kind.Constructor){
-            continue;
-          } else if (m.getReturnType().isPrimitive(PrimitiveSort.Process)){
-            add_process_to_adt(m);
-          } else if (m.getReturnType().isPrimitive(PrimitiveSort.Resource)) {
-            // drop predicate.
-          } else {
-            res.add_dynamic(rewrite(m));
-          }
-        }
-        result=res;
-        return;        
-      }
-      case ProgramVerification:{
-        hist_class = create.new_class(cl.name(), new DeclarationStatement[0], null);
-        hist_class.setFlag(ASTFlags.FINAL, true);
-        for(Method m:cl.dynamicMethods()){
-          if (m.getKind()==Method.Kind.Constructor){
-            hist_class.add_dynamic(rewrite(m));
-          } else if (m.getReturnType().isPrimitive(PrimitiveSort.Process)){
-            add_process_to_adt(m);
-            if (m.getBody()==null) {
-              add_begin_and_commit_to_class(m,is_history);
+      switch(mode) {
+        case AxiomVerification: {
+          ASTClass res = create.new_class(cl.name(), new DeclarationStatement[0], null);
+          res.setFlag(ASTFlags.FINAL, true);
+          for(Method m:cl.dynamicMethods()){
+            if (m.getKind()==Method.Kind.Constructor){
+              continue;
+            } else if (m.getReturnType().isPrimitive(PrimitiveSort.Process)){
+              add_process_to_adt(m);
+            } else if (m.getReturnType().isPrimitive(PrimitiveSort.Resource)) {
+              // drop predicate.
+            } else {
+              res.add_dynamic(rewrite(m));
             }
-          } else if (m.getReturnType().isPrimitive(PrimitiveSort.Resource)) {
-            hist_class.add(rewrite(m));
           }
-          else if (m.kind == Method.Kind.Pure) {
-            hist_class.add(rewrite(m)); //eventually this calls rewrite(Conctract, ContractBuilder) which will transform the accessible clause!
-          }
-          else {
-            add_lemma_to_adt(m);
-          }
+          result=res;
+          return;
         }
-        for(DeclarationStatement m:cl.dynamicFields()){
-          hist_class.add_dynamic(create.field_decl(m.name() + "_hist_value",m.getType(), rewrite(m.initJava())));
-          hist_class.add_dynamic(create.field_decl(m.name() + "_hist_init",m.getType()));
-          hist_class.add_dynamic(create.field_decl(m.name() + "_hist_act",m.getType()));
-          hist_class.add_dynamic(create.field_decl(m.name() + "_hist_write",m.getType()));
-          hist_class.add_dynamic(create.field_decl(m.name() + "_hist_free",m.getType()));
-          hist_class.add_dynamic(create.field_decl(histName(m.name()), m.getType()));
-          hist_class.add_dynamic(create.field_decl(m.name() + "_hist_action",m.getType()));
-          add_setters_and_getter(hist_class, m.name(), m.getType());
-        }
-        
-        add_begin_hist_of_end_future_method(cl);
-        add_split_merge_methods(cl);
+        case ProgramVerification: {
+          hist_class = create.new_class(cl.name(), new DeclarationStatement[0], null);
+          hist_class.setFlag(ASTFlags.FINAL, true);
+          for(Method m:cl.dynamicMethods()){
+            if (m.getKind()==Method.Kind.Constructor){
+              hist_class.add_dynamic(rewrite(m));
+            } else if (m.getReturnType().isPrimitive(PrimitiveSort.Process)){
+              add_process_to_adt(m);
+              if (m.getBody()==null) {
+                add_begin_and_commit_to_class(m,is_history);
+              }
+            } else if (m.getReturnType().isPrimitive(PrimitiveSort.Resource)) {
+              hist_class.add(rewrite(m));
+            }
+            else if (m.kind == Method.Kind.Pure) {
+              hist_class.add(rewrite(m)); //eventually this calls rewrite(Conctract, ContractBuilder) which will transform the accessible clause!
+            }
+            else {
+              add_lemma_to_adt(m);
+            }
+          }
+          for(DeclarationStatement m:cl.dynamicFields()){
+            hist_class.add_dynamic(create.field_decl(m.name() + "_hist_value",m.getType(), rewrite(m.initJava())));
+            hist_class.add_dynamic(create.field_decl(m.name() + "_hist_init",m.getType()));
+            hist_class.add_dynamic(create.field_decl(m.name() + "_hist_act",m.getType()));
+            hist_class.add_dynamic(create.field_decl(m.name() + "_hist_write",m.getType()));
+            hist_class.add_dynamic(create.field_decl(m.name() + "_hist_free",m.getType()));
+            hist_class.add_dynamic(create.field_decl(histName(m.name()), m.getType()));
+            hist_class.add_dynamic(create.field_decl(m.name() + "_hist_action",m.getType()));
+            add_setters_and_getter(hist_class, m.name(), m.getType());
+          }
 
-        DeclarationStatement args[]=new DeclarationStatement[2];
-        args[0]=create.field_decl("fr",create.primitive_type(PrimitiveSort.Fraction));
-        args[1]=create.field_decl("proc",adt_type);
-        hist_class.add(create.predicate("hist_idle", null, args));
-        result=hist_class;
-        return;
-      }}
+          add_begin_hist_of_end_future_method(cl);
+          add_split_merge_methods(cl);
+
+          DeclarationStatement args[]=new DeclarationStatement[2];
+          args[0]=create.field_decl("fr",create.primitive_type(PrimitiveSort.Fraction));
+          args[1]=create.field_decl("proc",adt_type);
+          hist_class.add(create.predicate("hist_idle", null, args));
+          result=hist_class;
+          return;
+        }
+      }
     } else {
       super.visit(cl);
     }

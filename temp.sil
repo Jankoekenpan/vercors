@@ -1,0 +1,207 @@
+// Generated on 2021-04-19 at 15:08:56
+domain Process {
+  
+  function p_is_choice(p1: Process, p2: Process): Bool
+  
+  function p_empty(): Process
+  
+  function p_merge(p1: Process, p2: Process): Process
+  
+  function p_choice(p1: Process, p2: Process): Process
+  
+  function p_seq(p1: Process, p2: Process): Process
+  
+  function p_test(): Process
+  
+  axiom empty_1L {
+    (forall p: Process :: { p_merge(p_empty(), p) } p_merge(p_empty(), p) == p)
+  }
+  
+  axiom empty_2L {
+    (forall p: Process :: { p_seq(p_empty(), p) } p_seq(p_empty(), p) == p)
+  }
+  
+  axiom empty_2R {
+    (forall p: Process :: { p_seq(p, p_empty()) } p_seq(p, p_empty()) == p)
+  }
+  
+  axiom choice_L {
+    (forall p1: Process, p2: Process :: { p_is_choice(p_choice(p1, p2), p1) } p_is_choice(p_choice(p1, p2), p1))
+  }
+  
+  axiom choice_R {
+    (forall p1: Process, p2: Process :: { p_is_choice(p_choice(p1, p2), p2) } p_is_choice(p_choice(p1, p2), p2))
+  }
+  
+  axiom choice_dist {
+    (forall p1: Process, p2: Process, p3: Process :: { p_seq(p_choice(p1, p2), p3) } p_seq(p_choice(p1, p2), p3) == p_choice(p_seq(p1, p3), p_seq(p2, p3)))
+  }
+  
+  axiom seq_assoc {
+    (forall p1: Process, p2: Process, p3: Process :: { p_seq(p_seq(p1, p2), p3) } p_seq(p_seq(p1, p2), p3) == p_seq(p1, p_seq(p2, p3)))
+  }
+  
+  axiom test_def_2 {
+    (forall p: Process :: { p_seq(p, p_test()) } p_seq(p, p_test()) == p_seq(p, p_seq(p_test(), p_empty())))
+  }
+}
+
+domain TYPE {
+  
+  unique function class_Future(): TYPE
+  
+  unique function class_java_DOT_lang_DOT_Object(): TYPE
+  
+  unique function class_EncodedGlobalVariables(): TYPE
+  
+  function directSuperclass(t: TYPE): TYPE
+  
+  function type_of(val: Ref): TYPE
+  
+  axiom Future_directSuperclass {
+    directSuperclass(class_Future()) == class_java_DOT_lang_DOT_Object()
+  }
+  
+  axiom EncodedGlobalVariables_directSuperclass {
+    directSuperclass(class_EncodedGlobalVariables()) == class_java_DOT_lang_DOT_Object()
+  }
+}
+
+domain frac {
+  
+  function frac_val(a: frac): Perm
+  
+  axiom frac_eq {
+    (forall a: frac, b: frac :: { frac_val(a),frac_val(b) } (frac_val(a) == frac_val(b)) == (a == b))
+  }
+  
+  axiom frac_bound {
+    (forall a: frac :: { frac_val(a) } 0 / 1 < frac_val(a) && frac_val(a) <= 1 / 1)
+  }
+}
+
+domain zfrac {
+  
+  function zfrac_val(a: zfrac): Perm
+  
+  axiom zfrac_eq {
+    (forall a: zfrac, b: zfrac :: { zfrac_val(a),zfrac_val(b) } (zfrac_val(a) == zfrac_val(b)) == (a == b))
+  }
+  
+  axiom zfrac_bound {
+    (forall a: zfrac :: { zfrac_val(a) } 0 / 1 <= zfrac_val(a) && zfrac_val(a) <= 1 / 1)
+  }
+}
+
+//  a field 
+field Future_mySequence_hist_value: Seq[Int]
+
+//  a field 
+field Future_mySequence_hist_init: Seq[Int]
+
+//  a field 
+field Future_mySequence_hist_act: Seq[Int]
+
+//  a field 
+field Future_mySequence_hist_write: Seq[Int]
+
+//  a field 
+field Future_mySequence_hist_free: Seq[Int]
+
+//  a field 
+field Future_mySequence_hist_hist: Seq[Int]
+
+//  a field 
+field Future_mySequence_hist_action: Seq[Int]
+
+function Future_myFunction(diz: Ref): Set[Int]
+  requires diz != null
+  requires acc(diz.Future_mySequence_hist_value, wildcard)
+  ensures (forall x: Int :: { (x in result) } (x in result) ==> 5 < x)
+  ensures (forall y: Int :: { (y in result) } !((y in result)) ==> y <= 5)
+{
+  (|diz.Future_mySequence_hist_value| == 0 ? Set[Int]() : Set(diz.Future_mySequence_hist_value[0]))
+}
+
+function instanceof_TYPE_TYPE(t: TYPE, u: TYPE): Bool
+  ensures result == (t == u || directSuperclass(t) == u)
+
+
+function new_frac(x: Perm): frac
+  requires 0 / 1 < x && x <= 1 / 1
+  ensures frac_val(result) == x
+
+
+function new_zfrac(x: Perm): zfrac
+  requires 0 / 1 <= x && x <= 1 / 1
+  ensures zfrac_val(result) == x
+
+
+predicate Future_hist_do_test_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+
+predicate Future_hist_idle_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+
+method Future_test_begin_Fraction_Process(diz: Ref, fr: frac, proc: Process)
+  requires diz != null
+  requires frac_val(fr) != none
+  requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_test(), proc)), write)
+  ensures frac_val(fr) != none
+  ensures acc(Future_hist_do_test_Fraction_Process(diz, fr, proc), write)
+{
+  inhale false
+}
+
+method Future_test_commit_Fraction_Process(diz: Ref, fr: frac, proc: Process)
+  requires diz != null
+  requires frac_val(fr) != none
+  requires acc(Future_hist_do_test_Fraction_Process(diz, fr, proc), write)
+  ensures frac_val(fr) != none
+  ensures acc(Future_hist_idle_Fraction_Process(diz, fr, proc), write)
+{
+  inhale false
+}
+
+method Future_hist_set_mySequence_Sequence$Integer$(diz: Ref, value: Seq[Int])
+  requires diz != null
+  requires acc(diz.Future_mySequence_hist_value, write)
+  requires acc(diz.Future_mySequence_hist_write, write)
+  ensures acc(diz.Future_mySequence_hist_value, write) && diz.Future_mySequence_hist_value == value
+  ensures acc(diz.Future_mySequence_hist_write, write)
+{
+  inhale false
+}
+
+method Future_end_future(diz: Ref)
+  requires diz != null
+  requires acc(diz.Future_mySequence_hist_value, write)
+  requires acc(diz.Future_mySequence_hist_hist, write)
+  requires acc(diz.Future_mySequence_hist_init, write)
+  requires acc(Future_hist_idle_Fraction_Process(diz, new_frac(write), p_empty()), write)
+  ensures acc(diz.Future_mySequence_hist_value, write)
+  ensures acc(diz.Future_mySequence_hist_write, write)
+  ensures acc(diz.Future_mySequence_hist_free, write)
+  ensures diz.Future_mySequence_hist_value == old(diz.Future_mySequence_hist_value)
+  ensures diz.Future_mySequence_hist_value == old(diz.Future_mySequence_hist_init)
+{
+  inhale false
+}
+
+method Future_split_Fraction_Process_Fraction_Process(diz: Ref, frac1: frac, proc1: Process, frac2: frac, proc2: Process)
+  requires diz != null
+  requires frac_val(frac1) + frac_val(frac2) <= write
+  requires acc(Future_hist_idle_Fraction_Process(diz, new_frac(frac_val(frac1) + frac_val(frac2)), p_merge(proc1, proc2)), write)
+  ensures acc(Future_hist_idle_Fraction_Process(diz, frac1, proc1), write)
+  ensures acc(Future_hist_idle_Fraction_Process(diz, frac2, proc2), write)
+{
+  inhale false
+}
+
+method Future_merge_Fraction_Process_Fraction_Process(diz: Ref, frac1: frac, proc1: Process, frac2: frac, proc2: Process)
+  requires diz != null
+  requires frac_val(frac1) + frac_val(frac2) <= write
+  requires acc(Future_hist_idle_Fraction_Process(diz, frac1, proc1), write)
+  requires acc(Future_hist_idle_Fraction_Process(diz, frac2, proc2), write)
+  ensures acc(Future_hist_idle_Fraction_Process(diz, new_frac(frac_val(frac1) + frac_val(frac2)), p_merge(proc1, proc2)), write)
+{
+  inhale false
+}

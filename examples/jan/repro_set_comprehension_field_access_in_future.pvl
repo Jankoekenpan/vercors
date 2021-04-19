@@ -2,10 +2,32 @@ class `Future` {
 
     seq<int> mySequence;
 
+    //this causes trouble because it is transformed to 'acc(this.mySequence_hist_value, read)'
+    //however, the field mySequence_hist_value does not exist (yet). The typecheck is run too early?!
     accessible mySequence;
     ensures (\forall int x; x in \result; x > 5);
     ensures (\forall int y; !(y in \result); y <= 5);
     pure set<int> myFunction() =
-        set<int> { i | int i <- {0 .. (|mySequence| - 1)}; mySequence[i] > 5 };
+        //set<int> { i | int i <- {0 .. (|mySequence| - 1)}; mySequence[i] > 5 };
+        |mySequence| == 0 ? set<int> { } : set<int> { head(mySequence) };
+
+    //needed so that CheckHistoryAlgebra sees this class as an 'algebra', so then it will apply the +_hist_value transformations and such.
+    process test();
 
 }
+
+// the field does not seem to be transformed by CheckHistoryAlgebra. Is there another pass that does that, that is also triggered by the --check-history option?
+//[progress] [32%] checkHistory took 15 ms
+//public class Future{
+//  seq<int> mySequence;
+//  /*@
+//    requires Perm( this.mySequence_hist_value , read );
+//    ensures (\forall int x;( x \memberof \result );x > 5);
+//    ensures (\forall int y;! (( y \memberof \result ));y <= 5);
+//  @*/
+//  /*@pure@*/ set<int> /*@ pure */ myFunction()=setcomp(null int i;this.mySequence_hist_value [ i ] > 5;i);
+//
+//}
+//
+//public class EncodedGlobalVariables{
+//}

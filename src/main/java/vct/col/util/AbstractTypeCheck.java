@@ -1931,6 +1931,7 @@ public class AbstractTypeCheck extends RecursiveVisitor<Type> {
             }
             e.setType(new FunctionType(args, m.getReturnType()));
           } else {
+            //it is an instance method
             Fail("Field nor predicate %s not found in class %s", e.field(), ((ClassType) object_type).getFullName());
           }
         }
