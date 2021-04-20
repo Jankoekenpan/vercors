@@ -1,17 +1,26 @@
+class Utils {
+
+    static pure set<int> toSet(seq<int> sequence) =
+        |sequence| == 0
+            ? set<int> { }
+            : set<int> { head(sequence) } + toSet(tail(sequence));
+
+}
+
 class `Future` {
 
     seq<int> mySequence;
 
-    //this causes trouble because it is transformed to 'acc(this.mySequence_hist_value, read)'
-    //however, the field mySequence_hist_value does not exist (yet). The typecheck is run too early?!
     accessible mySequence;
     ensures (\forall int x; x in \result; x > 5);
     ensures (\forall int y; !(y in \result); y <= 5);
     pure set<int> myFunction() =
-        //set<int> { i | int i <- {0 .. (|mySequence| - 1)}; mySequence[i] > 5 };
-        |mySequence| == 0 ? set<int> { } : set<int> { head(mySequence) };
+        set<int> { i | int i <- {0 .. (|mySequence| - 1)}; mySequence[i] > 5 };     //<--- this does not work!
+        //|mySequence| == 0 ? set<int> { } : set<int> { head(mySequence) };         //<--- this works! (but doesn't verify obviously)
 
     //needed so that CheckHistoryAlgebra sees this class as an 'algebra', so then it will apply the +_hist_value transformations and such.
+    //this will prevent a bug where the field accesses are transformed, but the field itself isn't!
+    //see is_algebra in CheckHistoryAlgebra#visit(ASTClass)!
     process test();
 
 }

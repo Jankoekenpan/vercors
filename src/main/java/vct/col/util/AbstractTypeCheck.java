@@ -674,6 +674,7 @@ public class AbstractTypeCheck extends RecursiveVisitor<Type> {
         case This:{
           ASTClass cl=current_class();
           if (cl == null) {
+            //TODO why do we get there when accessing a field in a set comprehension?
             Fail("use of keyword this outside of class context");
           } else {
             ClassType t = new ClassType(cl.getFullName());
