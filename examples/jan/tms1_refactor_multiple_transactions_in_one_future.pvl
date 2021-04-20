@@ -7,25 +7,25 @@ class Utils {
     //why implement append and concat? because I'd rather use alphabetic names than symbolic names!
     //especially because PVL diverts from Haskell's and Scala's convention to use the double plus for concatenation!
 
-    ensures \result == (\exists int i; 0 <= i && i < |sequence|; sequence[i] == element);
-    static pure boolean elem(int element, seq<int> sequence) =
-        |sequence| == 0
-            ? false
-            : ((head(sequence) == element) || elem(element, tail(sequence)));
-
-    requires length >= 0;
-    ensures |\result| == length;
-    ensures (\forall int i; 0 <= i && i < length; \result[i] == i);
-    static pure seq<int> makeSeq(int length) = makeSeqHelper(0, length);
-
-    requires length >= 0;
-    ensures |\result| == length;
-    ensures (\forall int i; 0 <= i && i < |\result|; \result[i] == start + i);
-    static pure seq<int> makeSeqHelper(int start, int length) =
-        length > 0
-            ? start :: makeSeqHelper(start + 1, length - 1)
-            : seq<int> { }
-            ;
+//    ensures \result == (\exists int i; 0 <= i && i < |sequence|; sequence[i] == element);
+//    static pure boolean elem(int element, seq<int> sequence) =
+//        |sequence| == 0
+//            ? false
+//            : ((head(sequence) == element) || elem(element, tail(sequence)));
+//
+//    requires length >= 0;
+//    ensures |\result| == length;
+//    ensures (\forall int i; 0 <= i && i < length; \result[i] == i);
+//    static pure seq<int> makeSeq(int length) = makeSeqHelper(0, length);
+//
+//    requires length >= 0;
+//    ensures |\result| == length;
+//    ensures (\forall int i; 0 <= i && i < |\result|; \result[i] == start + i);
+//    static pure seq<int> makeSeqHelper(int start, int length) =
+//        length > 0
+//            ? start :: makeSeqHelper(start + 1, length - 1)
+//            : seq<int> { }
+//            ;
 
 }
 
@@ -46,24 +46,6 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
-//    requires (\forall int i; 0 <= i && i < |allTransactions|; 0 <= allTransactions[i] && allTransactions[i] < |statuses|);
-//    ensures (\forall int i; i in \result; 0 <= i && i < |statuses|);
-//    ensures (\forall int i; 0 <= i && i < |allTransactions|;
-//                    ((statuses[allTransactions[i]] == Status.committed()) || (statuses[allTransactions[i]] == Status.aborted())) ==> (allTransactions[i] in \result)
-//            );
-//    //ensures (\forall int i; 0 <= i && i < |allTransactions|;
-//    //                (!((statuses[allTransactions[i]] == Status.committed()) || (statuses[allTransactions[i]] == Status.aborted()))) ==> (!(allTransactions[i] in \result))
-//    //        );
-//    static pure set<int> doneTransactions(seq<int> allTransactions, seq<int> statuses) {
-//        if (|allTransactions| == 0) {
-//            return set<int> { };
-//        } else {
-//            return ((statuses[head(allTransactions)] == Status.committed()) || (statuses[head(allTransactions)] == Status.aborted()))
-//                ? set<int> { head(allTransactions) } + doneTransactions(tail(allTransactions), statuses)
-//                : doneTransactions(tail(allTransactions), statuses);
-//        }
-//    }
-
     context |statuses| == NUM_TRANSACTIONS();
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> (i in \result) );
     static pure set<int> doneTransactions(seq<int> statuses) = doneTransactionsHelper(0, statuses);
@@ -79,6 +61,50 @@ class TMS1 {
                 : set<int> { } )
                 + doneTransactionsHelper(currentIndex + 1, tail(statuses));
 
+    context |statuses| == NUM_TRANSACTIONS();
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed()) ==> (i in \result) );
+    static pure set<int> committedTransactions(seq<int> statuses) = committedTransactionsHelper(0, statuses);
+
+    context |statuses| == NUM_TRANSACTIONS() - currentIndex;
+    ensures |\result| <= |statuses|;
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed()) ==> ((currentIndex + i) in \result) );
+    static pure set<int> committedTransactionsHelper(int currentIndex, seq<int> statuses) =
+        |statuses| == 0
+            ? set<int> { }
+            : ((head(statuses) == Status.committed())
+                ? set<int> { currentIndex }
+                : set<int> { } )
+                + committedTransactionsHelper(currentIndex + 1, tail(statuses));
+
+    context |statuses| == NUM_TRANSACTIONS();
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.commitPending()) ==> (i in \result) );
+    static pure set<int> commitPendingTransactions(seq<int> statuses) = commitPendingTransactionsHelper(0, statuses);
+
+    context |statuses| == NUM_TRANSACTIONS() - currentIndex;
+    ensures |\result| <= |statuses|;
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.commitPending()) ==> ((currentIndex + i) in \result) );
+    static pure set<int> commitPendingTransactionsHelper(int currentIndex, seq<int> statuses) =
+        |statuses| == 0
+            ? set<int> { }
+            : ((head(statuses) == Status.commitPending())
+                ? set<int> { currentIndex }
+                : set<int> { } )
+                + commitPendingTransactionsHelper(currentIndex + 1, tail(statuses));
+
+    context |invokedCommits| == NUM_TRANSACTIONS();
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); invokedCommits[i] ==> (i in \result) );
+    static pure set<int> invokedCommitTransactions(seq<boolean> invokedCommits) = invokedCommitTransactionsHelper(0, invokedCommits);
+
+    context |invokedCommits| == NUM_TRANSACTIONS() - currentIndex;
+    ensures |\result| <= |invokedCommits|;
+    ensures (\forall int i; 0 <= i && i < |invokedCommits|; invokedCommits[i] ==> ((currentIndex + i) in \result) );
+    static pure set<int> invokedCommitTransactionsHelper(int currentIndex, seq<boolean> invokedCommits) =
+        |invokedCommits| == 0
+            ? set<int> { }
+            : ((head(invokedCommits))
+                ? set<int> { currentIndex }
+                : set <int> { } )
+                + invokedCommitTransactionsHelper(currentIndex + 1, tail(invokedCommits));
 }
 
 /**
@@ -140,21 +166,32 @@ class `Future` {
     // derived state
 
     accessible status;
-    requires |this.status| == TMS1.NUM_TRANSACTIONS();
+    requires |status| == TMS1.NUM_TRANSACTIONS();
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.committed() || status[tid] == Status.aborted()) ==> (tid in \result) );
     pure set<int> doneTransactions() =
-        TMS1.doneTransactions(this.status);
-        //TMS1.doneTransactions(Utils.makeSeq(TMS1.NUM_TRANSACTIONS()), this.status);
+        TMS1.doneTransactions(status);
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
 
-//    pure set<int> committedTransactions() =
-//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.committed() };
+    accessible status;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.committed()) ==> (tid in \result) );
+    pure set<int> committedTransactions() =
+        TMS1.committedTransactions(status);
+        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.committed() };
 
-//    pure set<int> commitPendingTransactions() =
-//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.commitPending() };
+    accessible status;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.commitPending()) ==> (tid in \result) );
+    pure set<int> commitPendingTransactions() =
+        TMS1.commitPendingTransactions(status);
+        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.commitPending() };
 
-//    pure set<int> invokedCommitTransactions() =
-//        set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
+    accessible invokedCommit;
+    requires |invokedCommit| == TMS1.NUM_TRANSACTIONS();
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); invokedCommit[tid] ==> (tid in \result) );
+    pure set<int> invokedCommitTransactions() =
+        TMS1.invokedCommitTransactions(invokedCommit);
+        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
 
 //
 //
