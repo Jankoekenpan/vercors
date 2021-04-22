@@ -46,13 +46,20 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
+
+    // Helper functions for derived state variables.
+    // Unfortunately these are necessary because VerCors' implementation of set comprehensions is buggy.
+
     context |statuses| == NUM_TRANSACTIONS();
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> (i in \result) );
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] != Status.committed() && statuses[i] != Status.aborted()) ==> (!(i in \result)) );
     static pure set<int> doneTransactions(seq<int> statuses) = doneTransactionsHelper(0, statuses);
 
     context |statuses| == NUM_TRANSACTIONS() - currentIndex;
     ensures |\result| <= |statuses|;
+    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |statuses|);
     ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> ((currentIndex + i) in \result) );
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.committed() && statuses[i] != Status.aborted()) ==> (!((currentIndex + i) in \result)) );
     static pure set<int> doneTransactionsHelper(int currentIndex, seq<int> statuses) =
         |statuses| == 0
             ? set<int> { }
@@ -63,11 +70,14 @@ class TMS1 {
 
     context |statuses| == NUM_TRANSACTIONS();
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed()) ==> (i in \result) );
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] != Status.committed()) ==> (!(i in \result)) );
     static pure set<int> committedTransactions(seq<int> statuses) = committedTransactionsHelper(0, statuses);
 
     context |statuses| == NUM_TRANSACTIONS() - currentIndex;
     ensures |\result| <= |statuses|;
+    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |statuses|);
     ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed()) ==> ((currentIndex + i) in \result) );
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.committed()) ==> (!((currentIndex + i) in \result)) );
     static pure set<int> committedTransactionsHelper(int currentIndex, seq<int> statuses) =
         |statuses| == 0
             ? set<int> { }
@@ -78,11 +88,14 @@ class TMS1 {
 
     context |statuses| == NUM_TRANSACTIONS();
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.commitPending()) ==> (i in \result) );
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] != Status.commitPending()) ==> (!(i in \result)) );
     static pure set<int> commitPendingTransactions(seq<int> statuses) = commitPendingTransactionsHelper(0, statuses);
 
     context |statuses| == NUM_TRANSACTIONS() - currentIndex;
     ensures |\result| <= |statuses|;
+    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |statuses|);
     ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.commitPending()) ==> ((currentIndex + i) in \result) );
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.commitPending()) ==> (!((currentIndex + i) in \result)) );
     static pure set<int> commitPendingTransactionsHelper(int currentIndex, seq<int> statuses) =
         |statuses| == 0
             ? set<int> { }
@@ -93,11 +106,14 @@ class TMS1 {
 
     context |invokedCommits| == NUM_TRANSACTIONS();
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); invokedCommits[i] ==> (i in \result) );
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (!invokedCommits[i]) ==> (!(i in \result)) );
     static pure set<int> invokedCommitTransactions(seq<boolean> invokedCommits) = invokedCommitTransactionsHelper(0, invokedCommits);
 
     context |invokedCommits| == NUM_TRANSACTIONS() - currentIndex;
     ensures |\result| <= |invokedCommits|;
+    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |invokedCommits|);
     ensures (\forall int i; 0 <= i && i < |invokedCommits|; invokedCommits[i] ==> ((currentIndex + i) in \result) );
+    ensures (\forall int i; 0 <= i && i < |invokedCommits|; (!invokedCommits[i]) ==> (!((currentIndex + i) in \result)) );
     static pure set<int> invokedCommitTransactionsHelper(int currentIndex, seq<boolean> invokedCommits) =
         |invokedCommits| == 0
             ? set<int> { }
@@ -157,9 +173,6 @@ class `Future` {
 
     // ========= Derived state variables, functions and predicates =========
 
-    //TODO fix that VerCors actually correctly translates these functions!
-    //TODO suggested locations where to fix this: SilverClassReduction, CheckHistoryAlgebra, AddTypeADT (encodeInheritanceToDomain)
-
     //TODO actually implement these predicates
     //TODO define 'ser' and 'legal'
 
@@ -168,6 +181,7 @@ class `Future` {
     accessible status;
     requires |status| == TMS1.NUM_TRANSACTIONS();
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.committed() || status[tid] == Status.aborted()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] != Status.committed() && status[tid] != Status.aborted()) ==> (!(tid in \result)) );
     pure set<int> doneTransactions() =
         TMS1.doneTransactions(status);
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
@@ -175,6 +189,7 @@ class `Future` {
     accessible status;
     requires |status| == TMS1.NUM_TRANSACTIONS();
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.committed()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] != Status.committed()) ==> (!(tid in \result)) );
     pure set<int> committedTransactions() =
         TMS1.committedTransactions(status);
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.committed() };
@@ -182,6 +197,7 @@ class `Future` {
     accessible status;
     requires |status| == TMS1.NUM_TRANSACTIONS();
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.commitPending()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] != Status.commitPending()) ==> (!(tid in \result)) );
     pure set<int> commitPendingTransactions() =
         TMS1.commitPendingTransactions(status);
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.commitPending() };
@@ -189,6 +205,7 @@ class `Future` {
     accessible invokedCommit;
     requires |invokedCommit| == TMS1.NUM_TRANSACTIONS();
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); invokedCommit[tid] ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (!invokedCommit[tid]) ==> (!(tid in \result)) );
     pure set<int> invokedCommitTransactions() =
         TMS1.invokedCommitTransactions(invokedCommit);
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
