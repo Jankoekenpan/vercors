@@ -1,0 +1,8 @@
+
+class `Future` {
+
+    pure boolean allTrue(seq<boolean> booleans) =
+        (\forall int i; 0 <= i && i < |booleans|; booleans[i]);
+
+    process lol();
+}

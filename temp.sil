@@ -1,4 +1,4 @@
-// Generated on 2021-04-27 at 11:20:19
+// Generated on 2021-04-27 at 16:01:41
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -490,6 +490,35 @@ function TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(currentI
   ensures (forall i: Int :: { invokedCommits[i] } 0 <= i && i < |invokedCommits| && !invokedCommits[i] ==> !((currentIndex + i in result)))
 {
   (|invokedCommits| == 0 ? Set[Int]() : ((invokedCommits[0] ? Set(currentIndex) : Set[Int]()) union TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(currentIndex + 1, invokedCommits[1..])))
+}
+
+function TMS1_respectsOrder_Set$Tuple$Integer_Integer$$_Sequence$Integer$(order: Set[VCTTuple[Int, Int]], transactionIds: Seq[Int]): Bool
+{
+  (forall index: Int :: { transactionIds[index] } 0 <= index && index < |transactionIds| - 1 ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(transactionIds[index], transactionIds[index + 1], order))
+}
+
+function TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left: Int, right: Int, order: Set[VCTTuple[Int, Int]]): Bool
+  ensures ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (forall newRight: Int :: (newRight in TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(right, order)) ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left, newRight, order))
+{
+  ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (forall newRight: Int :: (newRight in TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(right, order)) ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left, newRight, order))
+}
+
+function TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(leftValue: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
+  ensures (forall i: Int :: { (i in result) } (i in result) ==> 0 <= i && i < TMS1_NUM_TRANSACTIONS())
+  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && ((vcttuple_tuple(leftValue, i): VCTTuple[Int, Int]) in relation) ==> (i in result))
+  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && !(((vcttuple_tuple(leftValue, i): VCTTuple[Int, Int]) in relation)) ==> !((i in result)))
+{
+  TMS1_rightValuesBounded_Integer_Integer_Integer_Set$Tuple$Integer_Integer$$(0, TMS1_NUM_TRANSACTIONS(), leftValue, relation)
+}
+
+function TMS1_rightValuesBounded_Integer_Integer_Integer_Set$Tuple$Integer_Integer$$(lowerBoundIncl: Int, upperBoundExcl: Int, leftValue: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
+  requires 0 <= lowerBoundIncl
+  requires lowerBoundIncl <= upperBoundExcl
+  ensures (forall i: Int :: { (i in result) } (i in result) ==> lowerBoundIncl <= i && i < upperBoundExcl)
+  ensures (forall i: Int :: lowerBoundIncl <= i && i < upperBoundExcl && ((vcttuple_tuple(leftValue, i): VCTTuple[Int, Int]) in relation) ==> (i in result))
+  ensures (forall i: Int :: lowerBoundIncl <= i && i < upperBoundExcl && !(((vcttuple_tuple(leftValue, i): VCTTuple[Int, Int]) in relation)) ==> !((i in result)))
+{
+  (lowerBoundIncl == upperBoundExcl ? Set[Int]() : ((((vcttuple_tuple(leftValue, lowerBoundIncl): VCTTuple[Int, Int]) in relation) ? Set(lowerBoundIncl) : Set[Int]()) union TMS1_rightValuesBounded_Integer_Integer_Integer_Set$Tuple$Integer_Integer$$(lowerBoundIncl + 1, upperBoundExcl, leftValue, relation)))
 }
 
 function instanceof_TYPE_TYPE(t: TYPE, u: TYPE): Bool

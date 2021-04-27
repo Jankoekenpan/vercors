@@ -46,9 +46,11 @@ class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
 
-
+    //
     // Helper functions for derived state variables.
     // Unfortunately these are necessary because VerCors' implementation of set comprehensions is buggy.
+    //
+    //
 
     context |statuses| == NUM_TRANSACTIONS();
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> (i in \result) );
@@ -121,6 +123,43 @@ class TMS1 {
                 ? set<int> { currentIndex }
                 : set <int> { } )
                 + invokedCommitTransactionsHelper(currentIndex + 1, tail(invokedCommits));
+
+    //
+    // Checks for serializations of transactions.
+    //
+    //
+
+    static pure boolean respectsOrder(set<tuple<int, int>> order, seq<int> transactionIds) =
+        (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
+
+    //TODO should use a predicate (resource) instead?
+    //TODO this is fun: the contract is EXACTLY the same as the function body, yet verification fails. #JustVercorsThings
+    //ensures (tuple<int, int> { left, right } in order) || (\forall int newRight; newRight in rightValues(right, order); inOrder(left, newRight, order));
+    static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
+        (tuple<int, int> { left, right } in order) ||
+        (\forall int newRight; newRight in rightValues(right, order); inOrder(left, newRight, order));
+
+    ensures (\forall int i; i in \result; 0 <= i && i < NUM_TRANSACTIONS());
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (tuple<int, int> { leftValue, i } in relation) ==> (i in \result) );
+    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (!(tuple<int, int> { leftValue, i } in relation)) ==> (!(i in \result)) );
+    static pure set<int> rightValues(int leftValue, set<tuple<int, int>> relation) =
+        rightValuesBounded(0, NUM_TRANSACTIONS(), leftValue, relation);
+        //set<int> { rightValue | int rightValue <- {0..(NUM_TRANSACTIONS()-1)} ; tuple<int, int> { leftValue, rightValue } in relation };
+        //set<int> { getSnd(tup) | tuple<int, int> tup <- relation; getFst(tup) == leftValue };
+
+    requires 0 <= lowerBoundIncl;
+    requires lowerBoundIncl <= upperBoundExcl;
+    ensures (\forall int i; i in \result; lowerBoundIncl <= i && i < upperBoundExcl);
+    ensures (\forall int i; lowerBoundIncl <= i && i < upperBoundExcl; (tuple<int, int> { leftValue, i } in relation) ==> (i in \result) );
+    ensures (\forall int i; lowerBoundIncl <= i && i < upperBoundExcl; (!(tuple<int, int> { leftValue, i } in relation)) ==> (!(i in \result)) );
+    static pure set<int> rightValuesBounded(int lowerBoundIncl, int upperBoundExcl, int leftValue, set<tuple<int, int>> relation) =
+        lowerBoundIncl == upperBoundExcl
+            ? set<int> { }
+            : (tuple<int, int> { leftValue, lowerBoundIncl } in relation
+                ? set<int> { lowerBoundIncl }
+                : set<int> { }
+              ) + rightValuesBounded(lowerBoundIncl + 1, upperBoundExcl, leftValue, relation);
+
 }
 
 /**
