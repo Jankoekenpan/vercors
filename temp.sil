@@ -1,4 +1,4 @@
-// Generated on 2021-04-22 at 13:16:33
+// Generated on 2021-04-27 at 11:20:19
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -319,6 +319,14 @@ function Future_invokedCommitTransactions(diz: Ref): Set[Int]
   ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && !diz.Future_invokedCommit_hist_value[tid] ==> !((tid in result)))
 {
   TMS1_invokedCommitTransactions_Sequence$Boolean$(diz.Future_invokedCommit_hist_value)
+}
+
+function Future_allOps_Sequence$Integer$(diz: Ref, serialization: Seq[Int]): Seq[VCTTuple[Int, Int]]
+  requires diz != null
+  requires acc(diz.Future_ops_hist_value, wildcard)
+  requires (forall i: Int :: { serialization[i] } 0 <= i && i < |serialization| ==> 0 <= serialization[i] && serialization[i] < |diz.Future_ops_hist_value|)
+{
+  (|serialization| == 0 ? Seq[VCTTuple[Int, Int]]() : Utils_concat_Sequence$Tuple$Integer_Integer$$_Sequence$Tuple$Integer_Integer$$(diz.Future_ops_hist_value[serialization[0]], Future_allOps_Sequence$Integer$(diz, serialization[1..])))
 }
 
 function Future_validCommit_Integer(diz: Ref, tid: Int): Bool

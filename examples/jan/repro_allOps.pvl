@@ -1,0 +1,15 @@
+class `Future` {
+
+    seq<seq<tuple<int, int>>> ops;
+
+    accessible ops;
+    requires (\forall int i; 0 <= i && i < |serialization|; 0 <= serialization[i] && serialization[i] < |ops|);
+    pure seq<tuple<int, int>> allOps(seq<int> serialization) =
+        |serialization| == 0
+            ? seq<tuple<int, int>> { }
+            : ops[head(serialization)] + allOps(tail(serialization));
+
+    //needed because is_algebra
+    process test();
+
+}

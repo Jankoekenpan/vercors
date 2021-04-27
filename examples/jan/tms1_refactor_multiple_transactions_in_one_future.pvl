@@ -210,14 +210,19 @@ class `Future` {
         TMS1.invokedCommitTransactions(invokedCommit);
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
 
-//
-//
-//    // functions
-//
-//    //this is called 'ops(sigma)' in the paper, but we're calling it allOps to prevent name collisions.
-//    pure seq<tuple<int, int>> allOps(seq<int> serialization/*the ints here are the transaction ids*/) =
-//        Utils.concat(ops[head(serialization)], allOps(tail(serialization)));
-//
+
+
+    // functions
+
+    //this is called 'ops(sigma)' in the paper, but we're calling it allOps to prevent name collisions.
+    accessible ops;
+    requires (\forall int i; 0 <= i && i < |serialization|; 0 <= serialization[i] && serialization[i] < |ops|);
+    pure seq<tuple<int, int>> allOps(seq<int> serialization/*the ints here are the transaction ids*/) =
+        |serialization| == 0
+            ? seq<tuple<int, int>> { }
+            : Utils.concat(ops[head(serialization)], allOps(tail(serialization)));
+    //TODO add a good ensures clause here
+
 //    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
 //        set<seq<int>> {};
 //        //TODO all possible serializations of the transactions, respecting the given order
