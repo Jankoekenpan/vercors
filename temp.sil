@@ -1,4 +1,4 @@
-// Generated on 2021-04-27 at 16:01:41
+// Generated on 2021-04-28 at 11:57:51
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -492,13 +492,12 @@ function TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(currentI
   (|invokedCommits| == 0 ? Set[Int]() : ((invokedCommits[0] ? Set(currentIndex) : Set[Int]()) union TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(currentIndex + 1, invokedCommits[1..])))
 }
 
-function TMS1_respectsOrder_Set$Tuple$Integer_Integer$$_Sequence$Integer$(order: Set[VCTTuple[Int, Int]], transactionIds: Seq[Int]): Bool
+function TMS1_respectsOrder_Sequence$Integer$_Set$Tuple$Integer_Integer$$(transactionIds: Seq[Int], order: Set[VCTTuple[Int, Int]]): Bool
 {
   (forall index: Int :: { transactionIds[index] } 0 <= index && index < |transactionIds| - 1 ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(transactionIds[index], transactionIds[index + 1], order))
 }
 
 function TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left: Int, right: Int, order: Set[VCTTuple[Int, Int]]): Bool
-  ensures ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (forall newRight: Int :: (newRight in TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(right, order)) ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left, newRight, order))
 {
   ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (forall newRight: Int :: (newRight in TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(right, order)) ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left, newRight, order))
 }

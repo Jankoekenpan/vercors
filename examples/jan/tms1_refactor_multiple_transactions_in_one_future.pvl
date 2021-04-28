@@ -129,12 +129,15 @@ class TMS1 {
     //
     //
 
-    static pure boolean respectsOrder(set<tuple<int, int>> order, seq<int> transactionIds) =
+    //static pure set<seq<int>> serializations(set<int> transactions, set<tuple<int, int>> externalOrder) =
+    //    set<int> { sequenz | seq<int> sequenz;
+    //        (\forall int i; 0 <= i && i < |sequenz|; sequenz[i] in transactions) &&        //all elements in the sequence are also in the set of transactions
+    //        (\forall int i; 0 <= i && i < |sequenz|; (\forall int j; 0 <= j && j < |sequenz| && j != i; sequenz[i] != sequenz[j])) &&   //all elements are unique
+    //        respectsOrder(sequenz, externalOrder) };
+
+    static pure boolean respectsOrder(seq<int> transactionIds, set<tuple<int, int>> order) =
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
 
-    //TODO should use a predicate (resource) instead?
-    //TODO this is fun: the contract is EXACTLY the same as the function body, yet verification fails. #JustVercorsThings
-    //ensures (tuple<int, int> { left, right } in order) || (\forall int newRight; newRight in rightValues(right, order); inOrder(left, newRight, order));
     static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
         (tuple<int, int> { left, right } in order) ||
         (\forall int newRight; newRight in rightValues(right, order); inOrder(left, newRight, order));
@@ -262,9 +265,10 @@ class `Future` {
             : Utils.concat(ops[head(serialization)], allOps(tail(serialization)));
     //TODO add a good ensures clause here
 
+
 //    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
-//        set<seq<int>> {};
-//        //TODO all possible serializations of the transactions, respecting the given order
+//        TMS1.serializations(transactions, order);
+//        //TODO all possible serializations of the transactions that respect the given order
 //        //TODO transactions.permutations().filter(sequence -> respects(order, sequence))
 //
 //
