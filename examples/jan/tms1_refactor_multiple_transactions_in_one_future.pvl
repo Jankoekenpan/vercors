@@ -12,7 +12,7 @@ class Utils {
 //        |sequence| == 0
 //            ? false
 //            : ((head(sequence) == element) || elem(element, tail(sequence)));
-//
+
 //    requires length >= 0;
 //    ensures |\result| == length;
 //    ensures (\forall int i; 0 <= i && i < length; \result[i] == i);
@@ -107,6 +107,7 @@ class TMS1 {
                 + commitPendingTransactionsHelper(currentIndex + 1, tail(statuses));
 
     context |invokedCommits| == NUM_TRANSACTIONS();
+    ensures (\forall int i; i in \result; 0 <= i && i < NUM_TRANSACTIONS());
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); invokedCommits[i] ==> (i in \result) );
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (!invokedCommits[i]) ==> (!(i in \result)) );
     static pure set<int> invokedCommitTransactions(seq<boolean> invokedCommits) = invokedCommitTransactionsHelper(0, invokedCommits);
@@ -145,10 +146,11 @@ class TMS1 {
             );
     static pure set<seq<int>> serializations(set<int> transactions, set<tuple<int, int>> externalOrder);
 
-
+    //TODO what contract do I need here? do I need one in the first place?
     static pure boolean respectsOrder(seq<int> transactionIds, set<tuple<int, int>> order) =
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
 
+    //TODO what contract doI need here? do I need one in the first place?
     static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
         (tuple<int, int> { left, right } in order) ||
         (\forall int newRight; newRight in rightValues(right, order); inOrder(left, newRight, order));
@@ -257,6 +259,7 @@ class `Future` {
 
     accessible invokedCommit;
     requires |invokedCommit| == TMS1.NUM_TRANSACTIONS();
+    ensures (\forall int tid; tid in \result; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS());
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); invokedCommit[tid] ==> (tid in \result) );
     ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (!invokedCommit[tid]) ==> (!(tid in \result)) );
     pure set<int> invokedCommitTransactions() =
@@ -273,55 +276,85 @@ class `Future` {
     pure seq<tuple<int, int>> allOps(seq<int> serialization/*the ints here are the transaction ids*/) =
         |serialization| == 0
             ? seq<tuple<int, int>> { }
-            : Utils.concat(ops[head(serialization)], allOps(tail(serialization)));
+            : (ops[head(serialization)] + allOps(tail(serialization)));
     //TODO add a good ensures clause here
 
 
-//    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
-//        TMS1.serializations(transactions, order);
-//        //TODO all possible serializations of the transactions that respect the given order
-//        //TODO transactions.permutations().filter(sequence -> respects(order, sequence))
-//
-//
-//    // predicates
-//    pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
+    //all possible serializations of the transactions that respect the given order
+    //e.g. in Scala it would be something like this: transactions.permutations.filter(sequence => respects(order, sequence))
+    ensures (\forall seq<int> sequenz; sequenz in \result; |sequenz| == |transactions| &&
+                (\forall int i; 0 <= i && i < |sequenz|; sequenz[i] in transactions) &&
+                (\forall int i; 0 <= i && i < |sequenz|; (\forall int j; 0 <= j && j < |sequenz| && j != i; sequenz[i] != sequenz[j]) ) &&
+                TMS1.respectsOrder(sequenz, order)
+            );
+    pure set<seq<int>> ser(set<int> transactions, set<tuple<int, int>> order) =
+        TMS1.serializations(transactions, order);
+
+
+
+    // predicates
+    pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
 //        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
 //        //TODO can I abuse bit-properties of ints to make this work?
-//
-//    pure boolean extConsPrefix(seq<int> serialization/*the ints here are transaction ids*/) =
-//        (\forall int idOne; idOne <= 0 && idOne < TMS1.NUM_TRANSACTIONS();
-//            (\forall int idTwo; idTwo <= 0 && idTwo < TMS1.NUM_TRANSACTIONS();
-//                (idTwo in serialization) &&
-//                ((tuple<int, int> {idOne, idTwo} in extOrder) ==>
-//                    ((idOne in serialization) == (status[idOne] == Status.committed()))
-//                )
-//            )
-//        );
 
-    pure boolean validCommit(int tid) = true;
-        /*
+    //extConsPrefix
+    accessible extOrder;
+    accessible status;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    requires (\forall int tid; tid in serialization; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS());
+    pure boolean extConsPrefix(set<int> serialization/*the ints here are transaction ids*/) =
+        (\forall int idOne; 0 <= idOne && idOne < TMS1.NUM_TRANSACTIONS();
+            (\forall int idTwo; 0 <= idTwo && idTwo < TMS1.NUM_TRANSACTIONS();
+                (idTwo in serialization) &&
+                (TMS1.inOrder(idOne, idTwo, extOrder) ==>
+                    ( (idOne in serialization) == (status[idOne] == Status.committed()) )
+                )
+            )
+        );
+        //TODO good ensures clause?
+
+    //validCommit
+    accessible extOrder;
+    accessible status;
+    accessible ops;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    requires |ops| == TMS1.NUM_TRANSACTIONS();
+    pure boolean validCommit(int tid) =
         (\exists set<int> S; S <= commitPendingTransactions();
             (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
                 (tid in S) && legal(allOps(serialization))
             )
         );
-        */
-    pure boolean validFail(int tid) = true;
-        /*
+
+    //validFail
+    accessible extOrder;
+    accessible status;
+    accessible ops;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    requires |ops| == TMS1.NUM_TRANSACTIONS();
+    pure boolean validFail(int tid) =
         (\exists set<int> S; S <= commitPendingTransactions();
             (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
                 (!(tid in S)) && legal(allOps(serialization))
             )
         );
-        */
-    pure boolean validResp(int tid, int pendingOp, int respOp) = true;
-        /*
+
+    //validResp
+    accessible extOrder;
+    accessible invokedCommit;
+    accessible ops;
+    requires |invokedCommit| == TMS1.NUM_TRANSACTIONS();
+    requires |ops| == TMS1.NUM_TRANSACTIONS();
+    requires 0 <= tid && tid < TMS1.NUM_TRANSACTIONS();
+    accessible status;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    pure boolean validResp(int tid, int pendingOp, int respOp) =
         (\exists set<int> S; S <= invokedCommitTransactions();
             (\exists seq<int> serialization; serialization in ser(S, extOrder);
                 extConsPrefix(S + set<int> { tid }) && legal(allOps(serialization ++ tid) ++ tuple<int, int>{pendingOp, respOp})
             )
         );
-        */
+        //TODO good ensures clause?
 
 
     // ========= Processes =========
@@ -388,7 +421,13 @@ class `Future` {
     accessible pendingOp;
     modifies status;
     modifies ops;
-    requires this.validResp(tid, this.pendingOp[tid], respOp);
+    //requirements for validResp:
+    accessible extOrder;
+    accessible invokedCommit;
+    requires |invokedCommit| == TMS1.NUM_TRANSACTIONS();
+    requires |ops| == TMS1.NUM_TRANSACTIONS();
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    requires validResp(tid, this.pendingOp[tid], respOp);
     ensures |\old(status)| == |status|;
     ensures |\old(ops)| == |ops|;
     ensures status[tid] == Status.ready();
@@ -417,6 +456,11 @@ class `Future` {
     context tid < |status|;
     modifies status;
     requires status[tid] == Status.commitPending();
+    //requirements for validCommit:
+    accessible extOrder;
+    accessible ops;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    requires |ops| == TMS1.NUM_TRANSACTIONS();
     requires validCommit(tid);
     ensures |\old(status)| == |status|;
     ensures status[tid] == Status.committed();
@@ -441,6 +485,11 @@ class `Future` {
             (status[tid] == Status.opPending()) ||
             (status[tid] == Status.commitPending()) ||
             (status[tid] == Status.cancelPending());
+    //requirements for validFail:
+    accessible extOrder;
+    accessible ops;
+    requires |status| == TMS1.NUM_TRANSACTIONS();
+    requires |ops| == TMS1.NUM_TRANSACTIONS();
     requires validFail(tid);
     ensures |\old(status)| == |status|;
     ensures status[tid] == Status.aborted();

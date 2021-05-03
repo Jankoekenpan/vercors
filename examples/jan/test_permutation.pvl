@@ -1,0 +1,6 @@
+class Test {
+
+    ensures permutationOf(input, \result);
+    pure static seq<int> test(seq<int> input);
+
+}

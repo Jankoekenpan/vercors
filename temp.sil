@@ -1,4 +1,4 @@
-// Generated on 2021-05-03 at 11:19:11
+// Generated on 2021-05-03 at 13:25:10
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -315,6 +315,7 @@ function Future_invokedCommitTransactions(diz: Ref): Set[Int]
   requires diz != null
   requires acc(diz.Future_invokedCommit_hist_value, wildcard)
   requires |diz.Future_invokedCommit_hist_value| == TMS1_NUM_TRANSACTIONS()
+  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < TMS1_NUM_TRANSACTIONS())
   ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && diz.Future_invokedCommit_hist_value[tid] ==> (tid in result))
   ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && !diz.Future_invokedCommit_hist_value[tid] ==> !((tid in result)))
 {
@@ -326,25 +327,66 @@ function Future_allOps_Sequence$Integer$(diz: Ref, serialization: Seq[Int]): Seq
   requires acc(diz.Future_ops_hist_value, wildcard)
   requires (forall i: Int :: { serialization[i] } 0 <= i && i < |serialization| ==> 0 <= serialization[i] && serialization[i] < |diz.Future_ops_hist_value|)
 {
-  (|serialization| == 0 ? Seq[VCTTuple[Int, Int]]() : Utils_concat_Sequence$Tuple$Integer_Integer$$_Sequence$Tuple$Integer_Integer$$(diz.Future_ops_hist_value[serialization[0]], Future_allOps_Sequence$Integer$(diz, serialization[1..])))
+  (|serialization| == 0 ? Seq[VCTTuple[Int, Int]]() : diz.Future_ops_hist_value[serialization[0]] ++ Future_allOps_Sequence$Integer$(diz, serialization[1..]))
+}
+
+function Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz: Ref, transactions: Set[Int], order: Set[VCTTuple[Int, Int]]): Set[Seq[Int]]
+  requires diz != null
+  ensures (forall sequenz: Seq[Int] :: { |sequenz| } (sequenz in result) ==> |sequenz| == |transactions|) && (forall sequenz: Seq[Int], i: Int :: (sequenz in result) && (0 <= i && i < |sequenz|) ==> (sequenz[i] in transactions)) && (forall sequenz: Seq[Int], i: Int, j: Int :: (sequenz in result) && (0 <= i && i < |sequenz|) && (0 <= j && j < |sequenz| && j != i) ==> sequenz[i] != sequenz[j]) && (forall sequenz: Seq[Int] :: (sequenz in result) ==> TMS1_respectsOrder_Sequence$Integer$_Set$Tuple$Integer_Integer$$(sequenz, order))
+{
+  TMS1_serializations_Set$Integer$_Set$Tuple$Integer_Integer$$(transactions, order)
+}
+
+function Future_legal_Sequence$Tuple$Integer_Integer$$(diz: Ref, invRespOps: Seq[VCTTuple[Int, Int]]): Bool
+  requires diz != null
+{
+  true
+}
+
+function Future_extConsPrefix_Set$Integer$(diz: Ref, serialization: Set[Int]): Bool
+  requires diz != null
+  requires acc(diz.Future_extOrder_hist_value, wildcard)
+  requires acc(diz.Future_status_hist_value, wildcard)
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires (forall tid: Int :: { (tid in serialization) } (tid in serialization) ==> 0 <= tid && tid < TMS1_NUM_TRANSACTIONS())
+{
+  (0 < TMS1_NUM_TRANSACTIONS() ==> (forall idTwo: Int :: { (idTwo in serialization) } 0 <= idTwo && idTwo < TMS1_NUM_TRANSACTIONS() ==> (idTwo in serialization))) && (forall idOne: Int, idTwo: Int :: 0 <= idOne && idOne < TMS1_NUM_TRANSACTIONS() && (0 <= idTwo && idTwo < TMS1_NUM_TRANSACTIONS() && TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(idOne, idTwo, diz.Future_extOrder_hist_value)) ==> (idOne in serialization) == (diz.Future_status_hist_value[idOne] == Status_committed()))
 }
 
 function Future_validCommit_Integer(diz: Ref, tid: Int): Bool
   requires diz != null
+  requires acc(diz.Future_extOrder_hist_value, wildcard)
+  requires acc(diz.Future_status_hist_value, wildcard)
+  requires acc(diz.Future_ops_hist_value, wildcard)
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
 {
-  true
+  (exists S: Set[Int] :: (S subset Future_commitPendingTransactions(diz)) && (exists serialization: Seq[Int] :: (serialization in Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz, (Future_committedTransactions(diz) union S), diz.Future_extOrder_hist_value)) && ((tid in S) && Future_legal_Sequence$Tuple$Integer_Integer$$(diz, Future_allOps_Sequence$Integer$(diz, serialization)))))
 }
 
 function Future_validFail_Integer(diz: Ref, tid: Int): Bool
   requires diz != null
+  requires acc(diz.Future_extOrder_hist_value, wildcard)
+  requires acc(diz.Future_status_hist_value, wildcard)
+  requires acc(diz.Future_ops_hist_value, wildcard)
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
 {
-  true
+  (exists S: Set[Int] :: (S subset Future_commitPendingTransactions(diz)) && (exists serialization: Seq[Int] :: (serialization in Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz, (Future_committedTransactions(diz) union S), diz.Future_extOrder_hist_value)) && (!((tid in S)) && Future_legal_Sequence$Tuple$Integer_Integer$$(diz, Future_allOps_Sequence$Integer$(diz, serialization)))))
 }
 
 function Future_validResp_Integer_Integer_Integer(diz: Ref, tid: Int, pendingOp: Int, respOp: Int): Bool
   requires diz != null
+  requires acc(diz.Future_extOrder_hist_value, wildcard)
+  requires acc(diz.Future_status_hist_value, wildcard)
+  requires acc(diz.Future_ops_hist_value, wildcard)
+  requires acc(diz.Future_invokedCommit_hist_value, wildcard)
+  requires |diz.Future_invokedCommit_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires 0 <= tid && tid < TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
 {
-  true
+  (exists S: Set[Int] :: (S subset Future_invokedCommitTransactions(diz)) && (exists serialization: Seq[Int] :: (serialization in Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz, S, diz.Future_extOrder_hist_value)) && (Future_extConsPrefix_Set$Integer$(diz, (S union Set(tid))) && Future_legal_Sequence$Tuple$Integer_Integer$$(diz, Future_allOps_Sequence$Integer$(diz, serialization ++ Seq(tid)) ++ Seq((vcttuple_tuple(pendingOp, respOp): VCTTuple[Int, Int]))))))
 }
 
 function Utils_append_Sequence$Integer$_Integer(list: Seq[Int], item: Int): Seq[Int]
@@ -475,6 +517,7 @@ function TMS1_commitPendingTransactionsHelper_Integer_Sequence$Integer$(currentI
 function TMS1_invokedCommitTransactions_Sequence$Boolean$(invokedCommits: Seq[Bool]): Set[Int]
   requires |invokedCommits| == TMS1_NUM_TRANSACTIONS()
   ensures |invokedCommits| == TMS1_NUM_TRANSACTIONS()
+  ensures (forall i: Int :: { (i in result) } (i in result) ==> 0 <= i && i < TMS1_NUM_TRANSACTIONS())
   ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && invokedCommits[i] ==> (i in result))
   ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && !invokedCommits[i] ==> !((i in result)))
 {
@@ -546,15 +589,15 @@ predicate Future_hist_do_beginOk_Fraction_Process(diz: Ref, fr: frac, proc: Proc
 
 predicate Future_hist_do_inv_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
-predicate Future_hist_do_resp_Fraction_Process_ZFraction(diz: Ref, fr: frac, proc: Process, pendingOp_frac: zfrac) 
+predicate Future_hist_do_resp_Fraction_Process_ZFraction_ZFraction_ZFraction(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, pendingOp_frac: zfrac, invokedCommit_frac: zfrac) 
 
 predicate Future_hist_do_commit_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
-predicate Future_hist_do_commitOk_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+predicate Future_hist_do_commitOk_Fraction_Process_ZFraction_ZFraction(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, ops_frac: zfrac) 
 
 predicate Future_hist_do_cancel_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
-predicate Future_hist_do_abort_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+predicate Future_hist_do_abort_Fraction_Process_ZFraction_ZFraction(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, ops_frac: zfrac) 
 
 predicate Future_hist_idle_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
@@ -801,7 +844,7 @@ method Future_inv_commit_Fraction_Process_Integer_Integer(diz: Ref, fr: frac, pr
   inhale false
 }
 
-method Future_resp_begin_Fraction_Process_ZFraction_Integer_Integer(diz: Ref, fr: frac, proc: Process, pendingOp_frac: zfrac, tid: Int, respOp: Int)
+method Future_resp_begin_Fraction_Process_ZFraction_ZFraction_ZFraction_Integer_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, pendingOp_frac: zfrac, invokedCommit_frac: zfrac, tid: Int, respOp: Int)
   requires diz != null
   requires frac_val(fr) != none
   requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_resp(tid, respOp), proc)), write)
@@ -811,16 +854,25 @@ method Future_resp_begin_Fraction_Process_ZFraction_Integer_Integer(diz: Ref, fr
   requires write != none
   requires acc(diz.Future_ops_hist_value, write)
   requires acc(diz.Future_ops_hist_hist, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
   requires zfrac_val(pendingOp_frac) != none
   requires acc(diz.Future_pendingOp_hist_value, zfrac_val(pendingOp_frac))
   requires acc(diz.Future_pendingOp_hist_hist, zfrac_val(pendingOp_frac))
+  requires zfrac_val(invokedCommit_frac) != none
+  requires acc(diz.Future_invokedCommit_hist_value, zfrac_val(invokedCommit_frac))
+  requires acc(diz.Future_invokedCommit_hist_hist, zfrac_val(invokedCommit_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires tid < |diz.Future_ops_hist_value|
   requires tid < |diz.Future_pendingOp_hist_value|
+  requires |diz.Future_invokedCommit_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
   requires Future_validResp_Integer_Integer_Integer(diz, tid, diz.Future_pendingOp_hist_value[tid], respOp)
   ensures frac_val(fr) != none
-  ensures acc(Future_hist_do_resp_Fraction_Process_ZFraction(diz, fr, proc, pendingOp_frac), write)
+  ensures acc(Future_hist_do_resp_Fraction_Process_ZFraction_ZFraction_ZFraction(diz, fr, proc, extOrder_frac, pendingOp_frac, invokedCommit_frac), write)
   ensures acc(diz.Future_status_hist_act, write)
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_write, write)
@@ -833,20 +885,32 @@ method Future_resp_begin_Fraction_Process_ZFraction_Integer_Integer(diz: Ref, fr
   ensures acc(diz.Future_ops_hist_action, write)
   ensures diz.Future_ops_hist_value == diz.Future_ops_hist_act
   ensures diz.Future_ops_hist_value == old(diz.Future_ops_hist_value)
+  ensures acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == diz.Future_extOrder_hist_act
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
   ensures acc(diz.Future_pendingOp_hist_act, zfrac_val(pendingOp_frac))
   ensures acc(diz.Future_pendingOp_hist_value, zfrac_val(pendingOp_frac))
   ensures acc(diz.Future_pendingOp_hist_write, zfrac_val(pendingOp_frac))
   ensures acc(diz.Future_pendingOp_hist_action, zfrac_val(pendingOp_frac))
   ensures diz.Future_pendingOp_hist_value == diz.Future_pendingOp_hist_act
   ensures diz.Future_pendingOp_hist_value == old(diz.Future_pendingOp_hist_value)
+  ensures acc(diz.Future_invokedCommit_hist_act, zfrac_val(invokedCommit_frac))
+  ensures acc(diz.Future_invokedCommit_hist_value, zfrac_val(invokedCommit_frac))
+  ensures acc(diz.Future_invokedCommit_hist_write, zfrac_val(invokedCommit_frac))
+  ensures acc(diz.Future_invokedCommit_hist_action, zfrac_val(invokedCommit_frac))
+  ensures diz.Future_invokedCommit_hist_value == diz.Future_invokedCommit_hist_act
+  ensures diz.Future_invokedCommit_hist_value == old(diz.Future_invokedCommit_hist_value)
 {
   inhale false
 }
 
-method Future_resp_commit_Fraction_Process_ZFraction_Integer_Integer(diz: Ref, fr: frac, proc: Process, pendingOp_frac: zfrac, tid: Int, respOp: Int)
+method Future_resp_commit_Fraction_Process_ZFraction_ZFraction_ZFraction_Integer_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, pendingOp_frac: zfrac, invokedCommit_frac: zfrac, tid: Int, respOp: Int)
   requires diz != null
   requires frac_val(fr) != none
-  requires acc(Future_hist_do_resp_Fraction_Process_ZFraction(diz, fr, proc, pendingOp_frac), write)
+  requires acc(Future_hist_do_resp_Fraction_Process_ZFraction_ZFraction_ZFraction(diz, fr, proc, extOrder_frac, pendingOp_frac, invokedCommit_frac), write)
   requires write != none
   requires acc(diz.Future_status_hist_act, write)
   requires acc(diz.Future_status_hist_value, write)
@@ -857,11 +921,21 @@ method Future_resp_commit_Fraction_Process_ZFraction_Integer_Integer(diz: Ref, f
   requires acc(diz.Future_ops_hist_value, write)
   requires acc(diz.Future_ops_hist_write, write)
   requires acc(diz.Future_ops_hist_action, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
   requires zfrac_val(pendingOp_frac) != none
   requires acc(diz.Future_pendingOp_hist_act, zfrac_val(pendingOp_frac))
   requires acc(diz.Future_pendingOp_hist_value, zfrac_val(pendingOp_frac))
   requires acc(diz.Future_pendingOp_hist_write, zfrac_val(pendingOp_frac))
   requires acc(diz.Future_pendingOp_hist_action, zfrac_val(pendingOp_frac))
+  requires zfrac_val(invokedCommit_frac) != none
+  requires acc(diz.Future_invokedCommit_hist_act, zfrac_val(invokedCommit_frac))
+  requires acc(diz.Future_invokedCommit_hist_value, zfrac_val(invokedCommit_frac))
+  requires acc(diz.Future_invokedCommit_hist_write, zfrac_val(invokedCommit_frac))
+  requires acc(diz.Future_invokedCommit_hist_action, zfrac_val(invokedCommit_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires tid < |diz.Future_ops_hist_value|
@@ -880,9 +954,15 @@ method Future_resp_commit_Fraction_Process_ZFraction_Integer_Integer(diz: Ref, f
   ensures acc(diz.Future_ops_hist_value, write)
   ensures acc(diz.Future_ops_hist_hist, write)
   ensures diz.Future_ops_hist_value == old(diz.Future_ops_hist_value)
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
   ensures acc(diz.Future_pendingOp_hist_value, zfrac_val(pendingOp_frac))
   ensures acc(diz.Future_pendingOp_hist_hist, zfrac_val(pendingOp_frac))
   ensures diz.Future_pendingOp_hist_value == old(diz.Future_pendingOp_hist_value)
+  ensures acc(diz.Future_invokedCommit_hist_value, zfrac_val(invokedCommit_frac))
+  ensures acc(diz.Future_invokedCommit_hist_hist, zfrac_val(invokedCommit_frac))
+  ensures diz.Future_invokedCommit_hist_value == old(diz.Future_invokedCommit_hist_value)
 {
   inhale false
 }
@@ -954,38 +1034,68 @@ method Future_commit_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: P
   inhale false
 }
 
-method Future_commitOk_begin_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, tid: Int)
+method Future_commitOk_begin_Fraction_Process_ZFraction_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, ops_frac: zfrac, tid: Int)
   requires diz != null
   requires frac_val(fr) != none
   requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_commitOk(tid), proc)), write)
   requires write != none
   requires acc(diz.Future_status_hist_value, write)
   requires acc(diz.Future_status_hist_hist, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
+  requires zfrac_val(ops_frac) != none
+  requires acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_hist, zfrac_val(ops_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires diz.Future_status_hist_value[tid] == Status_commitPending()
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
   requires Future_validCommit_Integer(diz, tid)
   ensures frac_val(fr) != none
-  ensures acc(Future_hist_do_commitOk_Fraction_Process(diz, fr, proc), write)
+  ensures acc(Future_hist_do_commitOk_Fraction_Process_ZFraction_ZFraction(diz, fr, proc, extOrder_frac, ops_frac), write)
   ensures acc(diz.Future_status_hist_act, write)
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_write, write)
   ensures acc(diz.Future_status_hist_action, write)
   ensures diz.Future_status_hist_value == diz.Future_status_hist_act
   ensures diz.Future_status_hist_value == old(diz.Future_status_hist_value)
+  ensures acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == diz.Future_extOrder_hist_act
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
+  ensures acc(diz.Future_ops_hist_act, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_write, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_action, zfrac_val(ops_frac))
+  ensures diz.Future_ops_hist_value == diz.Future_ops_hist_act
+  ensures diz.Future_ops_hist_value == old(diz.Future_ops_hist_value)
 {
   inhale false
 }
 
-method Future_commitOk_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, tid: Int)
+method Future_commitOk_commit_Fraction_Process_ZFraction_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, ops_frac: zfrac, tid: Int)
   requires diz != null
   requires frac_val(fr) != none
-  requires acc(Future_hist_do_commitOk_Fraction_Process(diz, fr, proc), write)
+  requires acc(Future_hist_do_commitOk_Fraction_Process_ZFraction_ZFraction(diz, fr, proc, extOrder_frac, ops_frac), write)
   requires write != none
   requires acc(diz.Future_status_hist_act, write)
   requires acc(diz.Future_status_hist_value, write)
   requires acc(diz.Future_status_hist_write, write)
   requires acc(diz.Future_status_hist_action, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
+  requires zfrac_val(ops_frac) != none
+  requires acc(diz.Future_ops_hist_act, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_write, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_action, zfrac_val(ops_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires |diz.Future_status_hist_act| == |diz.Future_status_hist_value|
@@ -996,6 +1106,12 @@ method Future_commitOk_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc:
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_hist, write)
   ensures diz.Future_status_hist_value == old(diz.Future_status_hist_value)
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
+  ensures acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_hist, zfrac_val(ops_frac))
+  ensures diz.Future_ops_hist_value == old(diz.Future_ops_hist_value)
 {
   inhale false
 }
@@ -1045,38 +1161,68 @@ method Future_cancel_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: P
   inhale false
 }
 
-method Future_abort_begin_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, tid: Int)
+method Future_abort_begin_Fraction_Process_ZFraction_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, ops_frac: zfrac, tid: Int)
   requires diz != null
   requires frac_val(fr) != none
   requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_abort(tid), proc)), write)
   requires write != none
   requires acc(diz.Future_status_hist_value, write)
   requires acc(diz.Future_status_hist_hist, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
+  requires zfrac_val(ops_frac) != none
+  requires acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_hist, zfrac_val(ops_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires diz.Future_status_hist_value[tid] == Status_beginPending() || diz.Future_status_hist_value[tid] == Status_opPending() || diz.Future_status_hist_value[tid] == Status_commitPending() || diz.Future_status_hist_value[tid] == Status_cancelPending()
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
   requires Future_validFail_Integer(diz, tid)
   ensures frac_val(fr) != none
-  ensures acc(Future_hist_do_abort_Fraction_Process(diz, fr, proc), write)
+  ensures acc(Future_hist_do_abort_Fraction_Process_ZFraction_ZFraction(diz, fr, proc, extOrder_frac, ops_frac), write)
   ensures acc(diz.Future_status_hist_act, write)
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_write, write)
   ensures acc(diz.Future_status_hist_action, write)
   ensures diz.Future_status_hist_value == diz.Future_status_hist_act
   ensures diz.Future_status_hist_value == old(diz.Future_status_hist_value)
+  ensures acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == diz.Future_extOrder_hist_act
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
+  ensures acc(diz.Future_ops_hist_act, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_write, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_action, zfrac_val(ops_frac))
+  ensures diz.Future_ops_hist_value == diz.Future_ops_hist_act
+  ensures diz.Future_ops_hist_value == old(diz.Future_ops_hist_value)
 {
   inhale false
 }
 
-method Future_abort_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, tid: Int)
+method Future_abort_commit_Fraction_Process_ZFraction_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, ops_frac: zfrac, tid: Int)
   requires diz != null
   requires frac_val(fr) != none
-  requires acc(Future_hist_do_abort_Fraction_Process(diz, fr, proc), write)
+  requires acc(Future_hist_do_abort_Fraction_Process_ZFraction_ZFraction(diz, fr, proc, extOrder_frac, ops_frac), write)
   requires write != none
   requires acc(diz.Future_status_hist_act, write)
   requires acc(diz.Future_status_hist_value, write)
   requires acc(diz.Future_status_hist_write, write)
   requires acc(diz.Future_status_hist_action, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
+  requires zfrac_val(ops_frac) != none
+  requires acc(diz.Future_ops_hist_act, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_write, zfrac_val(ops_frac))
+  requires acc(diz.Future_ops_hist_action, zfrac_val(ops_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires |diz.Future_status_hist_act| == |diz.Future_status_hist_value|
@@ -1087,6 +1233,12 @@ method Future_abort_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Pr
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_hist, write)
   ensures diz.Future_status_hist_value == old(diz.Future_status_hist_value)
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
+  ensures acc(diz.Future_ops_hist_value, zfrac_val(ops_frac))
+  ensures acc(diz.Future_ops_hist_hist, zfrac_val(ops_frac))
+  ensures diz.Future_ops_hist_value == old(diz.Future_ops_hist_value)
 {
   inhale false
 }
