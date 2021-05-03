@@ -129,11 +129,12 @@ class TMS1 {
     //
     //
 
-    //static pure set<seq<int>> serializations(set<int> transactions, set<tuple<int, int>> externalOrder) =
-    //    set<int> { sequenz | seq<int> sequenz;
-    //        (\forall int i; 0 <= i && i < |sequenz|; sequenz[i] in transactions) &&        //all elements in the sequence are also in the set of transactions
-    //        (\forall int i; 0 <= i && i < |sequenz|; (\forall int j; 0 <= j && j < |sequenz| && j != i; sequenz[i] != sequenz[j])) &&   //all elements are unique
-    //        respectsOrder(sequenz, externalOrder) };
+    static pure set<seq<int>> serializations(set<int> transactions, set<tuple<int, int>> externalOrder) =
+        set<seq<int>> { sequenz | seq<int> sequenz;                                         //sequenz will be contrained such that it is a permutation.
+            |sequenz| == |transactions| &&                                                  //lengths are equal
+            (\forall int i; 0 <= i && i < |sequenz|; sequenz[i] in transactions) &&         //all elements in the sequence are also in the set of transactions
+            (\forall int i; 0 <= i && i < |sequenz|; (\forall int j; 0 <= j && j < |sequenz| && j != i; sequenz[i] != sequenz[j])) &&   //all elements are unique
+            respectsOrder(sequenz, externalOrder) };                                        //order is satisfied
 
     static pure boolean respectsOrder(seq<int> transactionIds, set<tuple<int, int>> order) =
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));

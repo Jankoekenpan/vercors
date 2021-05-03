@@ -1,0 +1,15 @@
+class Repro {
+
+    ensures \result <= source;
+    ensures (\forall int i; i in \result; i > 5);
+    pure static set<int> workAround(set<int> source);
+
+
+    //ensures \result <= source;
+    //ensures (\forall int i; i in \result; i > 5);
+    //pure static set<int> repro(set<int> source) =
+    //    set<int> { i | int i <- source; i > 5 };
+    //TODO look at: GenerateADTFunctions, ParallelBlockEncoder#do_block (specifically, the use of NameScanner)
+
+}
+
