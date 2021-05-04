@@ -1,0 +1,15 @@
+class `Future` {
+
+    process acceptAll(seq<int> tids, seq<seq<int>> operationss) =
+        |tids| == 0
+            ?  empty
+            : ( acceptSingleTransaction(head(tids), operationss[head(tids)]) || acceptAll(tail(tids), operationss) );
+
+    process acceptSingleTransaction(int tid, seq<int> operations) =
+        |operations| == 0
+            ? empty
+            : ( acceptSingleOperation(tid, head(operations)) * acceptSingleTransaction(tid, tail(operations)) );
+
+    process acceptSingleOperation(int tid, int operation);
+
+}
