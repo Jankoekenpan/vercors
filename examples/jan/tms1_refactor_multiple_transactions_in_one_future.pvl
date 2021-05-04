@@ -226,10 +226,8 @@ class `Future` {
     //note that this is a sequence because this field models the pendingOps of all transactions.
     seq<int/*InvOperation*/> pendingOp;
 
-    // ========= Derived state variables, functions and predicates =========
 
-    //TODO actually implement these predicates
-    //TODO define 'ser' and 'legal'
+    // ========= Derived state variables, functions and predicates =========
 
     // derived state
 
@@ -267,7 +265,6 @@ class `Future` {
         //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
 
 
-
     // functions
 
     //this is called 'ops(sigma)' in the paper, but we're calling it allOps to prevent name collisions.
@@ -291,11 +288,11 @@ class `Future` {
         TMS1.serializations(transactions, order);
 
 
-
     // predicates
+
     pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
-//        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
-//        //TODO can I abuse bit-properties of ints to make this work?
+        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
+        //TODO can I abuse bit-properties of ints to make this work?
 
     //extConsPrefix
     accessible extOrder;
@@ -359,7 +356,14 @@ class `Future` {
 
     // ========= Processes =========
 
-    //TODO combine these processes into one 'total' process.
+    //TODO read invokes, write responses
+    process total(int tid) = init(tid) * begin(tid) * afterBeginPending(tid);
+    process afterBeginPending(int tid) = abort(tid) + (beginOk(tid) * (afterReady(tid)));
+    process afterReady(int tid) = (cancel(tid) * abort(tid))
+        + (inv(tid, 0) * ((resp(tid, 0) * afterReady(tid)) + abort(tid)))
+        + (commit(tid) * afterCommitPending(tid));
+    process afterCommitPending(int tid) = abort (tid) + commitOk(tid);
+
 
     //init
     context 0 <= i;
@@ -495,6 +499,5 @@ class `Future` {
     ensures status[tid] == Status.aborted();
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status[x]) == status[x]);
     process abort(int tid);
-
 
 }

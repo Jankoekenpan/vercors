@@ -1,4 +1,4 @@
-// Generated on 2021-05-03 at 13:25:10
+// Generated on 2021-05-04 at 11:03:56
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -10,6 +10,14 @@ domain Process {
   function p_choice(p1: Process, p2: Process): Process
   
   function p_seq(p1: Process, p2: Process): Process
+  
+  function p_total(tid: Int): Process
+  
+  function p_afterBeginPending(tid: Int): Process
+  
+  function p_afterReady(tid: Int): Process
+  
+  function p_afterCommitPending(tid: Int): Process
   
   function p_init(i: Int): Process
   
@@ -55,6 +63,38 @@ domain Process {
   
   axiom seq_assoc {
     (forall p1: Process, p2: Process, p3: Process :: { p_seq(p_seq(p1, p2), p3) } p_seq(p_seq(p1, p2), p3) == p_seq(p1, p_seq(p2, p3)))
+  }
+  
+  axiom total_def_1 {
+    (forall tid: Int :: { p_seq(p_seq(p_init(tid), p_begin(tid)), p_afterBeginPending(tid)) } p_seq(p_seq(p_init(tid), p_begin(tid)), p_afterBeginPending(tid)) == p_total(tid))
+  }
+  
+  axiom total_def_2 {
+    (forall p: Process, tid: Int :: { p_seq(p, p_total(tid)) } p_seq(p, p_total(tid)) == p_seq(p, p_seq(p_total(tid), p_empty())))
+  }
+  
+  axiom afterBeginPending_def_1 {
+    (forall tid: Int :: { p_afterBeginPending(tid) } p_choice(p_abort(tid), p_seq(p_beginOk(tid), p_afterReady(tid))) == p_afterBeginPending(tid))
+  }
+  
+  axiom afterBeginPending_def_2 {
+    (forall p: Process, tid: Int :: { p_seq(p, p_afterBeginPending(tid)) } p_seq(p, p_afterBeginPending(tid)) == p_seq(p, p_seq(p_afterBeginPending(tid), p_empty())))
+  }
+  
+  axiom afterReady_def_1 {
+    (forall tid: Int :: { p_afterReady(tid) } p_choice(p_choice(p_seq(p_cancel(tid), p_abort(tid)), p_seq(p_inv(tid, 0), p_choice(p_seq(p_resp(tid, 0), p_afterReady(tid)), p_abort(tid)))), p_seq(p_commit(tid), p_afterCommitPending(tid))) == p_afterReady(tid))
+  }
+  
+  axiom afterReady_def_2 {
+    (forall p: Process, tid: Int :: { p_seq(p, p_afterReady(tid)) } p_seq(p, p_afterReady(tid)) == p_seq(p, p_seq(p_afterReady(tid), p_empty())))
+  }
+  
+  axiom afterCommitPending_def_1 {
+    (forall tid: Int :: { p_afterCommitPending(tid) } p_choice(p_abort(tid), p_commitOk(tid)) == p_afterCommitPending(tid))
+  }
+  
+  axiom afterCommitPending_def_2 {
+    (forall p: Process, tid: Int :: { p_seq(p, p_afterCommitPending(tid)) } p_seq(p, p_afterCommitPending(tid)) == p_seq(p, p_seq(p_afterCommitPending(tid), p_empty())))
   }
   
   axiom init_def_2 {
