@@ -42,6 +42,18 @@ class Status {
 
 }
 
+class Operation {
+
+    //TODO contract must ensure that these encode-functions NEVER return a value that could possibly be returned by any of the other encode-functions
+    //TODO contract must also ensure that their return values are 'unique' (can never yield the same answer with different inputs)
+
+    static pure int encodeInvokeWrite(int tid, int address, int value) = 0 + 4 * (0+3*tid + 1+3*address + 2+3*value);
+    static pure int encodeInvokeRead(int tid, int address) = 1 + 4 * (0+3*tid + 1+3*address);
+    static pure int encodeRespRead(int tid, int address, int value) = 2 + 4 * (0+3*tid + 1+3*address + 2+3*value);
+    static pure int encodeRespWrite(int tid, int address) = 3 + 4 * (0+3*tid + 1+3*address);
+
+}
+
 class TMS1 {
 
     static pure int NUM_TRANSACTIONS() = 10;
@@ -151,9 +163,11 @@ class TMS1 {
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
 
     //TODO what contract doI need here? do I need one in the first place?
+    //TODO alles wat 'links' light van 'right' komt niet meer voor in 'order'
+    //TODO order mag geen cikels bevatten!
     static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
         (tuple<int, int> { left, right } in order) ||
-        (\forall int newRight; newRight in rightValues(right, order); inOrder(left, newRight, order));
+        (\exists int newRight; newRight in rightValues(left, order); inOrder(newRight, right, order));
 
     ensures (\forall int i; i in \result; 0 <= i && i < NUM_TRANSACTIONS());
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (tuple<int, int> { leftValue, i } in relation) ==> (i in \result) );

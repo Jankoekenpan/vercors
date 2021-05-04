@@ -1,5 +1,6 @@
 class `Future` {
 
+    /*TODO bespreek design choice: lijst van operatie staat al soort van vast.*/
     process acceptAll(seq<int> tids, seq<seq<int>> operationss) =
         |tids| == 0
             ?  empty

@@ -1,0 +1,51 @@
+class Legal {
+
+    pure boolean legal(seq<int> history);
+
+
+
+    void main() {
+
+        assume !legal(seq<int> { 1, 2, 3 });
+
+        if (legal(seq<int> { 1, 2, 3 })) {
+            assert false;   //verifieert! (vercors kan aantonen dat we hier nooit komen)
+        }
+
+    }
+
+    bool doCheck(seq<int> xs) {
+        if (alle indices van xs zijn groder dan 0) {
+            assume (legal xs);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+class x {
+    pure bool legal(seq<int>);
+
+     ensures (\forall int i = 0 .. |xs|; xs[i] > 0) == legal(xs);
+     ensures legal(xs) == \result;
+     bool doCheck(seq<int> xs) {
+         if (alle indices van xs zijn groter dan 0) {
+             assume legal(xs);
+             return true;
+         }
+
+         return false;
+     }
+
+     void main() {
+         if (doCheck(seq<int>{1, 2, 3})) {
+             assert false;
+         }
+         assert !legal(seq<int>{1, 2, 3});
+     }
+}
+
+class C {
+
+}
