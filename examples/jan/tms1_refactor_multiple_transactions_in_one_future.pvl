@@ -7,6 +7,10 @@ class Utils {
     //why implement append and concat? because I'd rather use alphabetic names than symbolic names!
     //especially because PVL diverts from Haskell's and Scala's convention to use the double plus for concatenation!
 
+    ensures (\forall set<int> aSet; aSet in theSet; (\forall int x; x in aSet; x in \result));
+    ensures (\forall int x; x in \result; (\exists set<int> aSet; aSet in theSet; x in aSet));
+    static pure set<int> flatten(set<set<int>> theSet);
+
 //    ensures \result == (\exists int i; 0 <= i && i < |sequence|; sequence[i] == element);
 //    static pure boolean elem(int element, seq<int> sequence) =
 //        |sequence| == 0
@@ -45,12 +49,15 @@ class Status {
 class Operation {
 
     //TODO contract must ensure that these encode-functions NEVER return a value that could possibly be returned by any of the other encode-functions
-    //TODO contract must also ensure that their return values are 'unique' (can never yield the same answer with different inputs)
+    //TODO contract must also ensure that their return values are 'unique' (can never yield the same result using different inputs)
+    //I don't think the transaction id should be part of the encoding.
 
-    static pure int encodeInvokeWrite(int tid, int address, int value) = 0 + 4 * (0+3*tid + 1+3*address + 2+3*value);
-    static pure int encodeInvokeRead(int tid, int address) = 1 + 4 * (0+3*tid + 1+3*address);
-    static pure int encodeRespRead(int tid, int address, int value) = 2 + 4 * (0+3*tid + 1+3*address + 2+3*value);
-    static pure int encodeRespWrite(int tid, int address) = 3 + 4 * (0+3*tid + 1+3*address);
+    static pure int encodeInvokeWrite(int address, int value) = 0 + 4 * (0+2*address + 1+2*value);
+    static pure int encodeInvokeRead(int address) = 1 + 4 * (0+2*address);
+    static pure int encodeResponseRead(int address, int value) = 2 + 4 * (0+2*address + 1+2*value);
+    static pure int encodeResponseWrite(int address) = 3 + 4 * (0+2*address);
+
+    //this is a work-around for vercors not supporting user-defined algebraic datatypes.
 
 }
 
@@ -65,8 +72,8 @@ class TMS1 {
     //
 
     context |statuses| == NUM_TRANSACTIONS();
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> (i in \result) );
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] != Status.committed() && statuses[i] != Status.aborted()) ==> (!(i in \result)) );
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> (i in \result) );
+    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.committed() && statuses[i] != Status.aborted()) ==> (!(i in \result)) );
     static pure set<int> doneTransactions(seq<int> statuses) = doneTransactionsHelper(0, statuses);
 
     context |statuses| == NUM_TRANSACTIONS() - currentIndex;
@@ -142,15 +149,6 @@ class TMS1 {
     //
     //
 
-    //static pure set<seq<int>> serializations(set<int> transactions, set<tuple<int, int>> externalOrder) =
-    //    set<seq<int>> { sequenz | seq<int> sequenz;                                         //sequenz will be contrained such that it is a permutation.
-    //        |sequenz| == |transactions| &&                                                  //lengths are equal
-    //        (\forall int i; 0 <= i && i < |sequenz|; sequenz[i] in transactions) &&         //all elements in the sequence are also in the set of transactions
-    //        (\forall int i; 0 <= i && i < |sequenz|; (\forall int j; 0 <= j && j < |sequenz| && j != i; sequenz[i] != sequenz[j])) &&   //all elements are unique
-    //        respectsOrder(sequenz, externalOrder) };                                        //order is satisfied
-    //this does not work due to an half-working implementation of set-comprehensions in VerCors.
-    //so instead we work around it by making it abstract, and have the contract specify the behaviour.
-
     ensures (\forall seq<int> sequenz; sequenz in \result; |sequenz| == |transactions| &&
             (\forall int i; 0 <= i && i < |sequenz|; sequenz[i] in transactions) &&
             (\forall int i; 0 <= i && i < |sequenz|; (\forall int j; 0 <= j && j < |sequenz| && j != i; sequenz[i] != sequenz[j]) ) &&
@@ -158,16 +156,19 @@ class TMS1 {
             );
     static pure set<seq<int>> serializations(set<int> transactions, set<tuple<int, int>> externalOrder);
 
-    //TODO what contract do I need here? do I need one in the first place?
+    ensures \result == (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
     static pure boolean respectsOrder(seq<int> transactionIds, set<tuple<int, int>> order) =
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
 
-    //TODO what contract doI need here? do I need one in the first place?
-    //TODO alles wat 'links' light van 'right' komt niet meer voor in 'order'
-    //TODO order mag geen cikels bevatten!
+    //TODO requires acyclic(order);
     static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
         (tuple<int, int> { left, right } in order) ||
-        (\exists int newRight; newRight in rightValues(left, order); inOrder(newRight, right, order));
+        (\exists int newRight; newRight in rightValues2(left, order); inOrder(newRight, right, order));
+
+    ensures (\forall int right; right in \result; tuple<int, int> { leftValue, right } in relation);
+    static pure set<int> rightValues2(int leftValue, set<tuple<int, int>> relation);
+        //set<int> { getSnd(tup) | tuple<int, int> tup <- relation; getFst(tup) == leftValue };
+
 
     ensures (\forall int i; i in \result; 0 <= i && i < NUM_TRANSACTIONS());
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (tuple<int, int> { leftValue, i } in relation) ==> (i in \result) );
@@ -175,7 +176,6 @@ class TMS1 {
     static pure set<int> rightValues(int leftValue, set<tuple<int, int>> relation) =
         rightValuesBounded(0, NUM_TRANSACTIONS(), leftValue, relation);
         //set<int> { rightValue | int rightValue <- {0..(NUM_TRANSACTIONS()-1)} ; tuple<int, int> { leftValue, rightValue } in relation };
-        //set<int> { getSnd(tup) | tuple<int, int> tup <- relation; getFst(tup) == leftValue };
 
     requires 0 <= lowerBoundIncl;
     requires lowerBoundIncl <= upperBoundExcl;
@@ -189,6 +189,36 @@ class TMS1 {
                 ? set<int> { lowerBoundIncl }
                 : set<int> { }
               ) + rightValuesBounded(lowerBoundIncl + 1, upperBoundExcl, leftValue, relation);
+
+//    ensures \result == (\forall tuple<int, int> tup; tup in relation; !(getFst(tup) in collectRightValues(getFst(tup), relation)));
+//    static pure boolean acyclic(set<tuple<int, int>> relation) =
+//        (\forall tuple<int, int> tup; tup in relation; acyclicHelper(tup, relation));
+
+//    ensures \result != (getFst(tup) in collectRightValues(getFst(tup), relation));
+//    static pure boolean acyclicHelper(tuple<int, int> tup, set<tuple<int, int>> relation) =
+//        !(getFst(tup) in collectRightValues(getFst(tup), relation));
+
+//    ensures (\forall int right; right in \result; inOrder(left, right, relation));
+//    static pure set<int> collectRightValues(int left, set<tuple<int, int>> relation) = collectRightValuesHelper(relation, rightValues2(left, relation));
+
+    //decreases |relation| - |accumulator|;
+//    ensures (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) in accumulator) ==> (getSnd(tup) in \result));
+//    ensures (\forall int x; x in accumulator; (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) == x) ==> (getSnd(tup) in \result)));
+//    ensures (\forall int y; y in \result; (\exists int x; x in accumulator; inOrder(x, y, relation)));
+//    static pure set<int> collectRightValuesHelper(set<tuple<int, int>> relation, set<int> accumulator) =
+//        accumulator == accumulator + allRightValues(accumulator, relation)
+//            ? accumulator
+//            : collectRightValuesHelper(relation, accumulator + allRightValues(accumulator, relation));
+
+//    ensures (\forall int right; right in \result; (\exists int left; left in check; tuple<int, int> { left, right } in relation));
+//    ensures (\forall int left; left in check; (\exists int right; right in \result; tuple<int, int> { left, right } in relation));
+//    static pure set<int> allRightValues(set<int> check, set<tuple<int, int>> relation) =
+//        Utils.flatten(allRightValuesHelper(check, relation));
+
+//    ensures (\forall int left; left in check; (\exists set<int> rightValues; rightValues in result; (\exists int right; right in rightValues; tuple<int, int> { left, right } in relation)));
+//    ensures (\forall set<int> rightValues; rightValues in \result; (\exists int left; left in check; (\exists int right; right in rightValues; tuple<int, int> { left, right } in relation)));
+//    static pure set<set<int>> allRightValuesHelper(set<int> check, set<tuple<int, int>> relation);
+//       //set<set<int>> { rightValues2(left, relation) | int left <- check }
 
 }
 
@@ -304,9 +334,8 @@ class `Future` {
 
     // predicates
 
-    pure boolean legal(seq<tuple<int, int>> invRespOps) = true;
-        //TODO if I want to implement this properly, then I need better types than int to model InvOps and RespOps
-        //TODO can I abuse bit-properties of ints to make this work?
+    pure boolean legal(seq<tuple<int, int>> invRespOps);    //TODO can be 'assumed' by program code. (allows for multiple types of memory implementations)
+
 
     //extConsPrefix
     accessible extOrder;

@@ -1,4 +1,4 @@
-// Generated on 2021-05-04 at 22:36:09
+// Generated on 2021-05-05 at 16:20:26
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -385,9 +385,7 @@ function Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz: Ref, transacti
 
 function Future_legal_Sequence$Tuple$Integer_Integer$$(diz: Ref, invRespOps: Seq[VCTTuple[Int, Int]]): Bool
   requires diz != null
-{
-  true
-}
+
 
 function Future_extConsPrefix_Set$Integer$(diz: Ref, serialization: Set[Int]): Bool
   requires diz != null
@@ -455,6 +453,11 @@ function Utils_concat_Sequence$Tuple$Integer_Integer$$_Sequence$Tuple$Integer_In
   list1 ++ list2
 }
 
+function Utils_flatten_Set$Set$Integer$$(theSet: Set[Set[Int]]): Set[Int]
+  ensures (forall aSet: Set[Int], x: Int :: (aSet in theSet) && (x in aSet) ==> (x in result))
+  ensures (forall x: Int :: (x in result) ==> (exists aSet: Set[Int] :: (aSet in theSet) && (x in aSet)))
+
+
 function Status_notStarted(): Int
 {
   0
@@ -495,24 +498,24 @@ function Status_aborted(): Int
   7
 }
 
-function Operation_encodeInvokeWrite_Integer_Integer_Integer(tid: Int, address: Int, value: Int): Int
+function Operation_encodeInvokeWrite_Integer_Integer(address: Int, value: Int): Int
 {
-  4 * (3 * tid + 1 + 3 * address + 2 + 3 * value)
+  4 * (2 * address + 1 + 2 * value)
 }
 
-function Operation_encodeInvokeRead_Integer_Integer(tid: Int, address: Int): Int
+function Operation_encodeInvokeRead_Integer(address: Int): Int
 {
-  1 + 4 * (3 * tid + 1 + 3 * address)
+  1 + 4 * (2 * address)
 }
 
-function Operation_encodeRespRead_Integer_Integer_Integer(tid: Int, address: Int, value: Int): Int
+function Operation_encodeResponseRead_Integer_Integer(address: Int, value: Int): Int
 {
-  2 + 4 * (3 * tid + 1 + 3 * address + 2 + 3 * value)
+  2 + 4 * (2 * address + 1 + 2 * value)
 }
 
-function Operation_encodeRespWrite_Integer_Integer(tid: Int, address: Int): Int
+function Operation_encodeResponseWrite_Integer(address: Int): Int
 {
-  3 + 4 * (3 * tid + 1 + 3 * address)
+  3 + 4 * (2 * address)
 }
 
 function TMS1_NUM_TRANSACTIONS(): Int
@@ -523,8 +526,8 @@ function TMS1_NUM_TRANSACTIONS(): Int
 function TMS1_doneTransactions_Sequence$Integer$(statuses: Seq[Int]): Set[Int]
   requires |statuses| == TMS1_NUM_TRANSACTIONS()
   ensures |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && (statuses[i] == Status_committed() || statuses[i] == Status_aborted()) ==> (i in result))
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && (statuses[i] != Status_committed() && statuses[i] != Status_aborted()) ==> !((i in result)))
+  ensures (forall i: Int :: 0 <= i && i < |statuses| && (statuses[i] == Status_committed() || statuses[i] == Status_aborted()) ==> (i in result))
+  ensures (forall i: Int :: 0 <= i && i < |statuses| && (statuses[i] != Status_committed() && statuses[i] != Status_aborted()) ==> !((i in result)))
 {
   TMS1_doneTransactionsHelper_Integer_Sequence$Integer$(0, statuses)
 }
@@ -606,14 +609,19 @@ function TMS1_serializations_Set$Integer$_Set$Tuple$Integer_Integer$$(transactio
 
 
 function TMS1_respectsOrder_Sequence$Integer$_Set$Tuple$Integer_Integer$$(transactionIds: Seq[Int], order: Set[VCTTuple[Int, Int]]): Bool
+  ensures result == (forall index: Int :: { transactionIds[index] } 0 <= index && index < |transactionIds| - 1 ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(transactionIds[index], transactionIds[index + 1], order))
 {
   (forall index: Int :: { transactionIds[index] } 0 <= index && index < |transactionIds| - 1 ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(transactionIds[index], transactionIds[index + 1], order))
 }
 
 function TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left: Int, right: Int, order: Set[VCTTuple[Int, Int]]): Bool
 {
-  ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (exists newRight: Int :: (newRight in TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(left, order)) && TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(newRight, right, order))
+  ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (exists newRight: Int :: (newRight in TMS1_rightValues2_Integer_Set$Tuple$Integer_Integer$$(left, order)) && TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(newRight, right, order))
 }
+
+function TMS1_rightValues2_Integer_Set$Tuple$Integer_Integer$$(leftValue: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
+  ensures (forall right: Int :: (right in result) ==> ((vcttuple_tuple(leftValue, right): VCTTuple[Int, Int]) in relation))
+
 
 function TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(leftValue: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
   ensures (forall i: Int :: { (i in result) } (i in result) ==> 0 <= i && i < TMS1_NUM_TRANSACTIONS())
