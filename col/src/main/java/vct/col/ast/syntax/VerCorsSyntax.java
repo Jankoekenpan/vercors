@@ -20,6 +20,8 @@ public class VerCorsSyntax {
     //precedence 90 is the same as used by GT, GTE, LT and LTE.
     syntax.addInfix(SubSet, "<", 90);
     syntax.addInfix(SubSetEq, "<=", 90);
+    syntax.addFunction(TupleFst, "getFst");
+    syntax.addFunction(TupleSnd, "getSnd");
 
     syntax.addLeftFix(Wand,"-*",3);
     syntax.addFunction(Perm,"Perm");

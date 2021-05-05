@@ -1,4 +1,4 @@
-// Generated on 2021-05-05 at 16:20:26
+// Generated on 2021-05-05 at 21:33:02
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -615,12 +615,14 @@ function TMS1_respectsOrder_Sequence$Integer$_Set$Tuple$Integer_Integer$$(transa
 }
 
 function TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left: Int, right: Int, order: Set[VCTTuple[Int, Int]]): Bool
+  requires TMS1_acyclic_Set$Tuple$Integer_Integer$$(order)
 {
   ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (exists newRight: Int :: (newRight in TMS1_rightValues2_Integer_Set$Tuple$Integer_Integer$$(left, order)) && TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(newRight, right, order))
 }
 
 function TMS1_rightValues2_Integer_Set$Tuple$Integer_Integer$$(leftValue: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
   ensures (forall right: Int :: (right in result) ==> ((vcttuple_tuple(leftValue, right): VCTTuple[Int, Int]) in relation))
+  ensures (forall tup: VCTTuple[Int, Int] :: (tup in relation) && (vcttuple_fst(tup): Int) == leftValue ==> ((vcttuple_snd(tup): Int) in result))
 
 
 function TMS1_rightValues_Integer_Set$Tuple$Integer_Integer$$(leftValue: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
@@ -640,6 +642,40 @@ function TMS1_rightValuesBounded_Integer_Integer_Integer_Set$Tuple$Integer_Integ
 {
   (lowerBoundIncl == upperBoundExcl ? Set[Int]() : ((((vcttuple_tuple(leftValue, lowerBoundIncl): VCTTuple[Int, Int]) in relation) ? Set(lowerBoundIncl) : Set[Int]()) union TMS1_rightValuesBounded_Integer_Integer_Integer_Set$Tuple$Integer_Integer$$(lowerBoundIncl + 1, upperBoundExcl, leftValue, relation)))
 }
+
+function TMS1_acyclic_Set$Tuple$Integer_Integer$$(relation: Set[VCTTuple[Int, Int]]): Bool
+  ensures result == (forall tup: VCTTuple[Int, Int] :: (tup in relation) ==> !(((vcttuple_fst(tup): Int) in TMS1_collectRightValues_Integer_Set$Tuple$Integer_Integer$$((vcttuple_fst(tup): Int), relation))))
+{
+  (forall tup: VCTTuple[Int, Int] :: (tup in relation) ==> TMS1_acyclicHelper_Tuple$Integer_Integer$_Set$Tuple$Integer_Integer$$(tup, relation))
+}
+
+function TMS1_acyclicHelper_Tuple$Integer_Integer$_Set$Tuple$Integer_Integer$$(tup: VCTTuple[Int, Int], relation: Set[VCTTuple[Int, Int]]): Bool
+  ensures result != ((vcttuple_fst(tup): Int) in TMS1_collectRightValues_Integer_Set$Tuple$Integer_Integer$$((vcttuple_fst(tup): Int), relation))
+{
+  !(((vcttuple_fst(tup): Int) in TMS1_collectRightValues_Integer_Set$Tuple$Integer_Integer$$((vcttuple_fst(tup): Int), relation)))
+}
+
+function TMS1_collectRightValues_Integer_Set$Tuple$Integer_Integer$$(left: Int, relation: Set[VCTTuple[Int, Int]]): Set[Int]
+  ensures (forall right: Int :: (right in result) ==> TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left, right, relation))
+{
+  TMS1_collectRightValuesHelper_Set$Tuple$Integer_Integer$$_Set$Integer$(relation, TMS1_rightValues2_Integer_Set$Tuple$Integer_Integer$$(left, relation))
+}
+
+function TMS1_collectRightValuesHelper_Set$Tuple$Integer_Integer$$_Set$Integer$(relation: Set[VCTTuple[Int, Int]], accumulator: Set[Int]): Set[Int]
+  ensures (forall tup: VCTTuple[Int, Int] :: TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$((vcttuple_fst(tup): Int), (vcttuple_snd(tup): Int), relation) && ((vcttuple_fst(tup): Int) in accumulator) ==> ((vcttuple_snd(tup): Int) in result))
+  ensures (forall x: Int, tup: VCTTuple[Int, Int] :: (x in accumulator) && (TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$((vcttuple_fst(tup): Int), (vcttuple_snd(tup): Int), relation) && (vcttuple_fst(tup): Int) == x) ==> ((vcttuple_snd(tup): Int) in result))
+  ensures (forall y: Int :: (y in result) ==> (exists x: Int :: (x in accumulator) && TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(x, y, relation)))
+
+
+function TMS1_allRightValues_Set$Integer$_Set$Tuple$Integer_Integer$$(check: Set[Int], relation: Set[VCTTuple[Int, Int]]): Set[Int]
+  ensures (forall right: Int :: (right in result) ==> (exists left: Int :: (left in check) && ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in relation)))
+  ensures (forall left: Int :: (left in check) ==> (exists right: Int :: (right in result) && ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in relation)))
+
+
+function TMS1_allRightValuesHelper_Set$Integer$_Set$Tuple$Integer_Integer$$(check: Set[Int], relation: Set[VCTTuple[Int, Int]]): Set[Set[Int]]
+  ensures (forall left: Int :: (left in check) ==> (exists rightValues: Set[Int] :: (rightValues in result) && (exists right: Int :: (right in rightValues) && ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in relation))))
+  ensures (forall rightValues: Set[Int] :: (rightValues in result) ==> (exists left: Int :: (left in check) && (exists right: Int :: (right in rightValues) && ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in relation))))
+
 
 function instanceof_TYPE_TYPE(t: TYPE, u: TYPE): Bool
   ensures result == (t == u || directSuperclass(t) == u)

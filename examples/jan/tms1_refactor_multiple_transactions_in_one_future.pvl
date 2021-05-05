@@ -166,10 +166,11 @@ class TMS1 {
         (\exists int newRight; newRight in rightValues2(left, order); inOrder(newRight, right, order));
 
     ensures (\forall int right; right in \result; tuple<int, int> { leftValue, right } in relation);
+    ensures (\forall tuple<int, int> tup; tup in relation; (getFst(tup) == leftValue) ==> (getSnd(tup) in \result));
     static pure set<int> rightValues2(int leftValue, set<tuple<int, int>> relation);
         //set<int> { getSnd(tup) | tuple<int, int> tup <- relation; getFst(tup) == leftValue };
 
-
+    //TODO remove this - no longer needed?
     ensures (\forall int i; i in \result; 0 <= i && i < NUM_TRANSACTIONS());
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (tuple<int, int> { leftValue, i } in relation) ==> (i in \result) );
     ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (!(tuple<int, int> { leftValue, i } in relation)) ==> (!(i in \result)) );
@@ -190,35 +191,36 @@ class TMS1 {
                 : set<int> { }
               ) + rightValuesBounded(lowerBoundIncl + 1, upperBoundExcl, leftValue, relation);
 
-//    ensures \result == (\forall tuple<int, int> tup; tup in relation; !(getFst(tup) in collectRightValues(getFst(tup), relation)));
-//    static pure boolean acyclic(set<tuple<int, int>> relation) =
-//        (\forall tuple<int, int> tup; tup in relation; acyclicHelper(tup, relation));
+    ensures \result == (\forall tuple<int, int> tup; tup in relation; !(getFst(tup) in collectRightValues(getFst(tup), relation)));
+    static pure boolean acyclic(set<tuple<int, int>> relation) =
+        (\forall tuple<int, int> tup; tup in relation; acyclicHelper(tup, relation));
 
-//    ensures \result != (getFst(tup) in collectRightValues(getFst(tup), relation));
-//    static pure boolean acyclicHelper(tuple<int, int> tup, set<tuple<int, int>> relation) =
-//        !(getFst(tup) in collectRightValues(getFst(tup), relation));
+    ensures \result != (getFst(tup) in collectRightValues(getFst(tup), relation));
+    static pure boolean acyclicHelper(tuple<int, int> tup, set<tuple<int, int>> relation) =
+        !(getFst(tup) in collectRightValues(getFst(tup), relation));
 
-//    ensures (\forall int right; right in \result; inOrder(left, right, relation));
-//    static pure set<int> collectRightValues(int left, set<tuple<int, int>> relation) = collectRightValuesHelper(relation, rightValues2(left, relation));
+    ensures (\forall int right; right in \result; inOrder(left, right, relation));
+    static pure set<int> collectRightValues(int left, set<tuple<int, int>> relation) = collectRightValuesHelper(relation, rightValues2(left, relation));
 
     //decreases |relation| - |accumulator|;
-//    ensures (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) in accumulator) ==> (getSnd(tup) in \result));
-//    ensures (\forall int x; x in accumulator; (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) == x) ==> (getSnd(tup) in \result)));
-//    ensures (\forall int y; y in \result; (\exists int x; x in accumulator; inOrder(x, y, relation)));
-//    static pure set<int> collectRightValuesHelper(set<tuple<int, int>> relation, set<int> accumulator) =
+    ensures (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) in accumulator) ==> (getSnd(tup) in \result));
+    ensures (\forall int x; x in accumulator; (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) == x) ==> (getSnd(tup) in \result)));
+    ensures (\forall int y; y in \result; (\exists int x; x in accumulator; inOrder(x, y, relation)));
+    static pure set<int> collectRightValuesHelper(set<tuple<int, int>> relation, set<int> accumulator); // =
 //        accumulator == accumulator + allRightValues(accumulator, relation)
 //            ? accumulator
 //            : collectRightValuesHelper(relation, accumulator + allRightValues(accumulator, relation));
 
-//    ensures (\forall int right; right in \result; (\exists int left; left in check; tuple<int, int> { left, right } in relation));
-//    ensures (\forall int left; left in check; (\exists int right; right in \result; tuple<int, int> { left, right } in relation));
-//    static pure set<int> allRightValues(set<int> check, set<tuple<int, int>> relation) =
-//        Utils.flatten(allRightValuesHelper(check, relation));
+    ensures (\forall int right; right in \result; (\exists int left; left in check; tuple<int, int> { left, right } in relation));
+    ensures (\forall int left; left in check; (\exists int right; right in \result; tuple<int, int> { left, right } in relation));
+    static pure set<int> allRightValues(set<int> check, set<tuple<int, int>> relation); // =
+        //Utils.flatten(allRightValuesHelper(check, relation));
+        //Utils.flatten(set<set<int>> { rightValues2(left, relation) | int left <- check });
 
-//    ensures (\forall int left; left in check; (\exists set<int> rightValues; rightValues in result; (\exists int right; right in rightValues; tuple<int, int> { left, right } in relation)));
-//    ensures (\forall set<int> rightValues; rightValues in \result; (\exists int left; left in check; (\exists int right; right in rightValues; tuple<int, int> { left, right } in relation)));
-//    static pure set<set<int>> allRightValuesHelper(set<int> check, set<tuple<int, int>> relation);
-//       //set<set<int>> { rightValues2(left, relation) | int left <- check }
+    ensures (\forall int left; left in check; (\exists set<int> rightValues; rightValues in \result; (\exists int right; right in rightValues; tuple<int, int> { left, right } in relation)));
+    ensures (\forall set<int> rightValues; rightValues in \result; (\exists int left; left in check; (\exists int right; right in rightValues; tuple<int, int> { left, right } in relation)));
+    static pure set<set<int>> allRightValuesHelper(set<int> check, set<tuple<int, int>> relation); // =
+       //set<set<int>> { rightValues2(left, relation) | int left <- check }
 
 }
 
