@@ -1,4 +1,4 @@
-// Generated on 2021-05-06 at 10:42:01
+// Generated on 2021-05-06 at 11:00:46
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -500,22 +500,22 @@ function Status_aborted(): Int
 
 function Operation_encodeInvokeWrite_Integer_Integer(address: Int, value: Int): Int
   ensures (forall a: Int, v: Int :: { Operation_encodeInvokeWrite_Integer_Integer(a, v) } a != address && v != value ==> Operation_encodeInvokeWrite_Integer_Integer(a, v) != Operation_encodeInvokeWrite_Integer_Integer(address, value))
-  ensures (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeWrite_Integer_Integer(a, v) != Operation_encodeInvokeRead_Integer(a)) && (forall a: Int, v: Int :: { Operation_encodeInvokeWrite_Integer_Integer(a, v) } { Operation_encodeResponseRead_Integer_Integer(a, v) } true && true ==> Operation_encodeInvokeWrite_Integer_Integer(a, v) != Operation_encodeResponseRead_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeWrite_Integer_Integer(a, v) != Operation_encodeResponseWrite_Integer(a))
+  ensures (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeWrite_Integer_Integer(address, value) != Operation_encodeInvokeRead_Integer(a)) && (forall a: Int, v: Int :: { Operation_encodeResponseRead_Integer_Integer(a, v) } true && true ==> Operation_encodeInvokeWrite_Integer_Integer(address, value) != Operation_encodeResponseRead_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeWrite_Integer_Integer(address, value) != Operation_encodeResponseWrite_Integer(a))
 
 
 function Operation_encodeInvokeRead_Integer(address: Int): Int
   ensures (forall a: Int :: { Operation_encodeInvokeRead_Integer(a) } a != address ==> Operation_encodeInvokeRead_Integer(a) != Operation_encodeInvokeRead_Integer(address))
-  ensures (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeRead_Integer(a) != Operation_encodeInvokeWrite_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeRead_Integer(a) != Operation_encodeResponseRead_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeRead_Integer(a) != Operation_encodeResponseWrite_Integer(a))
+  ensures (forall a: Int, v: Int :: { Operation_encodeInvokeWrite_Integer_Integer(a, v) } true && true ==> Operation_encodeInvokeRead_Integer(address) != Operation_encodeInvokeWrite_Integer_Integer(a, v)) && (forall a: Int, v: Int :: { Operation_encodeResponseRead_Integer_Integer(a, v) } true && true ==> Operation_encodeInvokeRead_Integer(address) != Operation_encodeResponseRead_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeInvokeRead_Integer(address) != Operation_encodeResponseWrite_Integer(a))
 
 
 function Operation_encodeResponseRead_Integer_Integer(address: Int, value: Int): Int
   ensures (forall a: Int, v: Int :: { Operation_encodeResponseRead_Integer_Integer(a, v) } a != address && v != value ==> Operation_encodeResponseRead_Integer_Integer(a, v) != Operation_encodeResponseRead_Integer_Integer(address, value))
-  ensures (forall a: Int, v: Int :: { Operation_encodeResponseRead_Integer_Integer(a, v) } { Operation_encodeInvokeWrite_Integer_Integer(a, v) } true && true ==> Operation_encodeResponseRead_Integer_Integer(a, v) != Operation_encodeInvokeWrite_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseRead_Integer_Integer(a, v) != Operation_encodeInvokeRead_Integer(a)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseRead_Integer_Integer(a, v) != Operation_encodeResponseWrite_Integer(a))
+  ensures (forall a: Int, v: Int :: { Operation_encodeInvokeWrite_Integer_Integer(a, v) } true && true ==> Operation_encodeResponseRead_Integer_Integer(address, value) != Operation_encodeInvokeWrite_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseRead_Integer_Integer(address, value) != Operation_encodeInvokeRead_Integer(a)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseRead_Integer_Integer(address, value) != Operation_encodeResponseWrite_Integer(a))
 
 
 function Operation_encodeResponseWrite_Integer(address: Int): Int
   ensures (forall a: Int :: { Operation_encodeResponseWrite_Integer(a) } a != address ==> Operation_encodeResponseWrite_Integer(a) != Operation_encodeResponseWrite_Integer(address))
-  ensures (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseWrite_Integer(a) != Operation_encodeInvokeWrite_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseWrite_Integer(a) != Operation_encodeInvokeRead_Integer(a)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseWrite_Integer(a) != Operation_encodeResponseRead_Integer_Integer(a, v))
+  ensures (forall a: Int, v: Int :: { Operation_encodeInvokeWrite_Integer_Integer(a, v) } true && true ==> Operation_encodeResponseWrite_Integer(address) != Operation_encodeInvokeWrite_Integer_Integer(a, v)) && (forall a: Int, v: Int :: true && true ==> Operation_encodeResponseWrite_Integer(address) != Operation_encodeInvokeRead_Integer(a)) && (forall a: Int, v: Int :: { Operation_encodeResponseRead_Integer_Integer(a, v) } true && true ==> Operation_encodeResponseWrite_Integer(address) != Operation_encodeResponseRead_Integer_Integer(a, v))
 
 
 function TMS1_NUM_TRANSACTIONS(): Int

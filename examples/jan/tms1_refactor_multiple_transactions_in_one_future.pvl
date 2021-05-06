@@ -54,33 +54,33 @@ class Operation {
 
     ensures (\forall int a; a != address; (\forall int v; v != value; encodeInvokeWrite(a, v) != encodeInvokeWrite(address, value) ) );
     ensures (\forall int a; true; (\forall int v; true;
-        (encodeInvokeWrite(a, v) != encodeInvokeRead(a)) &&
-        (encodeInvokeWrite(a, v) != encodeResponseRead(a, v)) &&
-        (encodeInvokeWrite(a, v) != encodeResponseWrite(a))
+        (encodeInvokeWrite(address, value) != encodeInvokeRead(a)) &&
+        (encodeInvokeWrite(address, value) != encodeResponseRead(a, v)) &&
+        (encodeInvokeWrite(address, value) != encodeResponseWrite(a))
     ));
     static pure int encodeInvokeWrite(int address, int value); // = 0 + 4 * (0+2*address + 1+2*value);
 
     ensures (\forall int a; a != address; encodeInvokeRead(a) != encodeInvokeRead(address) );
     ensures (\forall int a; true; (\forall int v; true;
-        (encodeInvokeRead(a) != encodeInvokeWrite(a, v)) &&
-        (encodeInvokeRead(a) != encodeResponseRead(a, v)) &&
-        (encodeInvokeRead(a) != encodeResponseWrite(a))
+        (encodeInvokeRead(address) != encodeInvokeWrite(a, v)) &&
+        (encodeInvokeRead(address) != encodeResponseRead(a, v)) &&
+        (encodeInvokeRead(address) != encodeResponseWrite(a))
     ));
     static pure int encodeInvokeRead(int address); // = 1 + 4 * (0+2*address);
 
     ensures (\forall int a; a != address; (\forall int v; v != value; encodeResponseRead(a, v) != encodeResponseRead(address, value) ) );
     ensures (\forall int a; true; (\forall int v; true;
-        (encodeResponseRead(a, v) != encodeInvokeWrite(a, v)) &&
-        (encodeResponseRead(a, v) != encodeInvokeRead(a)) &&
-        (encodeResponseRead(a, v) != encodeResponseWrite(a))
+        (encodeResponseRead(address, value) != encodeInvokeWrite(a, v)) &&
+        (encodeResponseRead(address, value) != encodeInvokeRead(a)) &&
+        (encodeResponseRead(address, value) != encodeResponseWrite(a))
     ));
     static pure int encodeResponseRead(int address, int value); // = 2 + 4 * (0+2*address + 1+2*value);
 
     ensures (\forall int a; a != address; encodeResponseWrite(a) != encodeResponseWrite(address) );
     ensures (\forall int a; true; (\forall int v; true;
-        (encodeResponseWrite(a) != encodeInvokeWrite(a, v)) &&
-        (encodeResponseWrite(a) != encodeInvokeRead(a)) &&
-        (encodeResponseWrite(a) != encodeResponseRead(a, v))
+        (encodeResponseWrite(address) != encodeInvokeWrite(a, v)) &&
+        (encodeResponseWrite(address) != encodeInvokeRead(a)) &&
+        (encodeResponseWrite(address) != encodeResponseRead(a, v))
     ));
     static pure int encodeResponseWrite(int address); // = 3 + 4 * (0+2*address);
 
