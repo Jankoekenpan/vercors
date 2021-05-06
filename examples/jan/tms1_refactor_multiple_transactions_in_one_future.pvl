@@ -48,14 +48,41 @@ class Status {
 
 class Operation {
 
-    //TODO contract must ensure that these encode-functions NEVER return a value that could possibly be returned by any of the other encode-functions
-    //TODO contract must also ensure that their return values are 'unique' (can never yield the same result using different inputs)
+    //contracts ensure that these encode-functions NEVER return a value that could possibly be returned by any of the other encode-functions
+    //contracts also ensure that their return values are 'unique' (can never yield the same result using different inputs)
     //I don't think the transaction id should be part of the encoding.
 
-    static pure int encodeInvokeWrite(int address, int value) = 0 + 4 * (0+2*address + 1+2*value);
-    static pure int encodeInvokeRead(int address) = 1 + 4 * (0+2*address);
-    static pure int encodeResponseRead(int address, int value) = 2 + 4 * (0+2*address + 1+2*value);
-    static pure int encodeResponseWrite(int address) = 3 + 4 * (0+2*address);
+    ensures (\forall int a; a != address; (\forall int v; v != value; encodeInvokeWrite(a, v) != encodeInvokeWrite(address, value) ) );
+    ensures (\forall int a; true; (\forall int v; true;
+        (encodeInvokeWrite(a, v) != encodeInvokeRead(a)) &&
+        (encodeInvokeWrite(a, v) != encodeResponseRead(a, v)) &&
+        (encodeInvokeWrite(a, v) != encodeResponseWrite(a))
+    ));
+    static pure int encodeInvokeWrite(int address, int value); // = 0 + 4 * (0+2*address + 1+2*value);
+
+    ensures (\forall int a; a != address; encodeInvokeRead(a) != encodeInvokeRead(address) );
+    ensures (\forall int a; true; (\forall int v; true;
+        (encodeInvokeRead(a) != encodeInvokeWrite(a, v)) &&
+        (encodeInvokeRead(a) != encodeResponseRead(a, v)) &&
+        (encodeInvokeRead(a) != encodeResponseWrite(a))
+    ));
+    static pure int encodeInvokeRead(int address); // = 1 + 4 * (0+2*address);
+
+    ensures (\forall int a; a != address; (\forall int v; v != value; encodeResponseRead(a, v) != encodeResponseRead(address, value) ) );
+    ensures (\forall int a; true; (\forall int v; true;
+        (encodeResponseRead(a, v) != encodeInvokeWrite(a, v)) &&
+        (encodeResponseRead(a, v) != encodeInvokeRead(a)) &&
+        (encodeResponseRead(a, v) != encodeResponseWrite(a))
+    ));
+    static pure int encodeResponseRead(int address, int value); // = 2 + 4 * (0+2*address + 1+2*value);
+
+    ensures (\forall int a; a != address; encodeResponseWrite(a) != encodeResponseWrite(address) );
+    ensures (\forall int a; true; (\forall int v; true;
+        (encodeResponseWrite(a) != encodeInvokeWrite(a, v)) &&
+        (encodeResponseWrite(a) != encodeInvokeRead(a)) &&
+        (encodeResponseWrite(a) != encodeResponseRead(a, v))
+    ));
+    static pure int encodeResponseWrite(int address); // = 3 + 4 * (0+2*address);
 
     //this is a work-around for vercors not supporting user-defined algebraic datatypes.
 
