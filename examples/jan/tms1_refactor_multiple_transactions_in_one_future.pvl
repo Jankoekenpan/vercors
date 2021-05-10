@@ -50,6 +50,8 @@ class Operation {
 
     //contracts ensure that these encode-functions NEVER return a value that could possibly be returned by any of the other encode-functions
     //contracts also ensure that their return values are 'unique' (can never yield the same result using different inputs)
+    //https://stackoverflow.com/questions/919612/mapping-two-integers-to-one-in-a-unique-and-deterministic-way
+
     //I don't think the transaction id should be part of the encoding.
 
     ensures (\forall int a; a != address; (\forall int v; v != value; encodeInvokeWrite(a, v) != encodeInvokeWrite(address, value) ) );
@@ -58,7 +60,7 @@ class Operation {
         (encodeInvokeWrite(address, value) != encodeResponseRead(a, v)) &&
         (encodeInvokeWrite(address, value) != encodeResponseWrite(a))
     ));
-    static pure int encodeInvokeWrite(int address, int value); // = 0 + 4 * (0+2*address + 1+2*value);
+    static pure int encodeInvokeWrite(int address, int value); // = 0 + 4 * (adjusted_cantor_pairing(address, value));
 
     ensures (\forall int a; a != address; encodeInvokeRead(a) != encodeInvokeRead(address) );
     ensures (\forall int a; true; (\forall int v; true;
@@ -66,7 +68,7 @@ class Operation {
         (encodeInvokeRead(address) != encodeResponseRead(a, v)) &&
         (encodeInvokeRead(address) != encodeResponseWrite(a))
     ));
-    static pure int encodeInvokeRead(int address); // = 1 + 4 * (0+2*address);
+    static pure int encodeInvokeRead(int address); // = 1 + 4 * (address);
 
     ensures (\forall int a; a != address; (\forall int v; v != value; encodeResponseRead(a, v) != encodeResponseRead(address, value) ) );
     ensures (\forall int a; true; (\forall int v; true;
@@ -74,7 +76,7 @@ class Operation {
         (encodeResponseRead(address, value) != encodeInvokeRead(a)) &&
         (encodeResponseRead(address, value) != encodeResponseWrite(a))
     ));
-    static pure int encodeResponseRead(int address, int value); // = 2 + 4 * (0+2*address + 1+2*value);
+    static pure int encodeResponseRead(int address, int value); // = 2 + 4 * (adjusted_cantor_pairing(address, value));
 
     ensures (\forall int a; a != address; encodeResponseWrite(a) != encodeResponseWrite(address) );
     ensures (\forall int a; true; (\forall int v; true;
@@ -82,7 +84,7 @@ class Operation {
         (encodeResponseWrite(address) != encodeInvokeRead(a)) &&
         (encodeResponseWrite(address) != encodeResponseRead(a, v))
     ));
-    static pure int encodeResponseWrite(int address); // = 3 + 4 * (0+2*address);
+    static pure int encodeResponseWrite(int address); // = 3 + 4 * (address);
 
     //this is a work-around for vercors not supporting user-defined algebraic datatypes.
 
@@ -98,78 +100,34 @@ class TMS1 {
     //
     //
 
-    context |statuses| == NUM_TRANSACTIONS();
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> (i in \result) );
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.committed() && statuses[i] != Status.aborted()) ==> (!(i in \result)) );
-    static pure set<int> doneTransactions(seq<int> statuses) = doneTransactionsHelper(0, statuses);
+    ensures (\forall int tid; 0 <= tid && tid < |statuses|; (statuses[tid] == Status.committed() || statuses[tid] == Status.aborted()) ==> tid in \result);
+    ensures (\forall int tid; 0 <= tid && tid < |statuses|; (statuses[tid] != Status.committed() && statuses[tid] != Status.aborted()) ==> (!(tid in \result)));
+    ensures (\forall int tid; tid in \result; 0 <= tid && tid < |statuses|);
+    ensures (\forall int tid; tid in \result; statuses[tid] == Status.committed() || statuses[tid] == Status.aborted());
+    static pure set<int> doneTransactions(seq<int> statuses);
+        // = set<int> { tid | int tid <- { 0 .. (|statuses|-1) }; statuses[tid] == Status.committed() || statuses[tid] == Status.aborted() };
 
-    context |statuses| == NUM_TRANSACTIONS() - currentIndex;
-    ensures |\result| <= |statuses|;
-    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |statuses|);
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed() || statuses[i] == Status.aborted()) ==> ((currentIndex + i) in \result) );
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.committed() && statuses[i] != Status.aborted()) ==> (!((currentIndex + i) in \result)) );
-    static pure set<int> doneTransactionsHelper(int currentIndex, seq<int> statuses) =
-        |statuses| == 0
-            ? set<int> { }
-            : ((head(statuses) == Status.committed() || head(statuses) == Status.aborted())
-                ? set<int> { currentIndex }
-                : set<int> { } )
-                + doneTransactionsHelper(currentIndex + 1, tail(statuses));
+    ensures (\forall int tid; 0 <= tid && tid < |statuses|; (statuses[tid] == Status.committed()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |statuses|; (statuses[tid] != Status.committed()) ==> (!(tid in \result)) );
+    ensures (\forall int tid; tid in \result; 0 <= tid && tid < |statuses|);
+    ensures (\forall int tid; tid in \result; statuses[tid] == Status.committed());
+    static pure set<int> committedTransactions(seq<int> statuses);
+        // = set<int> { tid | int tid <- { 0 .. (|statuses|-1) }; statuses[tid] == Status.committed() };
 
-    context |statuses| == NUM_TRANSACTIONS();
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.committed()) ==> (i in \result) );
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] != Status.committed()) ==> (!(i in \result)) );
-    static pure set<int> committedTransactions(seq<int> statuses) = committedTransactionsHelper(0, statuses);
+    ensures (\forall int tid; 0 <= tid && tid < |statuses|; (statuses[tid] == Status.commitPending()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |statuses|; (statuses[tid] != Status.commitPending()) ==> (!(tid in \result)) );
+    ensures (\forall int tid; tid in \result; 0 <= tid && tid < |statuses|);
+    ensures (\forall int tid; tid in \result; statuses[tid] == Status.commitPending());
+    static pure set<int> commitPendingTransactions(seq<int> statuses);
+        // = set<int> { tid | int tid <- { 0 .. (|statuses|-1) }; statuses[tid] == Status.commitPending() };
 
-    context |statuses| == NUM_TRANSACTIONS() - currentIndex;
-    ensures |\result| <= |statuses|;
-    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |statuses|);
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.committed()) ==> ((currentIndex + i) in \result) );
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.committed()) ==> (!((currentIndex + i) in \result)) );
-    static pure set<int> committedTransactionsHelper(int currentIndex, seq<int> statuses) =
-        |statuses| == 0
-            ? set<int> { }
-            : ((head(statuses) == Status.committed())
-                ? set<int> { currentIndex }
-                : set<int> { } )
-                + committedTransactionsHelper(currentIndex + 1, tail(statuses));
+    ensures (\forall int tid; 0 <= tid && tid < |invokedCommits|; invokedCommits[tid] ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |invokedCommits|; (!invokedCommits[tid]) ==> (!(tid in \result)) );
+    ensures (\forall int tid; tid in \result; 0 <= tid && tid < |invokedCommits|);
+    ensures (\forall int tid; tid in \result; invokedCommits[tid]);
+    static pure set<int> invokedCommitTransactions(seq<boolean> invokedCommits);
+        // = set<int> { tid | int tid <- { 0 .. (|invokedCommits|-1) }; invokedCommits[tid] };
 
-    context |statuses| == NUM_TRANSACTIONS();
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] == Status.commitPending()) ==> (i in \result) );
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (statuses[i] != Status.commitPending()) ==> (!(i in \result)) );
-    static pure set<int> commitPendingTransactions(seq<int> statuses) = commitPendingTransactionsHelper(0, statuses);
-
-    context |statuses| == NUM_TRANSACTIONS() - currentIndex;
-    ensures |\result| <= |statuses|;
-    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |statuses|);
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] == Status.commitPending()) ==> ((currentIndex + i) in \result) );
-    ensures (\forall int i; 0 <= i && i < |statuses|; (statuses[i] != Status.commitPending()) ==> (!((currentIndex + i) in \result)) );
-    static pure set<int> commitPendingTransactionsHelper(int currentIndex, seq<int> statuses) =
-        |statuses| == 0
-            ? set<int> { }
-            : ((head(statuses) == Status.commitPending())
-                ? set<int> { currentIndex }
-                : set<int> { } )
-                + commitPendingTransactionsHelper(currentIndex + 1, tail(statuses));
-
-    context |invokedCommits| == NUM_TRANSACTIONS();
-    ensures (\forall int i; i in \result; 0 <= i && i < NUM_TRANSACTIONS());
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); invokedCommits[i] ==> (i in \result) );
-    ensures (\forall int i; 0 <= i && i < NUM_TRANSACTIONS(); (!invokedCommits[i]) ==> (!(i in \result)) );
-    static pure set<int> invokedCommitTransactions(seq<boolean> invokedCommits) = invokedCommitTransactionsHelper(0, invokedCommits);
-
-    context |invokedCommits| == NUM_TRANSACTIONS() - currentIndex;
-    ensures |\result| <= |invokedCommits|;
-    ensures (\forall int i; i in \result; currentIndex <= i && i < currentIndex + |invokedCommits|);
-    ensures (\forall int i; 0 <= i && i < |invokedCommits|; invokedCommits[i] ==> ((currentIndex + i) in \result) );
-    ensures (\forall int i; 0 <= i && i < |invokedCommits|; (!invokedCommits[i]) ==> (!((currentIndex + i) in \result)) );
-    static pure set<int> invokedCommitTransactionsHelper(int currentIndex, seq<boolean> invokedCommits) =
-        |invokedCommits| == 0
-            ? set<int> { }
-            : ((head(invokedCommits))
-                ? set<int> { currentIndex }
-                : set <int> { } )
-                + invokedCommitTransactionsHelper(currentIndex + 1, tail(invokedCommits));
 
     //
     // Checks for serializations of transactions.
@@ -187,7 +145,7 @@ class TMS1 {
     static pure boolean respectsOrder(seq<int> transactionIds, set<tuple<int, int>> order) =
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
 
-    //TODO requires acyclic(order);
+    //requires acyclic(order);
     static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
         (tuple<int, int> { left, right } in order) ||
         (\exists int newRight; newRight in rightValues2(left, order); inOrder(newRight, right, order));
@@ -234,9 +192,9 @@ class TMS1 {
     ensures (\forall int x; x in accumulator; (\forall tuple<int, int> tup; inOrder(getFst(tup), getSnd(tup), relation); (getFst(tup) == x) ==> (getSnd(tup) in \result)));
     ensures (\forall int y; y in \result; (\exists int x; x in accumulator; inOrder(x, y, relation)));
     static pure set<int> collectRightValuesHelper(set<tuple<int, int>> relation, set<int> accumulator); // =
-//        accumulator == accumulator + allRightValues(accumulator, relation)
-//            ? accumulator
-//            : collectRightValuesHelper(relation, accumulator + allRightValues(accumulator, relation));
+        //accumulator == accumulator + allRightValues(accumulator, relation)
+        //    ? accumulator
+        //    : collectRightValuesHelper(relation, accumulator + allRightValues(accumulator, relation));
 
     ensures (\forall int right; right in \result; (\exists int left; left in check; tuple<int, int> { left, right } in relation));
     ensures (\forall int left; left in check; (\exists int right; right in \result; tuple<int, int> { left, right } in relation));
@@ -305,37 +263,29 @@ class `Future` {
     // derived state
 
     accessible status;
-    requires |status| == TMS1.NUM_TRANSACTIONS();
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.committed() || status[tid] == Status.aborted()) ==> (tid in \result) );
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] != Status.committed() && status[tid] != Status.aborted()) ==> (!(tid in \result)) );
+    ensures (\forall int tid; 0 <= tid && tid < |status|; (status[tid] == Status.committed() || status[tid] == Status.aborted()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |status|; (status[tid] != Status.committed() && status[tid] != Status.aborted()) ==> (!(tid in \result)) );
     pure set<int> doneTransactions() =
         TMS1.doneTransactions(status);
-        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; (status[i] == Status.committed()) || (status[i] == Status.aborted()) };
 
     accessible status;
-    requires |status| == TMS1.NUM_TRANSACTIONS();
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.committed()) ==> (tid in \result) );
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] != Status.committed()) ==> (!(tid in \result)) );
+    ensures (\forall int tid; 0 <= tid && tid < |status|; (status[tid] == Status.committed()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |status|; (status[tid] != Status.committed()) ==> (!(tid in \result)) );
     pure set<int> committedTransactions() =
         TMS1.committedTransactions(status);
-        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.committed() };
 
     accessible status;
-    requires |status| == TMS1.NUM_TRANSACTIONS();
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] == Status.commitPending()) ==> (tid in \result) );
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (status[tid] != Status.commitPending()) ==> (!(tid in \result)) );
+    ensures (\forall int tid; 0 <= tid && tid < |status|; (status[tid] == Status.commitPending()) ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |status|; (status[tid] != Status.commitPending()) ==> (!(tid in \result)) );
     pure set<int> commitPendingTransactions() =
         TMS1.commitPendingTransactions(status);
-        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; status[i] == Status.commitPending() };
 
     accessible invokedCommit;
-    requires |invokedCommit| == TMS1.NUM_TRANSACTIONS();
-    ensures (\forall int tid; tid in \result; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS());
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); invokedCommit[tid] ==> (tid in \result) );
-    ensures (\forall int tid; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS(); (!invokedCommit[tid]) ==> (!(tid in \result)) );
+    ensures (\forall int tid; tid in \result; 0 <= tid && tid < |invokedCommit|);
+    ensures (\forall int tid; 0 <= tid && tid < |invokedCommit|; invokedCommit[tid] ==> (tid in \result) );
+    ensures (\forall int tid; 0 <= tid && tid < |invokedCommit|; (!invokedCommit[tid]) ==> (!(tid in \result)) );
     pure set<int> invokedCommitTransactions() =
         TMS1.invokedCommitTransactions(invokedCommit);
-        //set<int> { i | int i <- {0..(TMS1.NUM_TRANSACTIONS()-1)}; invokedCommit[i] };
 
 
     // functions
@@ -372,6 +322,7 @@ class `Future` {
     requires |status| == TMS1.NUM_TRANSACTIONS();
     requires (\forall int tid; tid in serialization; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS());
     pure boolean extConsPrefix(set<int> serialization/*the ints here are transaction ids*/) =
+        //TODO where do idOne and idTwo come from? from the serialization! TODO continue here!
         (\forall int idOne; 0 <= idOne && idOne < TMS1.NUM_TRANSACTIONS();
             (\forall int idTwo; 0 <= idTwo && idTwo < TMS1.NUM_TRANSACTIONS();
                 (idTwo in serialization) &&
@@ -386,8 +337,8 @@ class `Future` {
     accessible extOrder;
     accessible status;
     accessible ops;
-    requires |status| == TMS1.NUM_TRANSACTIONS();
-    requires |ops| == TMS1.NUM_TRANSACTIONS();
+    requires |status| == TMS1.NUM_TRANSACTIONS(); //TODO this is not needed anymore
+    requires |ops| == TMS1.NUM_TRANSACTIONS();    //TODO idem. but need to fix that allOps(serialization) is still allowed!
     pure boolean validCommit(int tid) =
         (\exists set<int> S; S <= commitPendingTransactions();
             (\exists seq<int> serialization; serialization in ser(committedTransactions() + S, extOrder);
@@ -425,7 +376,6 @@ class `Future` {
         );
         //TODO good ensures clause?
 
-
     // ========= Processes =========
 
     //TODO read invokes, write responses
@@ -435,6 +385,9 @@ class `Future` {
         + (inv(tid, 0) * ((resp(tid, 0) * afterReady(tid)) + abort(tid)))
         + (commit(tid) * afterCommitPending(tid));
     process afterCommitPending(int tid) = abort (tid) + commitOk(tid);
+
+    //TODO process that combines all individual transaction processes
+    //TODO this 'first' process must initialize extOrder to set<tuple<int, int>> { } (the empty relation)
 
 
     //init
@@ -464,6 +417,10 @@ class `Future` {
     ensures |\old(status)| == |status|;
     ensures status[tid] == Status.beginPending();
     ensures (\forall int x; 0 <= x && x < |status| && x != tid; \old(status)[x] == status[x]);
+    accessible extOrder;
+    ensures (\forall int dt; dt in \old(doneTransactions()); tuple<int, int> { dt, tid } in extOrder);
+    ensures \old(TMS1.acyclic(extOrder)) ==> TMS1.acyclic(extOrder);
+    //TODO require dat 'tid' nog niet aan de rechterkant in de extOrder relatie zit? de transactie is namelijk 'nieuw'.
     process begin(int tid);
 
     //beginOk
@@ -535,8 +492,8 @@ class `Future` {
     //requirements for validCommit:
     accessible extOrder;
     accessible ops;
-    requires |status| == TMS1.NUM_TRANSACTIONS();
-    requires |ops| == TMS1.NUM_TRANSACTIONS();
+    requires |status| == TMS1.NUM_TRANSACTIONS();   //TODO eventually remove this line.
+    requires |ops| == TMS1.NUM_TRANSACTIONS();      //TODO eventually remove this line.
     requires validCommit(tid);
     ensures |\old(status)| == |status|;
     ensures status[tid] == Status.committed();

@@ -1,4 +1,4 @@
-// Generated on 2021-05-06 at 11:00:46
+// Generated on 2021-05-10 at 18:21:05
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -330,9 +330,8 @@ field Future_pendingOp_hist_action: Seq[Int]
 function Future_doneTransactions(diz: Ref): Set[Int]
   requires diz != null
   requires acc(diz.Future_status_hist_value, wildcard)
-  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && (diz.Future_status_hist_value[tid] == Status_committed() || diz.Future_status_hist_value[tid] == Status_aborted()) ==> (tid in result))
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && (diz.Future_status_hist_value[tid] != Status_committed() && diz.Future_status_hist_value[tid] != Status_aborted()) ==> !((tid in result)))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_status_hist_value| && (diz.Future_status_hist_value[tid] == Status_committed() || diz.Future_status_hist_value[tid] == Status_aborted()) ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_status_hist_value| && (diz.Future_status_hist_value[tid] != Status_committed() && diz.Future_status_hist_value[tid] != Status_aborted()) ==> !((tid in result)))
 {
   TMS1_doneTransactions_Sequence$Integer$(diz.Future_status_hist_value)
 }
@@ -340,9 +339,8 @@ function Future_doneTransactions(diz: Ref): Set[Int]
 function Future_committedTransactions(diz: Ref): Set[Int]
   requires diz != null
   requires acc(diz.Future_status_hist_value, wildcard)
-  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && diz.Future_status_hist_value[tid] == Status_committed() ==> (tid in result))
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && diz.Future_status_hist_value[tid] != Status_committed() ==> !((tid in result)))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_status_hist_value| && diz.Future_status_hist_value[tid] == Status_committed() ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_status_hist_value| && diz.Future_status_hist_value[tid] != Status_committed() ==> !((tid in result)))
 {
   TMS1_committedTransactions_Sequence$Integer$(diz.Future_status_hist_value)
 }
@@ -350,9 +348,8 @@ function Future_committedTransactions(diz: Ref): Set[Int]
 function Future_commitPendingTransactions(diz: Ref): Set[Int]
   requires diz != null
   requires acc(diz.Future_status_hist_value, wildcard)
-  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && diz.Future_status_hist_value[tid] == Status_commitPending() ==> (tid in result))
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && diz.Future_status_hist_value[tid] != Status_commitPending() ==> !((tid in result)))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_status_hist_value| && diz.Future_status_hist_value[tid] == Status_commitPending() ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_status_hist_value| && diz.Future_status_hist_value[tid] != Status_commitPending() ==> !((tid in result)))
 {
   TMS1_commitPendingTransactions_Sequence$Integer$(diz.Future_status_hist_value)
 }
@@ -360,10 +357,9 @@ function Future_commitPendingTransactions(diz: Ref): Set[Int]
 function Future_invokedCommitTransactions(diz: Ref): Set[Int]
   requires diz != null
   requires acc(diz.Future_invokedCommit_hist_value, wildcard)
-  requires |diz.Future_invokedCommit_hist_value| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < TMS1_NUM_TRANSACTIONS())
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && diz.Future_invokedCommit_hist_value[tid] ==> (tid in result))
-  ensures (forall tid: Int :: 0 <= tid && tid < TMS1_NUM_TRANSACTIONS() && !diz.Future_invokedCommit_hist_value[tid] ==> !((tid in result)))
+  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < |diz.Future_invokedCommit_hist_value|)
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_invokedCommit_hist_value| && diz.Future_invokedCommit_hist_value[tid] ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |diz.Future_invokedCommit_hist_value| && !diz.Future_invokedCommit_hist_value[tid] ==> !((tid in result)))
 {
   TMS1_invokedCommitTransactions_Sequence$Boolean$(diz.Future_invokedCommit_hist_value)
 }
@@ -402,8 +398,6 @@ function Future_validCommit_Integer(diz: Ref, tid: Int): Bool
   requires acc(diz.Future_extOrder_hist_value, wildcard)
   requires acc(diz.Future_status_hist_value, wildcard)
   requires acc(diz.Future_ops_hist_value, wildcard)
-  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
-  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
 {
   (exists S: Set[Int] :: (S subset Future_commitPendingTransactions(diz)) && (exists serialization: Seq[Int] :: (serialization in Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz, (Future_committedTransactions(diz) union S), diz.Future_extOrder_hist_value)) && ((tid in S) && Future_legal_Sequence$Tuple$Integer_Integer$$(diz, Future_allOps_Sequence$Integer$(diz, serialization)))))
 }
@@ -524,85 +518,32 @@ function TMS1_NUM_TRANSACTIONS(): Int
 }
 
 function TMS1_doneTransactions_Sequence$Integer$(statuses: Seq[Int]): Set[Int]
-  requires |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall i: Int :: 0 <= i && i < |statuses| && (statuses[i] == Status_committed() || statuses[i] == Status_aborted()) ==> (i in result))
-  ensures (forall i: Int :: 0 <= i && i < |statuses| && (statuses[i] != Status_committed() && statuses[i] != Status_aborted()) ==> !((i in result)))
-{
-  TMS1_doneTransactionsHelper_Integer_Sequence$Integer$(0, statuses)
-}
+  ensures (forall tid: Int :: 0 <= tid && tid < |statuses| && (statuses[tid] == Status_committed() || statuses[tid] == Status_aborted()) ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |statuses| && (statuses[tid] != Status_committed() && statuses[tid] != Status_aborted()) ==> !((tid in result)))
+  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < |statuses|)
+  ensures (forall tid: Int :: (tid in result) ==> statuses[tid] == Status_committed() || statuses[tid] == Status_aborted())
 
-function TMS1_doneTransactionsHelper_Integer_Sequence$Integer$(currentIndex: Int, statuses: Seq[Int]): Set[Int]
-  requires |statuses| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |statuses| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |result| <= |statuses|
-  ensures (forall i: Int :: { (i in result) } (i in result) ==> currentIndex <= i && i < currentIndex + |statuses|)
-  ensures (forall i: Int :: { statuses[i] } 0 <= i && i < |statuses| && (statuses[i] == Status_committed() || statuses[i] == Status_aborted()) ==> (currentIndex + i in result))
-  ensures (forall i: Int :: { statuses[i] } 0 <= i && i < |statuses| && (statuses[i] != Status_committed() && statuses[i] != Status_aborted()) ==> !((currentIndex + i in result)))
-{
-  (|statuses| == 0 ? Set[Int]() : ((statuses[0] == Status_committed() || statuses[0] == Status_aborted() ? Set(currentIndex) : Set[Int]()) union TMS1_doneTransactionsHelper_Integer_Sequence$Integer$(currentIndex + 1, statuses[1..])))
-}
 
 function TMS1_committedTransactions_Sequence$Integer$(statuses: Seq[Int]): Set[Int]
-  requires |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && statuses[i] == Status_committed() ==> (i in result))
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && statuses[i] != Status_committed() ==> !((i in result)))
-{
-  TMS1_committedTransactionsHelper_Integer_Sequence$Integer$(0, statuses)
-}
+  ensures (forall tid: Int :: 0 <= tid && tid < |statuses| && statuses[tid] == Status_committed() ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |statuses| && statuses[tid] != Status_committed() ==> !((tid in result)))
+  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < |statuses|)
+  ensures (forall tid: Int :: { statuses[tid] } (tid in result) ==> statuses[tid] == Status_committed())
 
-function TMS1_committedTransactionsHelper_Integer_Sequence$Integer$(currentIndex: Int, statuses: Seq[Int]): Set[Int]
-  requires |statuses| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |statuses| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |result| <= |statuses|
-  ensures (forall i: Int :: { (i in result) } (i in result) ==> currentIndex <= i && i < currentIndex + |statuses|)
-  ensures (forall i: Int :: { statuses[i] } 0 <= i && i < |statuses| && statuses[i] == Status_committed() ==> (currentIndex + i in result))
-  ensures (forall i: Int :: { statuses[i] } 0 <= i && i < |statuses| && statuses[i] != Status_committed() ==> !((currentIndex + i in result)))
-{
-  (|statuses| == 0 ? Set[Int]() : ((statuses[0] == Status_committed() ? Set(currentIndex) : Set[Int]()) union TMS1_committedTransactionsHelper_Integer_Sequence$Integer$(currentIndex + 1, statuses[1..])))
-}
 
 function TMS1_commitPendingTransactions_Sequence$Integer$(statuses: Seq[Int]): Set[Int]
-  requires |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures |statuses| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && statuses[i] == Status_commitPending() ==> (i in result))
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && statuses[i] != Status_commitPending() ==> !((i in result)))
-{
-  TMS1_commitPendingTransactionsHelper_Integer_Sequence$Integer$(0, statuses)
-}
+  ensures (forall tid: Int :: 0 <= tid && tid < |statuses| && statuses[tid] == Status_commitPending() ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |statuses| && statuses[tid] != Status_commitPending() ==> !((tid in result)))
+  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < |statuses|)
+  ensures (forall tid: Int :: { statuses[tid] } (tid in result) ==> statuses[tid] == Status_commitPending())
 
-function TMS1_commitPendingTransactionsHelper_Integer_Sequence$Integer$(currentIndex: Int, statuses: Seq[Int]): Set[Int]
-  requires |statuses| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |statuses| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |result| <= |statuses|
-  ensures (forall i: Int :: { (i in result) } (i in result) ==> currentIndex <= i && i < currentIndex + |statuses|)
-  ensures (forall i: Int :: { statuses[i] } 0 <= i && i < |statuses| && statuses[i] == Status_commitPending() ==> (currentIndex + i in result))
-  ensures (forall i: Int :: { statuses[i] } 0 <= i && i < |statuses| && statuses[i] != Status_commitPending() ==> !((currentIndex + i in result)))
-{
-  (|statuses| == 0 ? Set[Int]() : ((statuses[0] == Status_commitPending() ? Set(currentIndex) : Set[Int]()) union TMS1_commitPendingTransactionsHelper_Integer_Sequence$Integer$(currentIndex + 1, statuses[1..])))
-}
 
 function TMS1_invokedCommitTransactions_Sequence$Boolean$(invokedCommits: Seq[Bool]): Set[Int]
-  requires |invokedCommits| == TMS1_NUM_TRANSACTIONS()
-  ensures |invokedCommits| == TMS1_NUM_TRANSACTIONS()
-  ensures (forall i: Int :: { (i in result) } (i in result) ==> 0 <= i && i < TMS1_NUM_TRANSACTIONS())
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && invokedCommits[i] ==> (i in result))
-  ensures (forall i: Int :: 0 <= i && i < TMS1_NUM_TRANSACTIONS() && !invokedCommits[i] ==> !((i in result)))
-{
-  TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(0, invokedCommits)
-}
+  ensures (forall tid: Int :: 0 <= tid && tid < |invokedCommits| && invokedCommits[tid] ==> (tid in result))
+  ensures (forall tid: Int :: 0 <= tid && tid < |invokedCommits| && !invokedCommits[tid] ==> !((tid in result)))
+  ensures (forall tid: Int :: { (tid in result) } (tid in result) ==> 0 <= tid && tid < |invokedCommits|)
+  ensures (forall tid: Int :: (tid in result) ==> invokedCommits[tid])
 
-function TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(currentIndex: Int, invokedCommits: Seq[Bool]): Set[Int]
-  requires |invokedCommits| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |invokedCommits| == TMS1_NUM_TRANSACTIONS() - currentIndex
-  ensures |result| <= |invokedCommits|
-  ensures (forall i: Int :: { (i in result) } (i in result) ==> currentIndex <= i && i < currentIndex + |invokedCommits|)
-  ensures (forall i: Int :: { invokedCommits[i] } 0 <= i && i < |invokedCommits| && invokedCommits[i] ==> (currentIndex + i in result))
-  ensures (forall i: Int :: { invokedCommits[i] } 0 <= i && i < |invokedCommits| && !invokedCommits[i] ==> !((currentIndex + i in result)))
-{
-  (|invokedCommits| == 0 ? Set[Int]() : ((invokedCommits[0] ? Set(currentIndex) : Set[Int]()) union TMS1_invokedCommitTransactionsHelper_Integer_Sequence$Boolean$(currentIndex + 1, invokedCommits[1..])))
-}
 
 function TMS1_serializations_Set$Integer$_Set$Tuple$Integer_Integer$$(transactions: Set[Int], externalOrder: Set[VCTTuple[Int, Int]]): Set[Seq[Int]]
   ensures (forall sequenz: Seq[Int] :: { |sequenz| } (sequenz in result) ==> |sequenz| == |transactions|) && (forall sequenz: Seq[Int], i: Int :: (sequenz in result) && (0 <= i && i < |sequenz|) ==> (sequenz[i] in transactions)) && (forall sequenz: Seq[Int], i: Int, j: Int :: (sequenz in result) && (0 <= i && i < |sequenz|) && (0 <= j && j < |sequenz| && j != i) ==> sequenz[i] != sequenz[j]) && (forall sequenz: Seq[Int] :: (sequenz in result) ==> TMS1_respectsOrder_Sequence$Integer$_Set$Tuple$Integer_Integer$$(sequenz, externalOrder))
@@ -692,7 +633,7 @@ function new_zfrac(x: Perm): zfrac
 
 predicate Future_hist_do_init_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
-predicate Future_hist_do_begin_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
+predicate Future_hist_do_begin_Fraction_Process_ZFraction(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac) 
 
 predicate Future_hist_do_beginOk_Fraction_Process(diz: Ref, fr: frac, proc: Process) 
 
@@ -798,47 +739,66 @@ method Future_init_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Pro
   inhale false
 }
 
-method Future_begin_begin_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, tid: Int)
+method Future_begin_begin_Fraction_Process_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, tid: Int)
   requires diz != null
   requires frac_val(fr) != none
   requires acc(Future_hist_idle_Fraction_Process(diz, fr, p_seq(p_begin(tid), proc)), write)
   requires write != none
   requires acc(diz.Future_status_hist_value, write)
   requires acc(diz.Future_status_hist_hist, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires diz.Future_status_hist_value[tid] == Status_notStarted()
   ensures frac_val(fr) != none
-  ensures acc(Future_hist_do_begin_Fraction_Process(diz, fr, proc), write)
+  ensures acc(Future_hist_do_begin_Fraction_Process_ZFraction(diz, fr, proc, extOrder_frac), write)
   ensures acc(diz.Future_status_hist_act, write)
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_write, write)
   ensures acc(diz.Future_status_hist_action, write)
   ensures diz.Future_status_hist_value == diz.Future_status_hist_act
   ensures diz.Future_status_hist_value == old(diz.Future_status_hist_value)
+  ensures acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == diz.Future_extOrder_hist_act
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
 {
   inhale false
 }
 
-method Future_begin_commit_Fraction_Process_Integer(diz: Ref, fr: frac, proc: Process, tid: Int)
+method Future_begin_commit_Fraction_Process_ZFraction_Integer(diz: Ref, fr: frac, proc: Process, extOrder_frac: zfrac, tid: Int)
   requires diz != null
   requires frac_val(fr) != none
-  requires acc(Future_hist_do_begin_Fraction_Process(diz, fr, proc), write)
+  requires acc(Future_hist_do_begin_Fraction_Process_ZFraction(diz, fr, proc, extOrder_frac), write)
   requires write != none
   requires acc(diz.Future_status_hist_act, write)
   requires acc(diz.Future_status_hist_value, write)
   requires acc(diz.Future_status_hist_write, write)
   requires acc(diz.Future_status_hist_action, write)
+  requires zfrac_val(extOrder_frac) != none
+  requires acc(diz.Future_extOrder_hist_act, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_write, zfrac_val(extOrder_frac))
+  requires acc(diz.Future_extOrder_hist_action, zfrac_val(extOrder_frac))
   requires 0 <= tid
   requires tid < |diz.Future_status_hist_value|
   requires |diz.Future_status_hist_act| == |diz.Future_status_hist_value|
   requires diz.Future_status_hist_value[tid] == Status_beginPending()
   requires (forall x: Int :: { diz.Future_status_hist_act[x] } { diz.Future_status_hist_value[x] } 0 <= x && x < |diz.Future_status_hist_value| && x != tid ==> diz.Future_status_hist_act[x] == diz.Future_status_hist_value[x])
+  requires (forall dt: Int :: (dt in Future_doneTransactions(diz)) ==> ((vcttuple_tuple(dt, tid): VCTTuple[Int, Int]) in diz.Future_extOrder_hist_value))
+  requires TMS1_acyclic_Set$Tuple$Integer_Integer$$(diz.Future_extOrder_hist_act) ==> TMS1_acyclic_Set$Tuple$Integer_Integer$$(diz.Future_extOrder_hist_value)
   ensures frac_val(fr) != none
   ensures acc(Future_hist_idle_Fraction_Process(diz, fr, proc), write)
   ensures acc(diz.Future_status_hist_value, write)
   ensures acc(diz.Future_status_hist_hist, write)
   ensures diz.Future_status_hist_value == old(diz.Future_status_hist_value)
+  ensures acc(diz.Future_extOrder_hist_value, zfrac_val(extOrder_frac))
+  ensures acc(diz.Future_extOrder_hist_hist, zfrac_val(extOrder_frac))
+  ensures diz.Future_extOrder_hist_value == old(diz.Future_extOrder_hist_value)
 {
   inhale false
 }

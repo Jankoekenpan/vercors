@@ -49,14 +49,19 @@ public class CheckHistoryAlgebra extends AbstractRewriter {
   private String histName(String name) {
     return name + "_hist_hist";
   }
+
+  private boolean isAlgebra(ASTClass astClass) {
+    for (Method method : astClass.dynamicMethods()) {
+      if (method.getReturnType().isPrimitive(PrimitiveSort.Process)) {
+        return true;
+      }
+    }
+    return false;
+  }
   
   @Override
   public void visit(ASTClass cl){
-    boolean is_algebra=false;
-    for(Method m:cl.dynamicMethods()){
-      is_algebra|=m.getReturnType().isPrimitive(PrimitiveSort.Process);
-    }
-    if (is_algebra) {
+    if (isAlgebra(cl)) {
       boolean is_history = cl.name().equals("History");
       adt=create.adt("Process");
       adt_type=create.class_type("Process");

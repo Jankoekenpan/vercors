@@ -1,0 +1,19 @@
+class Test {
+
+    ensures \result == i > 0;
+    static pure boolean isValid(int i);
+
+}
+
+class `Future` {
+
+    int anInt;
+
+    //accessible anInt;
+    //pure boolean workaround() = Test.isValid(anInt);
+
+    accessible anInt;
+    ensures Test.isValid(anInt);
+    //ensures workaround();
+    process aProcess();
+}
