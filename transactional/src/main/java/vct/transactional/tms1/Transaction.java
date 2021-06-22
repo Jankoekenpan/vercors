@@ -73,14 +73,13 @@ public class Transaction {
         if (getStatus() != notStarted)
             throw new InvalidStatus("begin() expected status notStarted.");
 
-        synchronized (this) {
-            status = beginPending;
-        }
-
-        //TODO synchronize on 'this'? the effect of 'begin()' is that this transaction is added for every done transaction!
-        //TODO does the current locking scheme guarantee that?
-        for (Transaction doneTransaction : tms1.doneTransactions()) {
-            tms1.addExtOrder(doneTransaction, this);
+        synchronized (tms1) {
+            synchronized (this) {
+                status = beginPending;
+                for (Transaction doneTransaction: tms1.doneTransactions()) {
+                    tms1.addExtOrder(doneTransaction, this);
+                }
+            }
         }
     }
 
@@ -107,12 +106,14 @@ public class Transaction {
         if (getStatus() != opPending)
             throw new InvalidStatus("resp(r) expected status opPending.");
 
-        if (tms1.validResp(this, getPendingOp(), r))
-            throw new InvalidResp("cannot make a legal serialized history using response: " + r + ".");
+        synchronized (tms1) {
+            if (tms1.validResp(this, getPendingOp(), r))
+                throw new InvalidResp("cannot make a legal serialized history using response: " + r + ".");
 
-        synchronized (this) {
-            status = ready;
-            ops.add(new Tuple<>(getPendingOp(), r));
+            synchronized (this) {
+                status = ready;
+                ops.add(new Tuple<>(getPendingOp(), r));
+            }
         }
     }
 
@@ -130,12 +131,13 @@ public class Transaction {
         if (getStatus() != commitPending)
             throw new InvalidStatus("commitOk() expected status commitPending.");
 
-        //TODO synchronize on 'this' first?
-        if (!tms1.validCommit(this))
-            throw new InvalidCommit("cannot call commitOk() because there is no legal serial history of operations.");
+        synchronized (tms1) {
+            if (!tms1.validCommit(this))
+                throw new InvalidCommit("cannot call commitOk() because there is no legal serial history of operations.");
 
-        synchronized (this) {
-            status = committed;
+            synchronized (this) {
+                status = committed;
+            }
         }
     }
 
@@ -154,11 +156,13 @@ public class Transaction {
         if (!Set.of(beginPending, opPending, commitPending, cancelPending).contains(getStatus()))
             throw new InvalidStatus("abort() expected status beginPending, opPending, commitPending or cancelPending.");
 
-        if (!tms1.validFail(this))
-            throw new InvalidFail("cannot call abort() because there is a legal serial history of operations.");
+        synchronized (tms1) {
+            if (!tms1.validFail(this))
+                throw new InvalidFail("cannot call abort() because there is a legal serial history of operations.");
 
-        synchronized (this) {
-            status = aborted;
+            synchronized (this) {
+                status = aborted;
+            }
         }
     }
 

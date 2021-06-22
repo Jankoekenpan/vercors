@@ -145,7 +145,7 @@ class TMS1 {
     static pure boolean respectsOrder(seq<int> transactionIds, set<tuple<int, int>> order) =
         (\forall int index; 0 <= index && index < (|transactionIds|-1); inOrder(transactionIds[index], transactionIds[index+1], order));
 
-    //requires acyclic(order);
+    requires acyclic(order);
     static pure boolean inOrder(int left, int right, set<tuple<int, int>> order) =
         (tuple<int, int> { left, right } in order) ||
         (\exists int newRight; newRight in rightValues2(left, order); inOrder(newRight, right, order));
@@ -319,10 +319,11 @@ class `Future` {
     //extConsPrefix
     accessible extOrder;
     accessible status;
+    requires TMS1.acyclic(extOrder);
     requires |status| == TMS1.NUM_TRANSACTIONS();
     requires (\forall int tid; tid in serialization; 0 <= tid && tid < TMS1.NUM_TRANSACTIONS());
     pure boolean extConsPrefix(set<int> serialization/*the ints here are transaction ids*/) =
-        //TODO where do idOne and idTwo come from? from the serialization! TODO continue here!
+        //t and t' are both members of T (= the set of  transactions). This is correct!
         (\forall int idOne; 0 <= idOne && idOne < TMS1.NUM_TRANSACTIONS();
             (\forall int idTwo; 0 <= idTwo && idTwo < TMS1.NUM_TRANSACTIONS();
                 (idTwo in serialization) &&

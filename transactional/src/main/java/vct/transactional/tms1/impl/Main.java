@@ -46,10 +46,10 @@ public class Main {
             e.printStackTrace();
         }
 
-        //we seem to finish every time now which is good. and all the runs I do are correct, but that's not a proof.
-        //TODO use concurrency reasoning to 'prove' that runs are guaranteed to be correct!
-        //TODO idea: when a method of transaction needs synchronization, always synchronize on the tms1 instance first,
-        //TODO and then on the transaction itself. This should work because TransactionRunner doesn't call methods on the TMS1 instance directly.
-
+        //when transactions access the tms1 shared variable, they always synchronize on it first,
+        //making sure that they see an updated view of the global state.
+        //deadlocks cannot occur, because no thread locks the tms1 monitor after locking on the transaction itself.
+        //all synchronized methods on the TMS1 class can't be called by other classes, because they are package-private.
+        //gotta love concurrency in java!
     }
 }

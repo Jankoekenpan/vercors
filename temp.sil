@@ -1,4 +1,4 @@
-// Generated on 2021-05-10 at 18:21:05
+// Generated on 2021-06-22 at 22:29:12
 domain Process {
   
   function p_is_choice(p1: Process, p2: Process): Bool
@@ -387,6 +387,7 @@ function Future_extConsPrefix_Set$Integer$(diz: Ref, serialization: Set[Int]): B
   requires diz != null
   requires acc(diz.Future_extOrder_hist_value, wildcard)
   requires acc(diz.Future_status_hist_value, wildcard)
+  requires TMS1_acyclic_Set$Tuple$Integer_Integer$$(diz.Future_extOrder_hist_value)
   requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
   requires (forall tid: Int :: { (tid in serialization) } (tid in serialization) ==> 0 <= tid && tid < TMS1_NUM_TRANSACTIONS())
 {
@@ -398,6 +399,8 @@ function Future_validCommit_Integer(diz: Ref, tid: Int): Bool
   requires acc(diz.Future_extOrder_hist_value, wildcard)
   requires acc(diz.Future_status_hist_value, wildcard)
   requires acc(diz.Future_ops_hist_value, wildcard)
+  requires |diz.Future_status_hist_value| == TMS1_NUM_TRANSACTIONS()
+  requires |diz.Future_ops_hist_value| == TMS1_NUM_TRANSACTIONS()
 {
   (exists S: Set[Int] :: (S subset Future_commitPendingTransactions(diz)) && (exists serialization: Seq[Int] :: (serialization in Future_ser_Set$Integer$_Set$Tuple$Integer_Integer$$(diz, (Future_committedTransactions(diz) union S), diz.Future_extOrder_hist_value)) && ((tid in S) && Future_legal_Sequence$Tuple$Integer_Integer$$(diz, Future_allOps_Sequence$Integer$(diz, serialization)))))
 }
@@ -556,6 +559,7 @@ function TMS1_respectsOrder_Sequence$Integer$_Set$Tuple$Integer_Integer$$(transa
 }
 
 function TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(left: Int, right: Int, order: Set[VCTTuple[Int, Int]]): Bool
+  requires TMS1_acyclic_Set$Tuple$Integer_Integer$$(order)
 {
   ((vcttuple_tuple(left, right): VCTTuple[Int, Int]) in order) || (exists newRight: Int :: (newRight in TMS1_rightValues2_Integer_Set$Tuple$Integer_Integer$$(left, order)) && TMS1_inOrder_Integer_Integer_Set$Tuple$Integer_Integer$$(newRight, right, order))
 }

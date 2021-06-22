@@ -21,7 +21,7 @@ public class RespWriteOperation implements RespOperation {
 
     @Override
     public String toString() {
-        return "RespWriteOperation()";
+        return "RespWriteOperation[]";
     }
 
 }
